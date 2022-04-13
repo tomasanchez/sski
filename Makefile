@@ -84,7 +84,7 @@ install:
 	cd $(COMMONS) && sudo make uninstall --no-print-directory && sudo make install --no-print-directory && cd ..
 	rm -rf $(COMMONS)
 	@echo "\nCommons installed\n"
-#	$(MAKE) lib --no-print-directory
+	$(MAKE) lib --no-print-directory
 	@mkdir -p $(LOG_DIR)
 	@echo Completed
 
