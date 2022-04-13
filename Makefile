@@ -44,20 +44,23 @@ DIRS = $(KERNEL_DIR)
 # ! Allways add your rule for modules in here
 # ? eg. all: server client memory filesystem etc
 # TODO: add your rules
-all:
-	@echo Nothing to be done YET.
+all: kernel
 
 # This targets are not files
 # ! Allways add your rules for modules in here too
 # ? eg. .PHONY: server client memory filesystem etc  [...] clean install test
 # TODO: add your rules here
-.PHONY: clean install test lib
+.PHONY: kernel clean install test lib
 
 
 # ! AVOID MODIFYING THIS SECTION ------------------------------------------------------------------------------------------------------
 
 # This rule will be executed to build the different modules
-compile: all
+compile:
+		@mkdir -p $(BUILD_DIR)
+		@mkdir -p $(LOG_DIR)
+		@touch $(LOG_DIR)/$(KERNEL_DIR).log
+		$(MAKE) all
 
 # This rule
 test:
@@ -86,7 +89,6 @@ install:
 	rm -rf $(COMMONS)
 	@echo "\nCommons installed\n"
 	$(MAKE) lib --no-print-directory
-	@mkdir -p $(LOG_DIR)
 	@echo Completed
 
 # ! Requieres root user
