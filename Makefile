@@ -28,6 +28,7 @@ TEST_ALL=$(foreach dir, $(DIRS), cd $(dir) && $(MAKE_TEST) && cd .. &&)
 
 # TODO: Add additional module directories below here
 # ? eg. MEMORY_DIR=memory
+KERNEL_DIR=kernel
 
 # * DO NOT FORGET TO ADD YOUR DIRECTORIES HERE ---------------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ TEST_ALL=$(foreach dir, $(DIRS), cd $(dir) && $(MAKE_TEST) && cd .. &&)
 # ! Allways add your listed above directories here
 # ? eg. DIRS =$(SERVER_DIR) $(CLIENT_DIR) $(MEMORY_DIR)
 # TODO: Add the listed directories
-DIRS =
+DIRS = $(KERNEL_DIR)
 
 # * DO NOT FORGET TO ADD YOUR RULES IN ALL --------------------------------------------------------------------------------------------
 
@@ -43,20 +44,23 @@ DIRS =
 # ! Allways add your rule for modules in here
 # ? eg. all: server client memory filesystem etc
 # TODO: add your rules
-all:
-	@echo Nothing to be done YET.
+all: kernel
 
 # This targets are not files
 # ! Allways add your rules for modules in here too
 # ? eg. .PHONY: server client memory filesystem etc  [...] clean install test
 # TODO: add your rules here
-.PHONY: clean install test lib
+.PHONY: kernel clean install test lib
 
 
 # ! AVOID MODIFYING THIS SECTION ------------------------------------------------------------------------------------------------------
 
 # This rule will be executed to build the different modules
-compile: all
+compile:
+		@mkdir -p $(BUILD_DIR)
+		@mkdir -p $(LOG_DIR)
+		@touch $(LOG_DIR)/$(KERNEL_DIR).log
+		$(MAKE) all
 
 # This rule
 test:
@@ -85,7 +89,6 @@ install:
 	rm -rf $(COMMONS)
 	@echo "\nCommons installed\n"
 	$(MAKE) lib --no-print-directory
-	@mkdir -p $(LOG_DIR)
 	@echo Completed
 
 # ! Requieres root user
@@ -101,3 +104,5 @@ lib:
 
 # ? memory:
 # ? cd $(MEMORY_DIR) && $(MAKE_COMPILE)
+kernel:
+	cd $(KERNEL_DIR) && $(MAKE_COMPILE)

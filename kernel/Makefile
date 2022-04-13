@@ -52,7 +52,8 @@ TEST_OUTPUT = $(BUILD_FOLDER)/$(MODULE_NAME).test.out
 LEAKS = $(LOG_FOLDER)/$(MODULE_NAME)_leaks.log
 # Thread chek log file
 HELGRIND = $(LOG_FOLDER)/$(MODULE_NAME)_threads.log
-
+# Log File
+OUTPUT_LOG = $(LOG_FOLDER)/$(MODULE_NAME).log
 
 all : compile run
 
