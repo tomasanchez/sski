@@ -1,0 +1,21 @@
+{
+  "name": "kiss",
+  "version": "0.0.1",
+  "description": "Kernel de Implementacion Super Simple",
+  "main": "Makefile",
+  "repository": "https://github.com/sisoputnfrba/tp-2022-1c-code-for-goOS.git",
+  "author": "Tomas <tosanchez@frba.utn.edu.ar>",
+  "license": "MIT",
+  "scripts": {
+    "start": "make",
+    "clean": "make remove",
+    "release": "standard-version",
+    "release:first-release": "standard-version --first-release",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major"
+  },
+  "dependencies": {
+    "standard-version": "^9.2.0"
+  }
+}
