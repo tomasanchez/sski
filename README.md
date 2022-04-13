@@ -1,5 +1,7 @@
 # Operating Systems 1Q-2020
 
+[![Build](https://github.com/tomasanchez/sski/actions/workflows/makefile.yml/badge.svg?branch=main)](https://github.com/tomasanchez/sski/actions/workflows/makefile.yml)
+
 ##  Code for GoOS' KISS Assignment
 
 [View Requirements](https://docs.google.com/document/d/17WP76Vsi6ZrYlpYT8xOPXzLf42rQgtyKsOdVkyL5Jj0/edit#heading=h.nm1zk6pu7e78)
