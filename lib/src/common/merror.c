@@ -4,6 +4,7 @@
  * @author Roberto Nicolás Savinelli
  */
 
+#include <stdlib.h>
 #include "merror.h"
 
 static unsigned short _null_byte_size = sizeof('\0');
@@ -11,7 +12,7 @@ static unsigned short _null_byte_size = sizeof('\0');
 void error_create(error_t *error)
 {
 	error->message = NULL;
-	error->code = UNDEFINED;
+	error->code = UNDEFINED_ERROR;
 }
 
 void error_erase(error_t *error)
@@ -23,7 +24,7 @@ void error_erase(error_t *error)
 			free(error->message);
 			error->message = NULL;
 		}
-		error->code = UNDEFINED;
+		error->code = UNDEFINED_ERROR;
 	}
 }
 

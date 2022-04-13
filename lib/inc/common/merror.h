@@ -10,7 +10,7 @@
 
 #include "lib.h"
 
-#define UNDEFINED 0
+#define UNDEFINED_ERROR 0
 
 struct error
 {
