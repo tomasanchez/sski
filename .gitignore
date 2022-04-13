@@ -1,3 +1,16 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Husky
+.husky/
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Yarn
+*.lock
+
 # Prerequisites
 *.d
 
@@ -50,3 +63,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# VsCode
+.vscode/settings.json
+.vscode/c_cpp_properties.json
+.vscode/*.log
+
+# Outputs
+/log
