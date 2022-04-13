@@ -67,3 +67,29 @@ char *puerto(void);
  * @return el IP correspondiente
  */
 char *ip(void);
+
+// -----------------------------------------------------------
+//  Kernel
+// ------------------------------------------------------------
+
+char *ip_memoria(void);
+
+char *puerto_memoria(void);
+
+char *ip_cpu(void);
+
+char *puerto_cpu_dispatch(void);
+
+char *puerto_cpu_interrupt(void);
+
+char *puerto_escucha(void);
+
+char *algoritmo_planificacion(void);
+
+int estimacion_inicial(void);
+
+double alfa(void);
+
+int grado_multiprogramacion(void);
+
+int tiempo_maximo_bloqueado(void);

@@ -182,9 +182,9 @@ inline char *ip_memoria(void)
 
 #define PUERTO_MEMORIA "PUERTO_MEMORIA"
 
-inline int puerto_memoria(void)
+inline char *puerto_memoria(void)
 {
-	return config_int(PUERTO_MEMORIA);
+	return config_string(PUERTO_MEMORIA);
 }
 
 #define IP_CPU "IP_CPU"
@@ -196,23 +196,23 @@ inline char *ip_cpu(void)
 
 #define PUERTO_CPU_DISPATCH "PUERTO_CPU_DISPATCH"
 
-inline int puerto_cpu_dispatch(void)
+inline char *puerto_cpu_dispatch(void)
 {
-	return config_int(PUERTO_CPU_DISPATCH);
+	return config_string(PUERTO_CPU_DISPATCH);
 }
 
 #define PUERTO_CPU_INTERRUPT "PUERTO_CPU_INTERRUPT"
 
-inline int puerto_cpu_interrupt(void)
+inline char *puerto_cpu_interrupt(void)
 {
-	return config_int(PUERTO_CPU_INTERRUPT);
+	return config_string(PUERTO_CPU_INTERRUPT);
 }
 
 #define PUERTO_ESCUCHA "PUERTO_ESCUCHA"
 
-inline int puerto_escucha(void)
+inline char *puerto_escucha(void)
 {
-	return config_int(PUERTO_ESCUCHA);
+	return config_string(PUERTO_ESCUCHA);
 }
 
 #define ALGORITMO_PLANIFICACION "ALGORITMO_PLANIFICACION"
