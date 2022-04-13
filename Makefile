@@ -28,6 +28,7 @@ TEST_ALL=$(foreach dir, $(DIRS), cd $(dir) && $(MAKE_TEST) && cd .. &&)
 
 # TODO: Add additional module directories below here
 # ? eg. MEMORY_DIR=memory
+KERNEL_DIR=kernel
 
 # * DO NOT FORGET TO ADD YOUR DIRECTORIES HERE ---------------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ TEST_ALL=$(foreach dir, $(DIRS), cd $(dir) && $(MAKE_TEST) && cd .. &&)
 # ! Allways add your listed above directories here
 # ? eg. DIRS =$(SERVER_DIR) $(CLIENT_DIR) $(MEMORY_DIR)
 # TODO: Add the listed directories
-DIRS =
+DIRS = $(KERNEL_DIR)
 
 # * DO NOT FORGET TO ADD YOUR RULES IN ALL --------------------------------------------------------------------------------------------
 
@@ -101,3 +102,5 @@ lib:
 
 # ? memory:
 # ? cd $(MEMORY_DIR) && $(MAKE_COMPILE)
+kernel:
+	cd $(KERNEL_DIR) && $(MAKE_COMPILE)
