@@ -67,7 +67,6 @@ compile:
 	@mkdir -p $(BUILD_FOLDER)
 	@echo Building module: [$(MODULE_NAME)]...
 	$(CC) $(CFLAGS) $(MAIN_FILE) $(SOURCES) $(INCLUDES) $(LIBS) -o $(OUTPUT)
-	@touch $(OUTPUT_LOG)
 	@echo Build completed.
 
 # Compiles & Runs executable
@@ -80,7 +79,6 @@ test-build:
 	@mkdir -p $(BUILD_FOLDER)
 	@echo Preparing tests...
 	$(CC) $(TCFLAGS) $(TESTS) $(SOURCES) $(INCLUDES) $(LIBS) -o $(TEST_OUTPUT)
-	@touch $(OUTPUT_LOG)
 	@echo Test builds!
 
 # Runs tests cases
