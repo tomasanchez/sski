@@ -29,7 +29,9 @@ TEST_ALL=$(foreach dir, $(DIRS), cd $(dir) && $(MAKE_TEST) && cd .. &&)
 # TODO: Add additional module directories below here
 # ? eg. MEMORY_DIR=memory
 KERNEL_DIR=kernel
-
+CONSOLE_DIR=console
+MEMORY_DIR=memory
+CPU_DIR=cpu
 # * DO NOT FORGET TO ADD YOUR DIRECTORIES HERE ---------------------------------------------------------------------------------------
 
 #  Directories list
@@ -44,7 +46,7 @@ DIRS = $(KERNEL_DIR)
 # ! Allways add your rule for modules in here
 # ? eg. all: server client memory filesystem etc
 # TODO: add your rules
-all: kernel
+all: lib kernel
 
 # This targets are not files
 # ! Allways add your rules for modules in here too
@@ -60,7 +62,10 @@ compile:
 		@mkdir -p $(BUILD_DIR)
 		@mkdir -p $(LOG_DIR)
 		@touch $(LOG_DIR)/$(KERNEL_DIR).log
-		$(MAKE) all
+		@touch $(LOG_DIR)/$(CONSOLE_DIR).log
+		@touch $(LOG_DIR)/$(CPU_DIR).log
+		@touch $(LOG_DIR)/$(MEMORY_DIR).log
+		$(MAKE) all --no-print-directory
 
 # This rule
 test:
@@ -88,7 +93,6 @@ install:
 	cd $(COMMONS) && sudo make uninstall --no-print-directory && sudo make install --no-print-directory && cd ..
 	rm -rf $(COMMONS)
 	@echo "\nCommons installed\n"
-	$(MAKE) lib --no-print-directory
 	@echo Completed
 
 # ! Requieres root user
