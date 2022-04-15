@@ -38,7 +38,7 @@ CPU_DIR=cpu
 # ! Allways add your listed above directories here
 # ? eg. DIRS =$(SERVER_DIR) $(CLIENT_DIR) $(MEMORY_DIR)
 # TODO: Add the listed directories
-DIRS = $(KERNEL_DIR) $(MEMORY_DIR) $(CONSOLE_DIR)
+DIRS = $(KERNEL_DIR) $(CPU_DIR) $(MEMORY_DIR) $(CONSOLE_DIR)
 
 # * DO NOT FORGET TO ADD YOUR RULES IN ALL --------------------------------------------------------------------------------------------
 
@@ -46,15 +46,13 @@ DIRS = $(KERNEL_DIR) $(MEMORY_DIR) $(CONSOLE_DIR)
 # ! Allways add your rule for modules in here
 # ? eg. all: server client memory filesystem etc
 # TODO: add your rules
-all: lib kernel memory console
-
+all: lib kernel cpu memory console
 
 # This targets are not files
 # ! Allways add your rules for modules in here too
 # ? eg. .PHONY: server client memory filesystem etc  [...] clean install test
 # TODO: add your rules here
-.PHONY: kernel clean install test lib memory console
-
+.PHONY: kernel clean install test lib memory console cpu
 
 # ! AVOID MODIFYING THIS SECTION ------------------------------------------------------------------------------------------------------
 
@@ -111,6 +109,9 @@ lib:
 # ? cd $(MEMORY_DIR) && $(MAKE_COMPILE)
 kernel:
 	cd $(KERNEL_DIR) && $(MAKE_COMPILE)
+
+cpu:
+	cd $(CPU_DIR) && $(MAKE_COMPILE)
 
 memory:
 	cd $(MEMORY_DIR) && $(MAKE_COMPILE)
