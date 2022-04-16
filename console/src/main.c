@@ -7,8 +7,13 @@
  */
 #include "console.h"
 
+extern int yylex();
+
 int main(void)
 {
+
+	yylex();
+
 	if (on_init() NE ERROR)
 	{
 		on_client_run();
