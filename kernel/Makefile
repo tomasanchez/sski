@@ -47,7 +47,7 @@ MODULE_NAME = $(notdir $(shell pwd))
 OUTPUT = $(BUILD_FOLDER)/$(MODULE_NAME).out
 # Test Output file
 # ? eg. memory_test.out
-TEST_OUTPUT = $(BUILD_FOLDER)/$(MODULE_NAME).test.out
+TEST_OUTPUT = $(BUILD_FOLDER)/$(MODULE_NAME)_test.out
 # Leaks log file
 LEAKS = $(LOG_FOLDER)/$(MODULE_NAME)_leaks.log
 # Thread chek log file
