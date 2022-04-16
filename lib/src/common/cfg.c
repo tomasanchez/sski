@@ -170,6 +170,24 @@ inline char *ip(void)
 }
 
 // -----------------------------------------------------------
+//  Consola
+// ------------------------------------------------------------
+
+#define IP_KERNEL "IP_KERNEL"
+
+inline char *ip_kernel(void)
+{
+	return config_string(IP_KERNEL);
+}
+
+#define PUERTO_KERNEL "PUERTO_KERNEL"
+
+inline char *puerto_kernel(void)
+{
+	return config_string(PUERTO_KERNEL);
+}
+
+// -----------------------------------------------------------
 //  Kernel
 // ------------------------------------------------------------
 
