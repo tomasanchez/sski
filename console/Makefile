@@ -13,7 +13,7 @@ BISON = bison
 # Flex Flags
 FFLAGS = -l
 # Bison Flags
-BFLAGS = -Wcounterexamples -d
+BFLAGS = -d
 # Compiler Flags
 CFLAGS = -Wall -Wextra -g3
 # Test Compiler flags
