@@ -47,9 +47,11 @@ typedef struct ClientModule
 /**
  * @brief Se llama al Inicializar un modulo
  *
+ * @param argc cantidad de parámetros
+ *
  * @return SUCCESS o bien ERROR
  */
-int on_init(void);
+int on_init(int argc);
 
 /**
  * @brief Realiza el cierre liberando los recursos.
@@ -61,9 +63,12 @@ int on_before_exit(void);
 /**
  * @brief Event hanlder, cuando el servidor se encuentra atendiendo clientes
  *
+ * @param argc cantidad de parámetros
+ * @param argv los parámetros en sí
+ *
  * @return ERROR o SUCCESS
  */
-int on_client_run(void);
+int on_client_run(char *instructions_file);
 
 /**
  * @brief Event handler de establecer conexion

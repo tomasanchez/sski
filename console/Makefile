@@ -6,13 +6,21 @@
 
 # C Compiler
 CC = gcc
+# Flex
+FLEX = flex
+# Bison
+BISON = bison
+# Flex Flags
+FFLAGS = -l
+# Bison Flags
+BFLAGS = -Wcounterexamples -d
 # Compiler Flags
 CFLAGS = -Wall -Wextra -g3
 # Test Compiler flags
 TCFLAGS = -Wall -Wextra -Wshadow -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-pragmas -O3 -g3
 # Used libraries
 # * Add libraries when needed
-LIBS = -lreadline -lcommons -pthread
+LIBS = -lreadline -lcommons -pthread -lfl
 #Log Folder
 LOG_FOLDER=../log
 # Build Folder
@@ -21,6 +29,10 @@ BUILD_FOLDER=../build
 INCLUDE_DIRECTORY=./include/ ../lib/inc/
 # Source directory
 SOURCE_DIRECTORY=./src
+# Flex Files
+FLEX_FILES=./flex/*.l
+# Bison Files
+BISON_FILES=./bison/*.y
 # Test Directory
 TEST_DIRECTORY=./test
 # The main file path
@@ -64,7 +76,7 @@ compile:
 	@mkdir -p $(BUILD_FOLDER)
 	@mkdir -p $(LOG_FOLDER)
 	@echo Building module: [$(MODULE_NAME)]...
-	$(CC) $(CFLAGS) $(MAIN_FILE) $(SOURCES) $(INCLUDES) $(LIBS) -o $(OUTPUT)
+	$(FLEX) $(FFLAGS) $(FLEX_FILES) && $(BISON) $(BFLAGS) $(BISON_FILES) && $(CC) $(CFLAGS) $(MAIN_FILE) $(SOURCES) $(INCLUDES) $(LIBS) -o $(OUTPUT)
 	@echo Build completed.
 
 # Compiles & Runs executable
@@ -78,7 +90,7 @@ run: compile
 test-build:
 	@mkdir -p $(BUILD_FOLDER)
 	@echo Preparing tests...
-	$(CC) $(TCFLAGS) $(TESTS) $(SOURCES) $(INCLUDES) $(LIBS) -o $(TEST_OUTPUT)
+	$(FLEX) $(FFLAGS) $(FLEX_FILES) && $(BISON) $(BFLAGS) $(BISON_FILES) && $(CC) $(TCFLAGS) $(TESTS) $(SOURCES) $(INCLUDES) $(LIBS) -o $(TEST_OUTPUT)
 	@echo Test builds!
 
 # Runs tests cases

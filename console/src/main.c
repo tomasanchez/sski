@@ -7,11 +7,11 @@
  */
 #include "console.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	if (on_init() NE ERROR)
+	if (on_init(argc) NE ERROR)
 	{
-		on_client_run();
+		on_client_run(argv[1]);
 
 		return on_before_exit();
 	}
