@@ -52,11 +52,11 @@ void *instruction_to_stream(instruction_t *this)
 
 	size_t offset = 0lu;
 
-	memcpy(stream + offset, this->icode, sizeof(instcode_t));
+	memcpy(stream + offset, &this->icode, sizeof(instcode_t));
 	offset += sizeof(instcode_t);
-	memcpy(stream + offset, this->icode, sizeof(uint32_t));
+	memcpy(stream + offset, &this->icode, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
-	memcpy(stream + offset, this->icode, sizeof(uint32_t));
+	memcpy(stream + offset, &this->icode, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 
 	return stream;
