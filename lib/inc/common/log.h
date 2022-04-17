@@ -18,14 +18,13 @@
 // ------------------------------------------------------------
 
 /**
- * Instancia un logger con el nombre indicado.
+ * @brief Starts a Logger Singleton Instance.
  *
- * @param path la ruta en donde leer/escribir los loggins.
- * @param nombre_app el nombre del proceso que loggea.
- * @param consola si mostrar por consola o no
- * @return ERROR o SUCCESS
+ * @param app_name the application name.
+ * @param consola wether to show on console or not
+ * @return SUCCES or ERROR
  */
-int log_init(char *path, char *nombre_app, bool consola);
+int log_init(char *app_name, bool consola);
 
 /**
  * Libera la memoria del logger.

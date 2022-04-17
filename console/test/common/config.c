@@ -15,7 +15,7 @@
 // Relative path del CFG file
 #define CFG_RELATIVE_PATH "../config/console.cfg"
 // Nombre del CFG File
-#define CFG_FILE "console.cfg"
+#define CFG_FILE "console"
 
 CTEST(config, when_configInit_does_init)
 {

@@ -1,10 +1,10 @@
 /**
-* log.c
-*
-* @file Approach de un Loggger como Singleton
-* @author Tomás Sánchez
-* @since  09.03.2021
-*/
+ * log.c
+ *
+ * @file Approach de un Loggger como Singleton
+ * @author Tomás Sánchez
+ * @since  09.03.2021
+ */
 
 // Log header
 #include "log.h"
@@ -12,6 +12,8 @@
 #include <string.h>
 // mutex
 #include <pthread.h>
+// getcwd
+#include <limits.h>
 
 // ============================================================================================================
 //                               ***** Log -  Definiciones *****
@@ -34,34 +36,52 @@ static pthread_mutex_t mutex;
 //  Constructor y Destructor
 // ------------------------------------------------------------
 
-int log_init(char *path, char *nombre_app, bool consola)
+int log_init(char *app_name, bool consola)
 {
-    // La ruta del directorio contenedor
-    char carpeta_contenedora[MAX_CHARS] = "../log/";
 
-    if (!this)
-        this = log_create(strcat(carpeta_contenedora, path), nombre_app, consola && CONSOLA_ACITVA, MIN_LEVEL);
+	// La ruta del directorio contenedor
+	char carpeta_contenedora[MAX_CHARS] = "../log/";
+	char cwd[MAX_CHARS] = "";
 
-    if (this)
-    {
-        pthread_mutex_init(&mutex, NULL);
-        return SUCCESS;
-    }
-    else
-    {
-        perror(">> Logger Error");
-        return ERROR;
-    }
+	char *log_path = NULL;
+
+	if (getcwd(cwd, sizeof(carpeta_contenedora)) == NULL || strstr(cwd, app_name) != NULL || strstr(cwd, "build") != NULL)
+	{
+		log_path = strcat(carpeta_contenedora, app_name);
+	}
+	else
+	{
+		log_path = strcat(cwd, "/log/");
+		log_path = strcat(log_path, app_name);
+	}
+	log_path = strcat(log_path, ".log");
+
+	if (!log_path)
+		return ERROR;
+
+	if (!this)
+		this = log_create(log_path, app_name, consola && CONSOLA_ACITVA, MIN_LEVEL);
+
+	if (this)
+	{
+		pthread_mutex_init(&mutex, NULL);
+		return SUCCESS;
+	}
+	else
+	{
+		perror(">> Logger Error");
+		return ERROR;
+	}
 }
 
 inline void log_close(void)
 {
-    if (this)
-    {
-        pthread_mutex_destroy(&mutex);
-        log_destroy(this);
-        this = NULL;
-    }
+	if (this)
+	{
+		pthread_mutex_destroy(&mutex);
+		log_destroy(this);
+		this = NULL;
+	}
 }
 
 // -----------------------------------------------------------
@@ -70,14 +90,14 @@ inline void log_close(void)
 
 t_log *logger(void)
 {
-    return this;
+	return this;
 }
 
 void logger_lock(void)
 {
-    pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex);
 }
 void logger_unlock(void)
 {
-    pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex);
 }

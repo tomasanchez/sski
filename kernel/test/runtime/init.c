@@ -7,7 +7,7 @@
 
 CTEST(kernel_init, calling_log_init_does_not_fail)
 {
-	if (log_init(LOG_FILE, MODULE_NAME, true) == ERROR)
+	if (log_init(MODULE_NAME, true) == ERROR)
 		ASSERT_FAIL();
 
 	log_close();
@@ -15,7 +15,7 @@ CTEST(kernel_init, calling_log_init_does_not_fail)
 
 CTEST(kernel_init, calling_config_init_does_not_fail)
 {
-	if (config_init(CONF_FILE) == ERROR)
+	if (config_init(MODULE_NAME) == ERROR)
 		ASSERT_FAIL();
 
 	config_close();
@@ -33,7 +33,7 @@ CTEST(kernel_init, calling_servidor_create_does_create_a_valid_server)
 {
 	context_t context;
 
-	config_init(CONF_FILE);
+	config_init(MODULE_NAME);
 
 	context.server = servidor_create(ip(), puerto_escucha());
 

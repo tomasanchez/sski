@@ -17,7 +17,7 @@
 #include "lib.h"
 #include "conexion.h"
 
-#define CONF_FILE "console.cfg"
+#define CONF_FILE "console"
 
 #define RUNNING true
 

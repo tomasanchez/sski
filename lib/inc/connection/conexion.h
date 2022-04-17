@@ -26,7 +26,7 @@
  * @class
  * @public
  */
-typedef struct Conexion
+typedef struct Connection
 {
 	// Información del Servidor
 	struct addrinfo *info_server;
