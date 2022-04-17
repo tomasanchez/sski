@@ -51,12 +51,22 @@ LEAKS = $(LOG_FOLDER)/$(MODULE_NAME)_leaks.log
 # Thread chek log file
 HELGRIND = $(LOG_FOLDER)/$(MODULE_NAME)_threads.log
 
+# Flex/Lex.
+LEXC=flex
+LEX=flex/console.l
 
-all : compile run
+all : flex compile run
 
-.PHONY: all
+.PHONY: all flex
 
 # ! Avoid modifying this section - (Unless you know what you are doing) --------------------------------------------------------------
+# Lexer Generator
+flex:
+	@echo "Generating LExer - Needs FLEX installed..."
+	@mkdir -p src/console
+	@mkdir -p include/console
+	$(LEXC) $(LEX)
+	@echo "Built console's lexer"
 
 # Compilation rule
 # ? Generates .out executable
