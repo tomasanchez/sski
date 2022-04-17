@@ -5,6 +5,7 @@
 - [Operating Systems 1Q-2020](#operating-systems-1q-2020)
 	- [Code for GoOS' KISS Assignment](#code-for-goos-kiss-assignment)
 	- [Docs](#docs)
+		- [Modules](#modules)
 		- [Console](#console)
 	- [License](#license)
 
@@ -13,6 +14,10 @@
 [View Requirements](https://docs.google.com/document/d/17WP76Vsi6ZrYlpYT8xOPXzLf42rQgtyKsOdVkyL5Jj0/edit#heading=h.nm1zk6pu7e78)
 
 ## Docs
+
+### Modules
+
+![Class Diagram](./assets/docs/modules.svg)
 
 ### Console
 
