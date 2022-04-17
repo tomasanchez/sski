@@ -20,12 +20,12 @@
 // ------------------------------------------------------------
 
 /**
- * Levanta el archivo configuraciones de la carpeta config/.
+ * Singleton of Config: Reads from config/module_name.cfg.
  *
- * @param path el Nombre del archivo de configuraciones
+ * @param module_name el del modulo.
  * @return SUCCESS o ERROR
  */
-int config_init(char *path);
+int config_init(char *module_name);
 
 /**
  * Pregunta si la configuracion fue inicializada.

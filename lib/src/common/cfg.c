@@ -8,6 +8,8 @@
 
 #include "cfg.h"
 #include <commons/config.h>
+// getcwd
+#include <limits.h>
 
 // ============================================================================================================
 //                               ***** Configuracion -  Definiciones *****
@@ -104,13 +106,27 @@ inline long config_long(char *key)
 //  Constructor y Destructor
 // -----------------------------------------------------------
 
-int config_init(char *path)
+int config_init(char *app_name)
 {
 	// La ruta del directorio contenedor
 	char carpeta_contenedora[MAX_CHARS] = CONFIG_FOLDER_PATH;
+	char cwd[MAX_CHARS] = "";
+
+	char *cfg_path = NULL;
+
+	if (getcwd(cwd, sizeof(carpeta_contenedora)) == NULL || strstr(cwd, app_name) != NULL || strstr(cwd, "build") != NULL)
+	{
+		cfg_path = strcat(carpeta_contenedora, app_name);
+	}
+	else
+	{
+		cfg_path = strcat(cwd, "/config/");
+		cfg_path = strcat(cfg_path, app_name);
+	}
+	cfg_path = strcat(cfg_path, ".cfg");
 
 	if (!this)
-		this = config_create(strcat(carpeta_contenedora, path));
+		this = config_create(cfg_path);
 
 	if (this EQ NULL)
 	{
