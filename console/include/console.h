@@ -63,7 +63,7 @@ int on_before_exit(void);
  *
  * @return ERROR o SUCCESS
  */
-int on_client_run(void);
+int on_client_run(char *instructions_file_name, int process_size);
 
 /**
  * @brief Event handler de establecer conexion

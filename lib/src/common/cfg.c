@@ -186,6 +186,24 @@ inline char *ip(void)
 }
 
 // -----------------------------------------------------------
+//  Console
+// ------------------------------------------------------------
+
+#define PUERTO_KERNEL_KEY "PUERTO_KERNEL"
+
+inline char *puerto_kernel(void)
+{
+	return config_string(PUERTO_KERNEL_KEY);
+}
+
+#define IP_KERNEL_KEY "IP_KERNEL"
+
+inline char *ip_kernel(void)
+{
+	return config_string(IP_KERNEL_KEY);
+}
+
+// -----------------------------------------------------------
 //  Kernel
 // ------------------------------------------------------------
 

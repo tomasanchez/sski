@@ -2,9 +2,9 @@
 #define yyHEADER_H 1
 #define yyIN_HEADER 1
 
-#line 6 "include/console/lexer.h"
+#line 5 "./include/console/scanner.h"
 
-#line 8 "include/console/lexer.h"
+#line 7 "./include/console/scanner.h"
 
 #define  YY_INT_ALIGNED short int
 
@@ -206,13 +206,10 @@ void yyfree ( void *  );
 #define yywrap() (/*CONSTCOND*/1)
 #define YY_SKIP_YYWRAP
 
+#define YY_FLEX_LEX_COMPAT
 extern int yylineno;
 
-extern char *yytext;
-#ifdef yytext_ptr
-#undef yytext_ptr
-#endif
-#define yytext_ptr yytext
+extern char yytext[];
 
 #ifdef YY_HEADER_EXPORT_START_CONDITIONS
 #define INITIAL 0
@@ -469,9 +466,9 @@ extern int yylex (void);
 #undef yyTABLES_NAME
 #endif
 
-#line 46 "flex/console.l"
+#line 47 "./flex/console.l"
 
 
-#line 476 "include/console/lexer.h"
+#line 472 "./include/console/scanner.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

@@ -27,7 +27,8 @@ int init(context_t *context)
 
 	signals_init();
 
-	context->server = servidor_create(ip(), puerto());
+	context->server = servidor_create(ip(), puerto_escucha());
+	LOG_DEBUG("Escuchando en %s:%s", ip(), puerto_escucha());
 
 	return EXIT_SUCCESS;
 }

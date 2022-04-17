@@ -1,46 +1,47 @@
-/* Auto-Generated Header file name */
-%option header-file = "include/console/lexer.h"
-/* Auto-generated Source file name */
-%option outfile = "src/console/lexer.c"
-/* 8-bit Scanner (THREAD-SAFE)*/
-%option 8bit noyywrap
-/*For "include"*/
-%option stack
-/* Case insensitve option*/
-%option case-insensitive
-/* Count line number*/
-%option yylineno
-
-/* C/C++ code included inside %top{} are copied to both the `_lexer.c` and  the `_lexer.h` */
-%top{
-}
-
-/* C/C++ code included inside %{%} is copied to `_lexer.c` but not to the header-file*/
 %{
-/**
-* console_lexer.c
-*
-* @file  Auto-generated lexer by Flex.
-* @author Tomás Sánchez
-* @since  04.14.2022
-*/
 
-#include <stdlib.h>
+#include <stdio.h>
+#include "parser.h"
 
-// Avoiding warning implicit-function-declaration as fileno is no std in C
-extern int fileno(FILE *);
+#define ERROR_LEXICO(mensaje) yylexerrs++; char buffer[8229]; sprintf(buffer, "Error léxico: %s: %s", mensaje, yytext ); yyerror(buffer);
+
 %}
 
+%option outfile="./src/console/scanner.c"
+%option header-file="./include/console/scanner.h"
+
+%option 8bit
+%option stack
+%option noyywrap
+%option nounput
+%option noinput
+%option yylineno
+%option case-insensitive
+
+space [[:space:]]
+
+invalid_character [~`!@#$^&\[}[\]'"?\\>]
+
+alpha [[:alpha:]]
+
+digit [[:digit:]]
+
+constant {digit}+
 
 %%
-[ \t]
-("NO_OP")					{ puts("No operation");}
-("I/O")						{ puts("Input/Output");}
-("READ")					{ puts("Read");}
-("COPY")					{ puts("Copy");}
-("WRITE")					{ puts("Write");}
-("Exit")					{ puts("Exit");}
-[\n]						{ puts("End of line");}
-[0-9]+						{ puts("Number");}
-.							{ puts("Invalid symbol");}
+
+"NO_OP" { return NO_OP;}
+"I/O" { return IO;}
+"READ" { return READ;}
+"COPY" { return COPY;}
+"WRITE" { return WRITE;}
+"EXIT" { return EXIT;}
+
+{space}+ {} /* ignore new lines, tabulations and spaces */
+
+{constant} { yylval = strdup(yytext); return CONSTANT; }
+{constant}({invalid_character}|{alpha})({invalid_character}|{alpha}|{digit})* { ERROR_LEXICO("constante inválida"); }
+
+. { ERROR_LEXICO("caracter desconocido"); }
+
 %%
