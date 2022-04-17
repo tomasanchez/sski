@@ -6,20 +6,27 @@
  * @since  05.04.2021
  */
 #include "console.h"
+#include "context.h"
 
-extern int yylex();
-
-int main(void)
+int main(int argc, char *argv[])
 {
+	int exit_code = EXIT_FAILURE;
 
-	yylex();
+	context_t context = read_context(argc, argv);
 
-	if (on_init() NE ERROR)
+	if (context.status == CONTEXT_AVAILABLE)
 	{
-		on_client_run();
+		if (on_init() NE ERROR)
+		{
+			on_client_run(context.input_file_name, context.process_size);
 
-		return on_before_exit();
+			exit_code = on_before_exit();
+		}
 	}
 	else
-		return EXIT_FAILURE;
+	{
+		exit_code = context.status;
+	}
+
+	return exit_code;
 }

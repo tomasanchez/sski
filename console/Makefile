@@ -7,7 +7,7 @@
 # C Compiler
 CC = gcc
 # Compiler Flags
-CFLAGS = -Wall -Wextra -g3
+CFLAGS = -Wall -Wno-unused-function -Wextra -g3
 # Test Compiler flags
 TCFLAGS = -Wall -Wextra -Wshadow -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-variable -Wno-pragmas -O3 -g3
 # Used libraries
@@ -51,22 +51,36 @@ LEAKS = $(LOG_FOLDER)/$(MODULE_NAME)_leaks.log
 # Thread chek log file
 HELGRIND = $(LOG_FOLDER)/$(MODULE_NAME)_threads.log
 
-# Flex/Lex.
-LEXC=flex
-LEX=flex/console.l
+# Flex/Lex
+FLEX = flex
+FFLAGS = -l
+FLEX_FILES = ./flex/*.l
 
-all : flex compile run
+# Bison
+BISON = bison
+BFLAGS = -d
+BISON_FILES = ./bison/*.y
 
-.PHONY: all flex
+all : flex bison compile run
+
+.PHONY: all flex bison
 
 # ! Avoid modifying this section - (Unless you know what you are doing) --------------------------------------------------------------
-# Lexer Generator
+# Scanner Generator
 flex:
-	@echo "Generating LExer - Needs FLEX installed..."
+	@echo "Generating SCANNER - Needs FLEX installed..."
 	@mkdir -p src/console
 	@mkdir -p include/console
-	$(LEXC) $(LEX)
-	@echo "Built console's lexer"
+	$(FLEX) $(FFLAGS) $(FLEX_FILES)
+	@echo "Built console's scanner"
+
+# Parser Generator
+bison:
+	@echo "Generating PARSER - Needs BISON installed..."
+	@mkdir -p src/console
+	@mkdir -p include/console
+	$(BISON) $(BFLAGS) $(BISON_FILES)
+	@echo "Built console's scanner"
 
 # Compilation rule
 # ? Generates .out executable

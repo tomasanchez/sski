@@ -10,7 +10,11 @@
 #include "log.h"
 #include "cfg.h"
 #include "lib.h"
+#include "context.h"
 #include "network.h"
+#include "smartlist.h"
+#include "parser.h"
+#include "scanner.h"
 #include <signal.h>
 #include <pthread.h>
 #include <readline/readline.h>
@@ -22,6 +26,12 @@
 
 // El modulo servidor propiamente dicho
 static client_m_t this;
+
+t_list *input_file_commands;
+
+int yylexerrs = 0;
+
+extern int yynerrs;
 
 // ============================================================================================================
 //                                   ***** Funciones Privadas - Declaraciones  *****
@@ -40,6 +50,9 @@ static void cierre_forzoso(int signal);
  * @return int
  */
 static int conexion_init(void);
+
+static unsigned int analizar_instrucciones(char *instructions_file);
+
 // ============================================================================================================
 //                                   ***** Funciones Privadas - Definiciones  *****
 // ============================================================================================================
@@ -57,16 +70,46 @@ static void cierre_forzoso(int signal)
 
 static int conexion_init(void)
 {
-	char *port = puerto();
-	LOG_DEBUG("Inicializando Cliente en %s:%s", ip(), port);
-	this.conexion = conexion_cliente_create(ip(), port);
+	char *port = puerto_kernel();
+	char *ip = ip_kernel();
+
+	LOG_DEBUG("Inicializando Cliente en %s:%s", ip, port);
+	this.conexion = conexion_cliente_create(ip, port);
 
 	if (on_connect(&this.conexion, false) EQ SUCCESS)
 	{
-		LOG_DEBUG("Modulo conectado en %s:%s", ip(), port);
+		LOG_DEBUG("Modulo conectado en %s:%s", ip, port);
 	}
 
 	return SUCCESS;
+}
+
+static unsigned int analizar_instrucciones(char *instructions_file)
+{
+	unsigned int yyresult = 0;
+
+	yyin = fopen(instructions_file, "r");
+	switch (yyparse())
+	{
+	case YYACCEPT:
+		LOG_DEBUG("No se encontraron errores");
+		yyresult = YYACCEPT;
+		break;
+	case YYABORT:
+		LOG_ERROR("Se encontraron errores en la lista de instrucciones\n");
+		yyresult = YYABORT;
+		break;
+	case YYNOMEM:
+		LOG_ERROR("Memoria insuficiente\n");
+		yyresult = YYNOMEM;
+		break;
+	}
+
+	fclose(yyin);
+
+	yylex_destroy();
+
+	return yyresult;
 }
 
 // ============================================================================================================
@@ -96,6 +139,8 @@ int on_init(void)
 	// Attach del evento de interrupcion forzada.
 	signal(SIGINT, cierre_forzoso);
 
+	input_file_commands = list_smart_create(input_file_commands);
+
 	LOG_DEBUG("Modulo inicializado!");
 	this.status = RUNNING;
 	return conexion_init();
@@ -103,6 +148,10 @@ int on_init(void)
 
 int on_before_exit(void)
 {
+	int exit_code = EXIT_SUCCESS;
+
+	list_smart_fast_destroy(input_file_commands);
+
 	LOG_DEBUG("Cerrando Modulo...");
 
 	config_close();
@@ -115,24 +164,37 @@ int on_before_exit(void)
 	log_close();
 
 	if (this.signal == SIGINT)
-		exit(SIGINT);
+		exit_code = SIGINT;
 
-	return EXIT_SUCCESS;
+	return exit_code;
 }
 
 // ------------------------------------------------------------
 //  Event Handlers
 // ------------------------------------------------------------
 
-int on_client_run(void)
+int on_client_run(char *instructions_file_name, int process_size)
 {
+	LOG_DEBUG("Analizando sintáctica y semánticamente la lista de instrucciones");
+	unsigned int analysis_result = analizar_instrucciones(instructions_file_name);
 
-	while (this.status EQ RUNNING)
+	if (analysis_result != YYACCEPT)
+		this.status = not RUNNING;
+
+	if (yynerrs == 0 && yylexerrs == 0)
 	{
-		on_client_send(&this.conexion, on_client_read(readline(">> "), &this.status));
+		while (this.status EQ RUNNING)
+		{
+			while (input_file_commands->elements_count > 0)
+			{
+				on_client_send(&this.conexion, (char *)list_remove(input_file_commands, 0));
+			}
+
+			this.status = not RUNNING;
+		}
 	}
 
-	return EXIT_SUCCESS;
+	return analysis_result;
 }
 
 int on_connect(void *conexion, bool offline_mode)
