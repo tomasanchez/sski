@@ -79,7 +79,7 @@ static int conexion_init(void)
 
 int on_init(void)
 {
-	if (log_init("client.log", "Client", true) EQ ERROR)
+	if (log_init("console", true) EQ ERROR)
 		return ERROR;
 
 	LOG_DEBUG("Logger Inicializado");

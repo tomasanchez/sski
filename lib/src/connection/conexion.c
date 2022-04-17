@@ -29,7 +29,7 @@
  * @param puerto el puerto de conexión
  * @param conexion la referencia de la conexion a direccionar
  */
-int direccionar(char *, char *, conexion_t *);
+static int _address(char *, char *, conexion_t *);
 
 // ============================================================================================================
 //                               ***** Funciones Privadas - Definiciones *****
@@ -39,7 +39,7 @@ int direccionar(char *, char *, conexion_t *);
 //  Misc
 // ------------------------------------------------------------
 
-int direccionar(char *ip, char *port, conexion_t *this)
+int _address(char *ip, char *port, conexion_t *this)
 {
 	// Estructura local hints - Las hints para la creacion del socket.
 	struct addrinfo hints;
@@ -118,7 +118,7 @@ conexion_t conexion_cliente_create(char *ip, char *port)
 	// Estructura a Exportar conexion - La nueva conexión
 	conexion_t that;
 
-	direccionar(ip, port, &that);
+	_address(ip, port, &that);
 
 	// Creo el socket y la conexion
 	that.socket = socket(that.info_server->ai_family, that.info_server->ai_socktype, that.info_server->ai_protocol);
@@ -134,7 +134,7 @@ conexion_t conexion_servidor_create(char *ip, char *port)
 	conexion_t that = {NULL, 0, false};
 	int yes = 1;
 
-	if (direccionar(ip, port, &that) == ERROR)
+	if (_address(ip, port, &that) == ERROR)
 	{
 		return that;
 	}

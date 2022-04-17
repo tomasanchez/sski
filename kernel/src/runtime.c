@@ -10,10 +10,10 @@
 
 int init(context_t *context)
 {
-	if (log_init(LOG_FILE, MODULE_NAME, true) == ERROR)
+	if (log_init(MODULE_NAME, true) == ERROR)
 		return LOG_INITIALIZATION_ERROR;
 
-	if (config_init(CONF_FILE) == ERROR)
+	if (config_init("kernel") == ERROR)
 	{
 		LOG_ERROR("No se pudo levantar la configuracion.");
 		return CONFIGURATION_INITIALIZATION_ERROR;
