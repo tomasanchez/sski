@@ -95,7 +95,7 @@ compile:
 # Test compilation
 # ? Generates *_test.out executable
 run: compile
-	./$(OUTPUT)
+	./$(OUTPUT) ../$(MODULE_NAME)/instructions_test.txt 10
 
 # Test compilation
 # ? Generates *_test.out executable
