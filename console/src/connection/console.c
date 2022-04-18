@@ -16,16 +16,13 @@
 #include "parser.h"
 #include "scanner.h"
 #include <signal.h>
-#include <pthread.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 
 // ============================================================================================================
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
 // El modulo servidor propiamente dicho
-static client_m_t this;
+static console_t this;
 
 t_list *input_file_commands;
 
@@ -173,7 +170,7 @@ int on_before_exit(void)
 //  Event Handlers
 // ------------------------------------------------------------
 
-int on_client_run(char *instructions_file_name, int process_size)
+int on_run(char *instructions_file_name, int process_size)
 {
 	LOG_DEBUG("Analizando sintáctica y semánticamente la lista de instrucciones");
 	unsigned int analysis_result = analizar_instrucciones(instructions_file_name);
@@ -189,7 +186,7 @@ int on_client_run(char *instructions_file_name, int process_size)
 		{
 			while (input_file_commands->elements_count > 0)
 			{
-				on_client_send(&this.conexion, (char *)list_remove(input_file_commands, 0));
+				on_send_instruction(&this.conexion, (char *)list_remove(input_file_commands, 0));
 			}
 
 			this.status = not RUNNING;
@@ -240,7 +237,7 @@ char *on_client_read(char *line, bool *status)
 		return NULL;
 }
 
-int on_client_send(void *conexion, char *line)
+int on_send_instruction(void *conexion, char *line)
 {
 	if (line)
 	{

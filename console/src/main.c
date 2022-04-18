@@ -12,13 +12,13 @@ int main(int argc, char *argv[])
 {
 	int exit_code = EXIT_FAILURE;
 
-	context_t context = read_context(argc, argv);
+	context_t context = context_evaluate(argc, argv);
 
 	if (context.status == CONTEXT_AVAILABLE)
 	{
 		if (on_init() NE ERROR)
 		{
-			on_client_run(context.input_file_name, context.process_size);
+			on_run(context.input_file_name, context.process_size);
 
 			exit_code = on_before_exit();
 		}

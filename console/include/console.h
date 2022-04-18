@@ -25,7 +25,7 @@
  * @brief
  *
  */
-typedef struct ClientModule
+typedef struct ConsoleModule
 {
 	// La conexion del cliente
 	conexion_t conexion;
@@ -34,7 +34,7 @@ typedef struct ClientModule
 	// Detector de señales
 	int signal;
 
-} client_m_t;
+} console_t;
 
 // ============================================================================================================
 //                                   ***** Funciones Públicas  *****
@@ -63,7 +63,7 @@ int on_before_exit(void);
  *
  * @return ERROR o SUCCESS
  */
-int on_client_run(char *instructions_file_name, int process_size);
+int on_run(char *instructions_file_name, int process_size);
 
 /**
  * @brief Event handler de establecer conexion
@@ -90,4 +90,4 @@ char *on_client_read(char *line, bool *status);
  * @param line
  * @return int
  */
-int on_client_send(void *conexion, char *line);
+int on_send_instruction(void *conexion, char *line);
