@@ -85,7 +85,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/console.out",
-      "args": [],
+      "args": ["./console/entrada.txt", "10"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
