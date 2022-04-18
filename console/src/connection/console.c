@@ -143,7 +143,7 @@ int on_init(void)
 
 	LOG_DEBUG("Modulo inicializado!");
 	this.status = RUNNING;
-	return conexion_init();
+	return EXIT_SUCCESS;
 }
 
 int on_before_exit(void)
@@ -183,6 +183,8 @@ int on_client_run(char *instructions_file_name, int process_size)
 
 	if (yynerrs == 0 && yylexerrs == 0)
 	{
+		conexion_init();
+
 		while (this.status EQ RUNNING)
 		{
 			while (input_file_commands->elements_count > 0)
