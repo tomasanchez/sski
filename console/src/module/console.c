@@ -48,7 +48,13 @@ static void cierre_forzoso(int signal);
  */
 static int conexion_init(void);
 
-static unsigned int analizar_instrucciones(char *instructions_file);
+/**
+ * @brief Bison Parser Wrapper. Runs a syntax analysis.
+ *
+ * @param instructions_file a file path.
+ * @return unsigned int
+ */
+static unsigned int parse(char *instructions_file);
 
 // ============================================================================================================
 //                                   ***** Funciones Privadas - Definiciones  *****
@@ -59,7 +65,7 @@ static void cierre_forzoso(int signal)
 	if (signal == SIGINT)
 	{
 		this.signal = signal;
-		LOG_WARNING("Se detectó el cierre del proceso vía una señal");
+		LOG_WARNING("SIGNINT was received.");
 		on_before_exit();
 		exit(SIGINT);
 	}
@@ -70,39 +76,54 @@ static int conexion_init(void)
 	char *port = puerto_kernel();
 	char *ip = ip_kernel();
 
-	LOG_DEBUG("Inicializando Cliente en %s:%s", ip, port);
+	LOG_DEBUG("Connecting <Console> at %s:%s", ip, port);
 	this.conexion = conexion_cliente_create(ip, port);
 
 	if (on_connect(&this.conexion, false) EQ SUCCESS)
 	{
-		LOG_DEBUG("Modulo conectado en %s:%s", ip, port);
+		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
 	}
 
 	return SUCCESS;
 }
 
-static unsigned int analizar_instrucciones(char *instructions_file)
+static unsigned int parse(char *instructions_file)
 {
+	// Parser return result.
 	unsigned int yyresult = 0;
 
-	yyin = fopen(instructions_file, "r");
-	switch (yyparse())
+	if (instructions_file)
 	{
-	case YYACCEPT:
-		LOG_DEBUG("No se encontraron errores");
-		yyresult = YYACCEPT;
-		break;
-	case YYABORT:
-		LOG_ERROR("Se encontraron errores en la lista de instrucciones\n");
-		yyresult = YYABORT;
-		break;
-	case YYNOMEM:
-		LOG_ERROR("Memoria insuficiente\n");
-		yyresult = YYNOMEM;
-		break;
-	}
+		// Bison input file.
+		yyin = NULL;
+		yyin = fopen(instructions_file, "r");
 
-	fclose(yyin);
+		// When files did open.
+		if (yyin)
+		{
+			switch (yyparse())
+			{
+			case YYACCEPT:
+				LOG_DEBUG("No errors were found");
+				yyresult = YYACCEPT;
+				break;
+			case YYABORT:
+				LOG_ERROR("Syntax errors were found. Aborting...");
+				yyresult = YYABORT;
+				break;
+			case YYNOMEM:
+				LOG_ERROR("Not enough memory to process");
+				yyresult = YYNOMEM;
+				break;
+			}
+		}
+		else
+		{
+			LOG_ERROR("Could not open <'%s'> : No such file or directory", instructions_file);
+		}
+
+		fclose(yyin);
+	}
 
 	yylex_destroy();
 
@@ -122,23 +143,23 @@ int on_init(void)
 	if (log_init("console", true) EQ ERROR)
 		return ERROR;
 
-	LOG_DEBUG("Logger Inicializado");
+	LOG_DEBUG("Logger started.");
 
 	if (config_init(CONF_FILE) EQ ERROR)
 	{
-		LOG_ERROR("No se abrió la configuración.");
+		LOG_ERROR("Could not open Configuration file.");
 		log_close();
 		return ERROR;
 	}
 
-	LOG_DEBUG("Configuraciones cargadas");
+	LOG_DEBUG("Configurations loaded.");
 
 	// Attach del evento de interrupcion forzada.
 	signal(SIGINT, cierre_forzoso);
 
 	input_file_commands = list_smart_create(input_file_commands);
 
-	LOG_DEBUG("Modulo inicializado!");
+	LOG_DEBUG("Module started SUCCESSFULLY");
 	this.status = RUNNING;
 	return EXIT_SUCCESS;
 }
@@ -149,15 +170,15 @@ int on_before_exit(void)
 
 	list_smart_fast_destroy(input_file_commands);
 
-	LOG_DEBUG("Cerrando Modulo...");
+	LOG_WARNING("Closing Module...");
 
 	config_close();
-	LOG_DEBUG("Se liberó la configuración");
+	LOG_WARNING("Configurations unloaded.");
 
 	conexion_destroy(&this.conexion);
-	LOG_DEBUG("Conexion terminada.");
+	LOG_WARNING("Ended connection.");
 
-	LOG_DEBUG("Finalizado");
+	LOG_TRACE("Program ended.");
 	log_close();
 
 	if (this.signal == SIGINT)
@@ -172,8 +193,8 @@ int on_before_exit(void)
 
 int on_run(char *instructions_file_name, int process_size)
 {
-	LOG_DEBUG("Analizando sintáctica y semánticamente la lista de instrucciones");
-	unsigned int analysis_result = analizar_instrucciones(instructions_file_name);
+	LOG_TRACE("Running a Syntax Analysis...");
+	unsigned int analysis_result = parse(instructions_file_name);
 
 	if (analysis_result != YYACCEPT)
 		this.status = not RUNNING;
@@ -200,17 +221,17 @@ int on_connect(void *conexion, bool offline_mode)
 {
 	if (offline_mode)
 	{
-		LOG_WARNING("Modulo trabajando sin conexion...");
+		LOG_WARNING("Module working in offline mode.");
 		return ERROR;
 	}
 
 	while (!conexion_esta_conectada(*(conexion_t *)conexion))
 	{
-		LOG_TRACE("Intentando conectar...");
+		LOG_TRACE("Connecting...");
 
 		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
 		{
-			LOG_ERROR("No se pudo realizar la conexion...");
+			LOG_ERROR("Could not connect.");
 			sleep(TIEMPO_ESPERA);
 		}
 	}
