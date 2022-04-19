@@ -1,9 +1,20 @@
+/**
+ * @file context.c
+ * @author Tomás Sánchez <tosanchez@frba.utn.edu.ar>
+ * @brief
+ * @version 0.1
+ * @date 04-18-2022
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #include <stdlib.h>
 
 #include "context.h"
 #include "lib.h"
 
-context_t read_context(int argc, char *argv[])
+context_t context_evaluate(int argc, char *argv[])
 {
 	context_t context = {NULL, 0, CONTEXT_UNAVAILABLE};
 

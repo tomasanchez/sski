@@ -84,12 +84,12 @@ CTEST_TEARDOWN(client_send)
 
 CTEST2(client_send, no_se_envia_null)
 {
-	int result = on_client_send((void *)&data->conexion, NULL);
+	int result = on_send_instruction((void *)&data->conexion, NULL);
 	ASSERT_EQUAL(ERROR, result);
 }
 
 CTEST2(client_send, no_se_envia_sin_conexion)
 {
-	int result = on_client_send((void *)&data->conexion, strdup(LINE_STR));
+	int result = on_send_instruction((void *)&data->conexion, strdup(LINE_STR));
 	ASSERT_EQUAL(ERROR, result);
 }
