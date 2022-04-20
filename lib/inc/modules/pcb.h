@@ -13,7 +13,7 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
-#include <smartlist.h>
+#include "smartlist.h"
 
 /**
  * @brief Process Control Block.
@@ -49,3 +49,27 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation);
  * @param pcb to be deleted
  */
 void pcb_destroy(pcb_t *pcb);
+
+/**
+ * @brief Serializes a PCB.
+ *
+ * @param pcb the instance.
+ * @return a stream containing the pcb data.
+ */
+void *pcb_to_stream(pcb_t *pcb);
+
+/**
+ * @brief Obtains the size in bytes of a PCB instance.
+ *
+ * @param pcb the instance.
+ * @return the number of bytes in use.
+ */
+size_t pcb_bytes_size(pcb_t *pcb);
+
+/**
+ * @brief Recovers a PCB from a stream.
+ *
+ * @param stream to be deserialized
+ * @return a recovered PCB instance
+ */
+pcb_t *pcb_from_stream(void *stream);
