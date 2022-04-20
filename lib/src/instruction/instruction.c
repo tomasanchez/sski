@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "instruction.h"
+#include "smartlist.h"
 
 // Global Variable for list operations
 size_t _instruction_offset = 0lu;
@@ -88,4 +89,22 @@ void *instruction_reduce(void *buffer, void *next)
 	memcpy(&buffer + _instruction_offset, next, offset);
 	_instruction_offset += offset;
 	return buffer;
+}
+
+void *instruction_list_from(void *stream)
+{
+	t_list *list = list_create();
+	uint32_t size = 0;
+	size_t offset = 0;
+
+	memcpy(&size, stream, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+
+	for (uint32_t i = 0; i < size; i++)
+	{
+		list_smart_add(list, instruction_from_stream(stream + offset));
+		offset += sizeof(instruction_t);
+	}
+
+	return list;
 }

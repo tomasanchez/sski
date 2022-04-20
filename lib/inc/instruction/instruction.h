@@ -107,3 +107,11 @@ instruction_t *instruction_from_stream(void *stream);
  * @return the accumulator
  */
 void *instruction_reduce(void *buffer, void *next);
+
+/**
+ * @brief List instructions from a stream.
+ *
+ * @param stream must be [size (uint32_t)][data (instruction_t)][data...]
+ * @return a list.
+ */
+void *instruction_list_from(void *stream);
