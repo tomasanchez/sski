@@ -1,10 +1,10 @@
 /**
-* thread_manager.c
-*
-* @file Manager de Threads
-* @author Tomás Sánchez
-* @since  05.08.2021
-*/
+ * thread_manager.c
+ *
+ * @file Manager de Threads
+ * @author Tomás Sánchez
+ * @since  05.08.2021
+ */
 
 #include "thread_manager.h"
 #include <signal.h>
@@ -15,23 +15,6 @@
 //                               ***** Estructuras y Definiciones *****
 // ============================================================================================================
 
-/**
- * @brief Manager de threads 
- */
-typedef struct ThreadManager
-{
-	// Listado de Threads
-	pthread_t *threads;
-	// MUTEX de los Threads
-	pthread_mutex_t mutex;
-	// Cantidad Threads
-	int size;
-	// Cantidad maxima de threads
-	int max_threads;
-	// Si se inició o no
-	bool init;
-} thread_manager_t;
-
 // El manager en sí
 static thread_manager_t this;
 
@@ -40,22 +23,24 @@ static thread_manager_t this;
 // ============================================================================================================
 
 /**
- * @brief Busca en la lista el índice del thread
- * 
- * @return el índice o ERROR 
+ * @brief Retreives the current thread index in a thread manager.
+ *
+ * @param tm the manager reference
+ * @return the index or Error.
  */
-int conseguir_indice(void);
-
+static ssize_t thread_manager_get_index(const thread_manager_t *tm);
 // ============================================================================================================
 //                               ***** Funciones Privadas - Definiciones *****
 // ============================================================================================================
-int conseguir_indice(void)
+
+static ssize_t
+thread_manager_get_index(const thread_manager_t *tm)
 {
-	// El THREAD ID del thread llamante.
+	// The calling thread ID (current thread).
 	pthread_t id = pthread_self();
 
-	for (int i = 0; i < this.size; i++)
-		if (this.threads[i] EQ id)
+	for (ssize_t i = 0l; i < tm->size; i++)
+		if (tm->threads[i] EQ id)
 			return i;
 
 	return ERROR;
@@ -68,15 +53,42 @@ int conseguir_indice(void)
 //  Inicializador y Terminador
 // ------------------------------------------------------------
 
+thread_manager_t
+new_thread_manager()
+{
+	thread_manager_t tm;
+
+	tm.max_threads = N_THREADS;
+	tm.threads = calloc(tm.max_threads, sizeof(pthread_t));
+	pthread_mutex_init(&tm.mutex, NULL);
+	tm.init = true;
+	tm.size = 0;
+
+	return tm;
+}
+
+void thread_manager_destroy(thread_manager_t *tm)
+{
+
+	if (tm->init)
+	{
+		thread_manager_end_threads(tm);
+
+		pthread_mutex_destroy(&tm->mutex);
+
+		free(tm->threads);
+	}
+
+	tm->threads = NULL;
+	tm->size = 0;
+	tm->init = false;
+}
+
 int thread_manager_init(void)
 {
 	if (!this.init)
 	{
-		this.size = 0;
-		this.max_threads = N_THREADS;
-		this.threads = calloc(this.max_threads, sizeof(pthread_t));
-		pthread_mutex_init(&this.mutex, NULL);
-		this.init = true;
+		this = new_thread_manager();
 	}
 
 	return SUCCESS;
@@ -84,19 +96,7 @@ int thread_manager_init(void)
 
 void thread_manager_end(void)
 {
-	if (this.init)
-	{
-		for (int i = 0; i < this.size; i++)
-		{
-			pthread_kill(this.threads[i], SIGTERM);
-		}
-
-		pthread_mutex_destroy(&this.mutex);
-
-		free(this.threads);
-	}
-
-	this.init = false;
+	thread_manager_destroy(&this);
 }
 
 // ------------------------------------------------------------
@@ -119,33 +119,76 @@ inline void mutex_unlock()
 //  Agregar y Borrar thread
 // ------------------------------------------------------------
 
+void thread_manager_launch(thread_manager_t *tm,
+						   void *(*thread_routine)(void *),
+						   void *__restrict args)
+{
+	if (tm->init)
+	{
+		pthread_mutex_lock(&tm->mutex);
+
+		if (tm->size < tm->max_threads)
+		{
+			pthread_create(&tm->threads[tm->size], NULL, thread_routine, args);
+			pthread_detach(tm->threads[tm->size]);
+		}
+		else
+		{
+			tm->max_threads *= 2;
+			tm->threads = realloc(tm->threads, tm->max_threads * sizeof(pthread_t));
+			pthread_create(&tm->threads[tm->size], NULL, thread_routine, args);
+			pthread_detach(tm->threads[tm->size]);
+		}
+
+		tm->size++;
+
+		pthread_mutex_unlock(&tm->mutex);
+	}
+}
+
 void thread_manager_lanzar(void *(*rutina)(void *), void *__restrict argumentos)
 {
-	// Mientras haya lugar, agrego a la lista...
-	// Necesita mutua exclusión
-	THREAD_SAFE(
-		if (this.size < this.max_threads)
-		{
-			pthread_create(&this.threads[this.size], NULL, rutina, argumentos);
-			pthread_detach(this.threads[this.size]);
-		} else
-		{
-			this.max_threads *= 2;
-			this.threads = realloc(this.threads, this.max_threads * sizeof(*(this.threads)));
-			pthread_create(&this.threads[this.size], NULL, rutina, argumentos);
-			pthread_detach(this.threads[this.size]);
-		} this.size++;);
+	thread_manager_launch(&this, rutina, argumentos);
+}
+
+int thread_manager_end_thread(thread_manager_t *tm)
+{
+	pthread_mutex_lock(&tm->mutex);
+	// Pthread ID.
+	ssize_t t_id = thread_manager_get_index(tm);
+
+	// When no ID found fail.
+	if (t_id == ERROR)
+		return EXIT_FAILURE;
+
+	// Move the last positition to the deleted one.
+	if (tm->size > 0)
+		tm->threads[t_id] = tm->threads[tm->size - 1];
+
+	tm->size--;
+
+	pthread_mutex_unlock(&tm->mutex);
+
+	pthread_exit(NULL);
+
+	return EXIT_SUCCESS;
+}
+
+void thread_manager_end_threads(thread_manager_t *tm)
+{
+
+	pthread_mutex_lock(&tm->mutex);
+
+	for (ssize_t i = 0l; i < tm->size; i++)
+		pthread_kill(tm->threads[i], SIGTERM);
+
+	tm->size = 0;
+	pthread_mutex_unlock(&tm->mutex);
 }
 
 void thread_manager_terminar_thread(void)
 {
-	// Se remueve de la lista, neceista mutua exclusión.
-	THREAD_SAFE(
-		int i = conseguir_indice();
-		this.threads[i] = this.threads[this.size - 1];
-		this.size--;);
-
-	pthread_exit(NULL);
+	thread_manager_end_thread(&this);
 }
 
 void thread_manager_terminar_thread_all(void)
