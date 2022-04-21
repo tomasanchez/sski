@@ -10,14 +10,19 @@
 
 int on_init(context_t *context)
 {
-	if (log_init(MODULE_NAME, true) == ERROR)
+	if (log_init(MODULE_NAME, true) EQ ERROR)
 		return LOG_INITIALIZATION_ERROR;
 
-	if (config_init("kernel") == ERROR)
+	LOG_DEBUG("Logger started.");
+
+	if (config_init(MODULE_NAME) EQ ERROR)
 	{
-		LOG_ERROR("No se pudo levantar la configuracion.");
+		LOG_ERROR("Could not open Configuration file.");
+		log_close();
 		return CONFIGURATION_INITIALIZATION_ERROR;
 	}
+
+	LOG_DEBUG("Configurations loaded.");
 
 	thread_manager_init();
 
@@ -28,7 +33,10 @@ int on_init(context_t *context)
 	signals_init();
 
 	context->server = servidor_create(ip(), puerto_escucha());
-	LOG_DEBUG("Escuchando en %s:%s", ip(), puerto_escucha());
+
+	LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
+
+	LOG_DEBUG("Kernel Module started SUCCESSFULLY");
 
 	return EXIT_SUCCESS;
 }
@@ -37,11 +45,11 @@ int on_run(context_t *context)
 {
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
-		LOG_ERROR("No se pudo levantar el servidor.");
+		LOG_ERROR("Server could not listen.");
 		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("Servidor a la espera de clientes...");
+	LOG_DEBUG("Server listenning. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(context->server), routine);
@@ -51,11 +59,12 @@ int on_run(context_t *context)
 
 void on_before_exit(context_t *context, int exit_code)
 {
-	LOG_DEBUG("Finalizando ejecucion.\n");
+	LOG_WARNING("Closing Kernel...");
 
 	thread_manager_end();
 
 	servidor_destroy(&(context->server));
+	LOG_WARNING("Server has stopped.");
 
 	/* BO finalization routines */
 
@@ -63,6 +72,8 @@ void on_before_exit(context_t *context, int exit_code)
 
 	config_close();
 
+	LOG_WARNING("Configurations unloaded.");
+	LOG_TRACE("Kernel ended with status <%d>.", exit_code);
 	log_close();
 
 	exit(exit_code);
