@@ -81,7 +81,7 @@ instruction_t *instruction_create(instcode_t icode, uint32_t param0, uint32_t pa
  *
  * @param instruction to be deleted
  */
-void instruction_destroy(instruction_t *instruction);
+void instruction_destroy(void *instruction);
 
 /**
  * @brief Maps an instruction to a Stream.
@@ -89,7 +89,7 @@ void instruction_destroy(instruction_t *instruction);
  * @param instruction to be mapped
  * @return a serialized stream containing an instruction.
  */
-void *instruction_to_stream(instruction_t *instruction);
+void *instruction_to_stream(void *instruction);
 
 /**
  * @brief Instantiates an instruction from a stream.
@@ -98,3 +98,20 @@ void *instruction_to_stream(instruction_t *instruction);
  * @return instruction_t*
  */
 instruction_t *instruction_from_stream(void *stream);
+
+/**
+ * @brief Reduces an instruction into a buffer.
+ *
+ * @param buffer the accumulator
+ * @param next the next instruction
+ * @return the accumulator
+ */
+void *instruction_reduce(void *buffer, void *next);
+
+/**
+ * @brief List instructions from a stream.
+ *
+ * @param stream must be [size (uint32_t)][data (instruction_t)][data...]
+ * @return a list.
+ */
+void *instruction_list_from(void *stream);
