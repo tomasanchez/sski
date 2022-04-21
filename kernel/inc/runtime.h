@@ -18,8 +18,8 @@ typedef struct context
 	servidor_t server;
 } context_t;
 
-int init(context_t *context);
+int on_init(context_t *context);
 
-int run(context_t *context);
+int on_run(context_t *context);
 
-void stop(context_t *context, int exit_code);
+void on_before_exit(context_t *context, int exit_code);

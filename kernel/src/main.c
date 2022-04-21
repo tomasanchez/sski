@@ -12,10 +12,10 @@ context_t g_context;
 
 int main(void)
 {
-	int exit_code = init(&g_context);
+	int status_code = on_init(&g_context);
 
-	if (exit_code == EXIT_SUCCESS)
-		exit_code = run(&g_context);
+	if (status_code == EXIT_SUCCESS)
+		status_code = on_run(&g_context);
 
-	stop(&g_context, exit_code);
+	on_before_exit(&g_context, status_code);
 }

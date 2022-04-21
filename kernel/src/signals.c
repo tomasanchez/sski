@@ -14,7 +14,7 @@ static void
 _sigint()
 {
 	LOG_WARNING("Se capturó la señal SIGINT");
-	stop(&(g_context), SIGINT);
+	on_before_exit(&(g_context), SIGINT);
 }
 
 static void

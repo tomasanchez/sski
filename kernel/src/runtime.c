@@ -8,7 +8,7 @@
 #include "runtime.h"
 #include "main.h"
 
-int init(context_t *context)
+int on_init(context_t *context)
 {
 	if (log_init(MODULE_NAME, true) == ERROR)
 		return LOG_INITIALIZATION_ERROR;
@@ -33,7 +33,7 @@ int init(context_t *context)
 	return EXIT_SUCCESS;
 }
 
-int run(context_t *context)
+int on_run(context_t *context)
 {
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
@@ -49,7 +49,7 @@ int run(context_t *context)
 	return EXIT_SUCCESS;
 }
 
-void stop(context_t *context, int exit_code)
+void on_before_exit(context_t *context, int exit_code)
 {
 	LOG_DEBUG("Finalizando ejecucion.\n");
 
