@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "main.h"
-#include "runtime.h"
+#include "kernel.h"
 #include "ctest.h"
 
 CTEST(kernel_init, calling_log_init_does_not_fail)

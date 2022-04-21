@@ -6,7 +6,7 @@
 #include "signals.h"
 #include "lib.h"
 #include "log.h"
-#include "runtime.h"
+#include "kernel.h"
 
 extern context_t g_context;
 

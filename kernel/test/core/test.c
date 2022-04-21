@@ -14,7 +14,7 @@
 #define CTEST_COLOR_OK
 
 #include "ctest.h"
-#include "runtime.h"
+#include "kernel.h"
 
 context_t g_context;
 
