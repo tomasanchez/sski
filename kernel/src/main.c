@@ -6,7 +6,7 @@
  * @since  03.17.2022
  */
 
-#include "runtime.h"
+#include "kernel.h"
 
 context_t g_context;
 

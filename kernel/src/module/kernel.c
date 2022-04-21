@@ -5,7 +5,7 @@
 #include "routines.h"
 #include "thread_manager.h"
 #include "signals.h"
-#include "runtime.h"
+#include "kernel.h"
 #include "main.h"
 
 int on_init(context_t *context)
