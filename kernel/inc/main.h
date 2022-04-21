@@ -9,6 +9,3 @@
 #pragma once
 
 #define MODULE_NAME "kernel"
-
-#define LOG_FILE "kernel.log"
-#define CONF_FILE "kernel.cfg"
