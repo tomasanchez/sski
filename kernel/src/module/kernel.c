@@ -1,3 +1,18 @@
+/**
+ * @file kernel.c
+ * @author Roberto Savinelli <rsavinelli@frba.utn.edu.ar>
+ * @brief Updated version by Tomas Sanchez
+ * @version 0.2
+ * @date 04-22-2022
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
+// ============================================================================================================
+//                                   ***** Dependencies  *****
+// ============================================================================================================
+
 #include "server.h"
 #include "lib.h"
 #include "log.h"
@@ -7,6 +22,46 @@
 #include "signals.h"
 #include "kernel.h"
 #include "main.h"
+
+// ============================================================================================================
+//                                   ***** Private Functions  *****
+// ============================================================================================================
+/**
+ * @brief Initializes the Kernel Context
+ *
+ * @param context the kernel context
+ * @return success or failure
+ */
+static int on_init_context(context_t *context);
+
+/**
+ * @brief Destroy the context elements
+ *
+ * @param context the Kernel Context
+ */
+static void on_delete_context(context_t *context);
+
+static int on_init_context(context_t *context)
+{
+	context->server = servidor_create(ip(), puerto_escucha());
+	// TODO : Init CPU Connection
+	// TODO: Init Memory Connection
+	context->tm = new_thread_manager();
+
+	return EXIT_SUCCESS;
+}
+
+static void
+on_delete_context(context_t *context)
+{
+	servidor_destroy(&(context->server));
+	// TODO : Destroy CPU Connection
+	// TODO: Destroy Memory Connection
+	thread_manager_destroy(&(context->tm));
+}
+// ============================================================================================================
+//                                   ***** Public Functions  *****
+// ============================================================================================================
 
 int on_init(context_t *context)
 {
@@ -24,15 +79,16 @@ int on_init(context_t *context)
 
 	LOG_DEBUG("Configurations loaded.");
 
-	thread_manager_init();
+	if (on_init_context(context) EQ EXIT_SUCCESS)
+	{
+		LOG_DEBUG("Context initializated");
+	}
 
 	/* BO initialization routines */
 
 	/* EO initialization routines */
 
 	signals_init();
-
-	context->server = servidor_create(ip(), puerto_escucha());
 
 	LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
 
@@ -43,6 +99,9 @@ int on_init(context_t *context)
 
 int on_run(context_t *context)
 {
+
+	// TODO: use different threads for each connection.
+
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
 		LOG_ERROR("Server could not listen.");
@@ -61,9 +120,8 @@ void on_before_exit(context_t *context, int exit_code)
 {
 	LOG_WARNING("Closing Kernel...");
 
-	thread_manager_end();
+	on_delete_context(context);
 
-	servidor_destroy(&(context->server));
 	LOG_WARNING("Server has stopped.");
 
 	/* BO finalization routines */

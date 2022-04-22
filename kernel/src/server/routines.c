@@ -8,6 +8,8 @@
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
+extern context_t g_context;
+
 // ============================================================================================================
 //                                   ***** Funciones Privadas  *****
 // ============================================================================================================
@@ -47,24 +49,24 @@ void *routine(void *fd)
 			if (opcode == DC)
 			{
 				// Connection closed
-				LOG_WARNING("El cliente en el socket %d terminó la conexión.", sender_fd);
+				LOG_WARNING("Client <%d> has ended connection", sender_fd);
 			}
 			else
 			{
-				LOG_ERROR("Error detectado al utilizar recv() con el cliente %d.", sender_fd);
-				LOG_DEBUG("Terminando conexión con el cliente %d.", sender_fd);
+				LOG_ERROR("Error while recieving a message from Client <%d>", sender_fd);
+				LOG_DEBUG("Lost connection with Client <%d>", sender_fd);
 			}
 
 			servidor_desconectar_cliente(sender_fd); // Bye!
 
-			thread_manager_terminar_thread();
+			thread_manager_end_thread(&g_context.server.tm);
 
 			return NULL;
 		}
 		else
 		{
 			// We got some good server from a client
-			LOG_TRACE("Recibí el código de operación <%s> del cliente %d.", opcode_to_string(opcode), sender_fd);
+			LOG_TRACE("Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
 
 			switch (opcode)
 			{
@@ -73,7 +75,7 @@ void *routine(void *fd)
 				break;
 
 			default:
-				LOG_ERROR("Código de operación recibido del cliente %d es inválido: %d.", sender_fd, opcode);
+				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
 				break;
 			}
 		}

@@ -23,6 +23,7 @@ typedef struct Context
 	servidor_t server;
 	// TODO: Add Kernel-Memory Client dependency
 	// TODO: Add Kernel-CPU Client dependency
+	thread_manager_t tm;
 } context_t;
 
 /**
