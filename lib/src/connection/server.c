@@ -49,51 +49,51 @@ static void *recibir_buffer(int socket, ssize_t *bytes);
 //  Streams
 // ------------------------------------------------------------
 
-static int recibir_operacion(int iv_socket)
+static int recibir_operacion(int socket)
 {
-    // Variable a Exportar Opcode - el número de operación.
-    int ev_opcode;
-    // Valor de Retorno Bytes - Los bytes recibidos o -1 si error.
-    ssize_t rv_bytes;
+	// Variable a Exportar Opcode - el número de operación.
+	int opcode;
+	// Valor de Retorno Bytes - Los bytes recibidos o -1 si error.
+	ssize_t recv_ret;
 
-    rv_bytes = recv(iv_socket, &ev_opcode, sizeof(int), MSG_WAITALL);
+	recv_ret = recv(socket, &opcode, sizeof(int), MSG_WAITALL);
 
-    if (rv_bytes <= 0)
-        return rv_bytes;
+	if (recv_ret <= 0)
+		return recv_ret;
 
-    else
-        return ev_opcode;
+	else
+		return opcode;
 }
 
-static void *recibir_buffer(int iv_socket, ssize_t *iv_size)
+static void *recibir_buffer(int socket, ssize_t *bytes_size)
 {
-    /**
-     * Referencia a Exportar buffer - el buffer recibido;
-     */
-    void *er_buffer;
+	/**
+	 * Referencia a Exportar buffer - el buffer recibido;
+	 */
+	void *buffer_stream;
 
-    // Variable local tamaño
-    size_t lv_size = 0;
+	// Variable local tamaño
+	size_t size = 0;
 
-    // Valor de Retorno bytes - Los bytes recibidos o ERROR
-    ssize_t rv_bytes = recv(iv_socket, &lv_size, sizeof(int), MSG_WAITALL);
+	// Valor de Retorno bytes - Los bytes recibidos o ERROR
+	ssize_t recv_ret = recv(socket, &size, sizeof(int), MSG_WAITALL);
 
-    if (rv_bytes EQ ERROR)
-        return NULL;
+	if (recv_ret EQ ERROR)
+		return NULL;
 
-    er_buffer = malloc(lv_size);
+	buffer_stream = malloc(size);
 
-    rv_bytes = recv(iv_socket, er_buffer, lv_size, MSG_WAITALL);
+	recv_ret = recv(socket, buffer_stream, size, MSG_WAITALL);
 
-    if (rv_bytes EQ ERROR)
-    {
-        free(er_buffer);
-        return NULL;
-    }
+	if (recv_ret EQ ERROR)
+	{
+		free(buffer_stream);
+		return NULL;
+	}
 
-    *iv_size = lv_size;
+	*bytes_size = size;
 
-    return er_buffer;
+	return buffer_stream;
 }
 
 // ============================================================================================================
@@ -104,72 +104,76 @@ static void *recibir_buffer(int iv_socket, ssize_t *iv_size)
 //  Constructor / Destructor
 // ------------------------------------------------------------
 
-servidor_t servidor_create(char *iv_ip, char *iv_puerto)
+servidor_t servidor_create(char *ip, char *port)
 {
-    // Estructura a Exportar servidor - el nuevo servidor
-    servidor_t es_servidor;
+	// Estructura a Exportar servidor - el nuevo servidor
+	servidor_t server;
 
-    es_servidor.conexion = conexion_servidor_create(iv_ip, iv_puerto);
+	server.conexion = conexion_servidor_create(ip, port);
 
-    es_servidor.iniciado = false;
+	server.iniciado = false;
 
-    return es_servidor;
+	server.tm = new_thread_manager();
+
+	return server;
 }
 
-void servidor_destroy(servidor_t *is_servidor)
+void servidor_destroy(servidor_t *server)
 {
-    if (is_servidor)
-        conexion_destroy(&is_servidor->conexion);
+	if (server)
+		conexion_destroy(&server->conexion);
+
+	thread_manager_destroy(&server->tm);
 }
 
 // -----------------------------------------------------------
 //  Conectividad
 // ------------------------------------------------------------
 
-inline int servidor_escuchar(servidor_t *is_servidor)
+inline int servidor_escuchar(servidor_t *server)
 {
-    return conexion_escuchar(&is_servidor->conexion);
+	return conexion_escuchar(&server->conexion);
 }
 
-void servidor_run(servidor_t *is_servidor, void *(*rutina)(void *))
+void servidor_run(servidor_t *server, void *(*interceptor)(void *))
 {
-    errno = 0;
-    // La remote address
-    struct sockaddr_storage remoteaddr;
-    // La longigutd de la address
-    socklen_t addrlen = sizeof remoteaddr;
+	errno = 0;
+	// La remote address
+	struct sockaddr_storage remoteaddr;
+	// La longigutd de la address
+	socklen_t addrlen = sizeof remoteaddr;
 
-    // Acepto un nuevo cliente
-    int fd = ERROR;
+	// Acepto un nuevo cliente
+	int fd = ERROR;
 
-    fd = accept(is_servidor->conexion.socket, (struct sockaddr *)&remoteaddr, &addrlen);
+	fd = accept(server->conexion.socket, (struct sockaddr *)&remoteaddr, &addrlen);
 
-    if (fd > 0)
-    {
-        char remoteIP[INET6_ADDRSTRLEN];
-        int *newfd = malloc(sizeof(int));
+	if (fd > 0)
+	{
+		char remoteIP[INET6_ADDRSTRLEN];
+		int *newfd = malloc(sizeof(int));
 
-        LOG_DEBUG("Nueva conexión de %s en el socket %d.",
-                  inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&remoteaddr),
-                            remoteIP, INET6_ADDRSTRLEN),
-                  fd);
+		LOG_DEBUG("Nueva conexión de %s en el socket %d.",
+				  inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&remoteaddr),
+							remoteIP, INET6_ADDRSTRLEN),
+				  fd);
 
-        *newfd = fd;
+		*newfd = fd;
 
-        thread_manager_lanzar(rutina, (void *)newfd);
-    }
-    else
-    {
-        if (errno != EAGAIN && errno != EWOULDBLOCK)
-            LOG_WARNING("Un error ocurrió durante accept()");
-    }
+		thread_manager_launch(&server->tm, interceptor, (void *)newfd);
+	}
+	else
+	{
+		if (errno != EAGAIN && errno != EWOULDBLOCK)
+			LOG_WARNING("Un error ocurrió durante accept()");
+	}
 
-    return;
+	return;
 }
 
 void servidor_desconectar_cliente(int socket)
 {
-    close(socket);
+	close(socket);
 }
 
 // ------------------------------------------------------------
@@ -178,7 +182,7 @@ void servidor_desconectar_cliente(int socket)
 
 inline int servidor_recibir_operacion(int socket)
 {
-    return recibir_operacion(socket);
+	return recibir_operacion(socket);
 }
 
 // ----------------------
@@ -187,22 +191,22 @@ inline int servidor_recibir_operacion(int socket)
 
 inline char *servidor_recibir_mensaje(int socket, ssize_t *bytes)
 {
-    return (char *)recibir_buffer(socket, bytes);
+	return (char *)recibir_buffer(socket, bytes);
 }
 
-inline ssize_t servidor_enviar_mensaje(int socket, char *iv_msg)
+inline ssize_t servidor_enviar_mensaje(int socket, char *msg)
 {
-    return enviar_str(iv_msg, socket);
+	return enviar_str(msg, socket);
 }
 
 inline void *servidor_recibir_stream(int socket, ssize_t *bytes)
 {
-    return recibir_buffer(socket, bytes);
+	return recibir_buffer(socket, bytes);
 }
 
-inline ssize_t servidor_enviar_stream(int opcode, int socket, void *iv_str, ssize_t iv_str_size)
+inline ssize_t servidor_enviar_stream(int opcode, int socket, void *stream, ssize_t size)
 {
-    return enviar_stream(opcode, iv_str, iv_str_size, socket);
+	return enviar_stream(opcode, stream, size, socket);
 }
 
 // ----------------------
@@ -211,10 +215,10 @@ inline ssize_t servidor_enviar_stream(int opcode, int socket, void *iv_str, ssiz
 
 uint32_t servidor_recibir_accion(int socket)
 {
-    return accion_recibir(socket);
+	return accion_recibir(socket);
 }
 
 ssize_t servidor_enviar_accion(int socket, void *accion)
 {
-    return accion_enviar((accion_t *)accion, socket);
+	return accion_enviar((accion_t *)accion, socket);
 }

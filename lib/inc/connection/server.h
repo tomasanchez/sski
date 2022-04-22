@@ -11,6 +11,7 @@
 #include "conexion.h"
 #include <stdint.h>
 #include <poll.h>
+#include "thread_manager.h"
 
 #define N_CLIENTES 1
 
@@ -31,6 +32,8 @@ typedef struct Servidor
 	conexion_t conexion;
 	// Si inició o no
 	bool iniciado;
+	// Thread Tracker
+	thread_manager_t tm;
 } servidor_t;
 
 // ============================================================================================================
