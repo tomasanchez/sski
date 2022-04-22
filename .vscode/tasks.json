@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make-lib",
+      "command": "make",
+      "args": ["lib"],
+      "type": "shell"
+    },
+    {
+      "label": "make-kernel",
+      "command": "make",
+      "args": ["kernel"],
+      "type": "shell"
+    },
+    {
+      "label": "make-console",
+      "command": "make",
+      "args": ["console"],
+      "type": "shell"
+    },
+    {
+      "label": "make-cpu",
+      "command": "make",
+      "args": ["cpu"],
+      "type": "shell"
+    },
+    {
+      "label": "make-memory",
+      "command": "make",
+      "args": ["memory"],
+      "type": "shell"
+    }
+  ]
+}

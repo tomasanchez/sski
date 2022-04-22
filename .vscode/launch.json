@@ -8,6 +8,7 @@
       "name": "Lib-Test",
       "type": "cppdbg",
       "request": "launch",
+      "preLaunchTask": "make-lib",
       "program": "${workspaceFolder}/shared/lib_test.out",
       "args": [],
       "stopAtEntry": false,
@@ -24,9 +25,10 @@
       ]
     },
     {
-      "name": "kernel",
+      "name": "Kernel",
       "type": "cppdbg",
       "request": "launch",
+      "preLaunchTask": "make-kernel",
       "program": "${workspaceFolder}/build/kernel.out",
       "args": [],
       "stopAtEntry": false,
@@ -46,6 +48,7 @@
       "name": "Memory",
       "type": "cppdbg",
       "request": "launch",
+      "preLaunchTask": "make-memory",
       "program": "${workspaceFolder}/build/memory.out",
       "args": [],
       "stopAtEntry": false,
@@ -62,9 +65,10 @@
       ]
     },
     {
-      "name": "cpu",
+      "name": "CPU",
       "type": "cppdbg",
       "request": "launch",
+      "preLaunchTask": "make-cpu",
       "program": "${workspaceFolder}/build/cpu.out",
       "args": [],
       "stopAtEntry": false,
@@ -84,8 +88,9 @@
       "name": "Console",
       "type": "cppdbg",
       "request": "launch",
+      "preLaunchTask": "make-console",
       "program": "${workspaceFolder}/build/console.out",
-      "args": ["./console/entrada.txt", "10"],
+      "args": ["./console/instructions_test.txt", "10"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -100,7 +105,7 @@
       ]
     },
     {
-      "name": "kernel-test",
+      "name": "Kernel-Test",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/kernel_test.out",
@@ -119,7 +124,7 @@
       ]
     },
     {
-      "name": "cpu-Test",
+      "name": "CPU-Test",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/cpu_test.out",
@@ -138,7 +143,7 @@
       ]
     },
     {
-      "name": "Memory_test",
+      "name": "Memory-Test",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/memory_test.out",
@@ -157,7 +162,7 @@
       ]
     },
     {
-      "name": "Console-test",
+      "name": "Console-Test",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/console_test.out",
