@@ -162,7 +162,7 @@ int thread_manager_end_thread(thread_manager_t *tm)
 		return EXIT_FAILURE;
 
 	// Move the last positition to the deleted one.
-	if (tm->size > 0)
+	if (tm->size > 1)
 		tm->threads[t_id] = tm->threads[tm->size - 1];
 
 	tm->size--;
