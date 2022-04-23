@@ -9,12 +9,21 @@
  *
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include "cpu.h"
+
+extern cpu_t g_cpu;
 
 int main(void)
 {
-	puts("Hello World!");
+	int exit_status = EXIT_SUCCESS;
 
-	return EXIT_SUCCESS;
+	if ((exit_status = on_init(&g_cpu)) == EXIT_SUCCESS)
+	{
+		on_run(&g_cpu);
+
+		return on_before_exit(&g_cpu);
+	}
+
+	return exit_status;
 }
