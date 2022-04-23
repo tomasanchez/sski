@@ -22,6 +22,7 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 	pcb->instructions = list_create();
 	pcb->page_table = NULL;
 	pcb->estimation = estimation;
+	pcb->pc = 0;
 
 	return pcb;
 }
@@ -54,7 +55,7 @@ void *pcb_to_stream(pcb_t *pcb)
 	 * @brief The serialized stream will be:
 	 *
 	 * --------------------------------------------------------------
-	 * ID | SIZE | ESTIMATION | <List_Count> | Instructions...
+	 * ID | SIZE | ESTIMATION | PC | <List_Count> | Instructions...
 	 * --------------------------------------------------------------
 	 *
 	 */
@@ -63,6 +64,8 @@ void *pcb_to_stream(pcb_t *pcb)
 	memcpy(stream + offset, &pcb->size, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(stream + offset, &pcb->estimation, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(stream + offset, &pcb->pc, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	int list_count = list_size(pcb->instructions);
 	memcpy(stream + offset, &list_count, sizeof(uint32_t));
@@ -103,6 +106,8 @@ pcb_t *pcb_from_stream(void *stream)
 	offset += sizeof(uint32_t);
 	memcpy(&pcb->estimation, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
+	memcpy(&pcb->pc, stream + offset, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
 
 	pcb->instructions = instruction_list_from(stream + offset);
 	pcb->page_table = NULL;
@@ -114,8 +119,8 @@ size_t pcb_bytes_size(pcb_t *pcb)
 {
 	// The PCB final size.
 	size_t size = 0;
-	// The size of [ID, SIZE, ESTIMATION]
-	size += sizeof(uint32_t) * 3;
+	// The size of [ID, SIZE, ESTIMATION, PC]
+	size += sizeof(uint32_t) * 4;
 	// Size of the List_SIZE value.
 	size += sizeof(uint32_t);
 	// The size of the instruction list.
