@@ -1,6 +1,9 @@
 #include "kernel.h"
 #include "server.h"
 #include "dispatcher.h"
+#include "instruction.h"
+#include "conexion.h"
+#include "accion.h"
 #include "log.h"
 #include "cfg.h"
 
@@ -27,6 +30,16 @@ recibir_mensaje(int cliente)
 	ssize_t size = ERROR;
 	// El mensaje (MSG) recibido
 	return servidor_recibir_mensaje(cliente, &size);
+}
+
+static instruction_t *recibir_instruction(int cliente)
+{
+	ssize_t size = ERROR;
+	void *stream = servidor_recibir_stream(cliente, &size);
+	instruction_t *instruction = instruction_from_stream(stream);
+	free(stream);
+
+	return instruction;
 }
 
 // ============================================================================================================
@@ -72,6 +85,14 @@ void *routine(void *fd)
 			{
 			case MSG:
 				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
+				break;
+
+			case SYS:
+				dispatch_handle_action((void *)accion_recibir(sender_fd));
+				break;
+
+			case CMD:
+				dispatch_handle_instruction((void *)recibir_instruction(sender_fd));
 				break;
 
 			default:
