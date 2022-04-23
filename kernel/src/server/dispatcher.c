@@ -2,6 +2,8 @@
 #include <commons/collections/list.h>
 
 #include "dispatcher.h"
+#include "accion.h"
+#include "instruction.h"
 #include "thread_manager.h"
 #include "server.h"
 #include "smartlist.h"
@@ -60,6 +62,28 @@ void *dispatch_imprimir_mensaje(void *args)
 	THREAD_SAFE(LOG_INFO("Mensaje: %s", msg));
 
 	free(msg);
+
+	return NULL;
+}
+
+void *dispatch_handle_instruction(void *args)
+{
+	instruction_t *instruction = ((instruction_t *)args);
+
+	THREAD_SAFE(LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1));
+
+	instruction_destroy(instruction);
+
+	return NULL;
+}
+
+void *dispatch_handle_action(void *args)
+{
+	accion_t *accion = ((accion_t *)args);
+
+	THREAD_SAFE(LOG_INFO("Received Action: %d %d", accion->actioncode, accion->param););
+
+	accion_destroy(accion);
 
 	return NULL;
 }

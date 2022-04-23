@@ -88,20 +88,11 @@ void *routine(void *fd)
 				break;
 
 			case SYS:
-				accion_t *accion = accion_recibir(sender_fd);
-
-				LOG_DEBUG("Received Syscall: %d %d", accion->actioncode, accion->param);
-
-				accion_destroy(accion);
-
+				dispatch_handle_action((void *)accion_recibir(sender_fd));
 				break;
 
 			case CMD:
-				instruction_t *instruction = recibir_instruction(sender_fd);
-
-				LOG_DEBUG("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1);
-
-				instruction_destroy(instruction);
+				dispatch_handle_instruction((void *)recibir_instruction(sender_fd));
 				break;
 
 			default:
