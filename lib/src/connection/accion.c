@@ -8,19 +8,12 @@
 
 #include "accion.h"
 #include "conexion.h"
+#include "server.h"
 #include <stdlib.h>
 
 // ============================================================================================================
 //                                   ***** Funciones Privadas - Declaraciones  *****
 // ============================================================================================================
-
-/**
- * @brief Serializa una Accion
- *
- * @param accion la accion a serializar
- * @return Un stream serializado
- */
-void *accion_serializar(const accion_t *accion);
 
 /**
  * @brief Atajo de cáculo del tamaño fijo de una accion
@@ -37,6 +30,20 @@ static inline ssize_t accion_size()
 	return sizeof(int) + sizeof(uint32_t);
 }
 
+accion_t *accion_from_stream(void *stream)
+{
+	actioncode_t _code = NO_ACTION_PARAMETER;
+	uint32_t _param = 0u;
+
+	size_t offset = 0lu;
+	memcpy(&_code, stream, sizeof(actioncode_t));
+	offset += sizeof(actioncode_t);
+	memcpy(&_param, stream + offset, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+
+	return accion_create(_code, _param);
+}
+
 void *accion_serializar(const accion_t *accion)
 {
 	// El stream a enviarse
@@ -47,9 +54,9 @@ void *accion_serializar(const accion_t *accion)
 
 	// Copio de a bytes, incrementando el offset en todos los casos
 	/**
-	 *          [ OPCODE ][ PARAM ]
+	 *          [ actioncode ][ PARAM ]
 	 */
-	memcpy(stream + lv_offset, &(accion->opcode), sizeof(int));
+	memcpy(stream + lv_offset, &(accion->actioncode), sizeof(int));
 	lv_offset += sizeof(int);
 	memcpy(stream + lv_offset, &(accion->param), sizeof(uint32_t));
 	lv_offset += sizeof(uint32_t);
@@ -65,11 +72,11 @@ void *accion_serializar(const accion_t *accion)
 //  Constructor y Destructor
 // ------------------------------------------------------------
 
-accion_t *accion_create(opcode_t opcode, uint32_t param)
+accion_t *accion_create(actioncode_t actioncode, uint32_t param)
 {
 	accion_t *accion = malloc(sizeof(accion_t));
 
-	accion->opcode = opcode;
+	accion->actioncode = actioncode;
 	accion->param = param;
 
 	return accion;
@@ -101,25 +108,12 @@ ssize_t accion_enviar(accion_t *accion, int socket)
 	return bytes;
 }
 
-uint32_t accion_recibir(int socket)
+accion_t *accion_recibir(int socket)
 {
-	// Variable a Exportar param - el valor del parámetreo de una accion.
-	uint32_t param = 0;
-
-	// Valor de Retorno Bytes - Los bytes recibidos o -1 si error.
-	ssize_t rv_bytes;
-
-	rv_bytes = recv(socket, &param, sizeof(uint32_t), MSG_WAITALL);
-
-	return rv_bytes <= 0 ? 0 : param;
-}
-
-accion_t *accion_recibir_full(int socket)
-{
-	// Variable a Exportar accion - la accion recibida.
-	accion_t *accion = malloc(sizeof(accion_t));
-
-	recv(socket, accion, accion_size(), MSG_WAITALL);
+	ssize_t size = ERROR;
+	void *stream = servidor_recibir_stream(socket, &size);
+	accion_t *accion = accion_from_stream(stream);
+	free(stream);
 
 	return accion;
 }

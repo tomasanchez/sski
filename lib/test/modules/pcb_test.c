@@ -49,9 +49,9 @@ inline void fill_list(t_list *list)
 {
 	uint32_t g_param0 = 10, g_param2 = 124;
 
-	instruction_t *exit_i = instruction_create(EXIT, g_param0, g_param2);
-	instruction_t *read_i = instruction_create(READ, g_param0, g_param2);
-	instruction_t *write_i = instruction_create(WRITE, g_param0, g_param2);
+	instruction_t *exit_i = instruction_create(C_REQUEST_EXIT, g_param0, g_param2);
+	instruction_t *read_i = instruction_create(C_REQUEST_READ, g_param0, g_param2);
+	instruction_t *write_i = instruction_create(C_REQUEST_WRITE, g_param0, g_param2);
 
 	list_smart_add(list, exit_i);
 	list_smart_add(list, read_i);

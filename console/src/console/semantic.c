@@ -27,63 +27,47 @@
 #include <smartlist.h>
 
 #include "semantic.h"
+#include "instruction.h"
 
 extern t_list *input_file_commands;
 
 static void
-_request_instruction(const char *instruccion, int cantidad_de_argumentos, ...)
+_request_instruction(instcode_t instcode, int param0, int param1)
 {
-	va_list ap;
+	instruction_t *instruction = instruction_create(instcode, param0, param1);
 
-	size_t instruction_size = sizeof(char) * (strlen(instruccion) + 1);
-	char *request = (char *)malloc(instruction_size);
-	strcpy(request, instruccion);
-
-	va_start(ap, cantidad_de_argumentos);
-	for (int i = 0; i < cantidad_de_argumentos; i++)
-	{
-		char *param = va_arg(ap, char *);
-		size_t param_size = sizeof(char) * (strlen(param) + 2);
-		request = (char *)realloc(request, instruction_size + param_size);
-		strcat(request, " ");
-		strcat(request, param);
-		instruction_size += param_size;
-	}
-
-	list_smart_add(input_file_commands, request);
-
-	va_end(ap);
+	list_smart_add(input_file_commands, instruction);
 }
 
 void request_exit(void)
 {
-	_request_instruction("EXIT", 0);
+	_request_instruction(C_REQUEST_EXIT, NO_INSTRUCTION_PARAMETER, NO_INSTRUCTION_PARAMETER);
 }
 
 void request_no_op(char *constant)
 {
-	_request_instruction("NO_OP", 1, constant);
+	_request_instruction(C_REQUEST_NO_OP, atoi(constant), NO_INSTRUCTION_PARAMETER);
 
 	free(constant);
 }
 
 void request_io(char *constant)
 {
-	_request_instruction("I/O", 1, constant);
+	_request_instruction(C_REQUEST_IO, atoi(constant), NO_INSTRUCTION_PARAMETER);
 
 	free(constant);
 }
 
 void request_read(char *constant)
 {
-	_request_instruction("READ", 1, constant);
+	_request_instruction(C_REQUEST_READ, atoi(constant), NO_INSTRUCTION_PARAMETER);
 
 	free(constant);
 }
 
 void request_write(char *constant_l, char *constant_r)
 {
-	_request_instruction("WRITE", 2, constant_l, constant_r);
+	_request_instruction(C_REQUEST_WRITE, atoi(constant_l), atoi(constant_r));
 
 	free(constant_l);
 
@@ -92,7 +76,7 @@ void request_write(char *constant_l, char *constant_r)
 
 void request_copy(char *constant_l, char *constant_r)
 {
-	_request_instruction("COPY", 2, constant_l, constant_r);
+	_request_instruction(C_REQUEST_COPY, atoi(constant_l), atoi(constant_r));
 
 	free(constant_l);
 

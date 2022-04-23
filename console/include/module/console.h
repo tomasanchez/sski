@@ -16,6 +16,8 @@
 
 #include "lib.h"
 #include "conexion.h"
+#include "instruction.h"
+#include "accion.h"
 
 #define CONF_FILE "console"
 
@@ -63,7 +65,7 @@ int on_before_exit(void);
  *
  * @return ERROR o SUCCESS
  */
-int on_run(char *instructions_file_name, int process_size);
+int on_run(char *instructions_file_name, uint32_t process_size);
 
 /**
  * @brief Event handler de establecer conexion
@@ -90,4 +92,6 @@ char *on_client_read(char *line, bool *status);
  * @param line
  * @return int
  */
-int on_send_instruction(void *conexion, char *line);
+ssize_t on_send_instruction(void *conexion, instruction_t *inst);
+
+ssize_t on_send_action(conexion_t is_conexion, actioncode_t actioncode, uint32_t param);
