@@ -13,6 +13,7 @@
 
 #include <inttypes.h>
 #include "opcode.h"
+#include "conexion.h"
 
 /**
  * @brief Instruction ID Code
@@ -20,13 +21,17 @@
  */
 typedef enum InstructionCode
 {
-	EXIT,
-	READ,
-	WRITE,
-	COPY,
-	IO,
-	NO_OP
+	// Console OPERATIONS tha can be sent to the Kernel
+	C_REQUEST_EXIT,
+	C_REQUEST_READ,
+	C_REQUEST_WRITE,
+	C_REQUEST_NO_OP,
+	C_REQUEST_IO,
+	C_REQUEST_COPY,
+	NO_INSTRUCTION
 } instcode_t;
+
+#define NO_INSTRUCTION_PARAMETER 0
 
 /**
  * @brief Pseudo-code's instruction.
@@ -115,3 +120,5 @@ void *instruction_reduce(void *buffer, void *next);
  * @return a list.
  */
 void *instruction_list_from(void *stream);
+
+ssize_t instruction_send(conexion_t is_conexion, instruction_t *is_instruction);

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "instruction.h"
+#include "conexion.h"
 #include "smartlist.h"
 
 // Global Variable for list operations
@@ -69,7 +70,7 @@ void *instruction_to_stream(void *instruction)
 
 instruction_t *instruction_from_stream(void *stream)
 {
-	instcode_t _icode = NO_OP;
+	instcode_t _icode = NO_INSTRUCTION;
 	uint32_t _param0 = 0u, _param1 = 0u;
 
 	size_t offset = 0lu;
@@ -107,4 +108,16 @@ void *instruction_list_from(void *stream)
 	}
 
 	return list;
+}
+
+ssize_t instruction_send(conexion_t is_conexion, instruction_t *is_instruction)
+{
+	// Local stream - el paquete serializado, requiere free(1)
+	void *stream = instruction_to_stream(is_instruction);
+
+	ssize_t bytes_sent = conexion_enviar_stream(is_conexion, CMD, stream, sizeof(instruction_t));
+
+	free(stream);
+
+	return bytes_sent;
 }

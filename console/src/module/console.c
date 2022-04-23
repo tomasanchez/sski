@@ -11,6 +11,9 @@
 #include "cfg.h"
 #include "lib.h"
 #include "context.h"
+#include "instruction.h"
+#include "conexion.h"
+#include "accion.h"
 #include "network.h"
 #include "smartlist.h"
 #include "parser.h"
@@ -191,7 +194,7 @@ int on_before_exit(void)
 //  Event Handlers
 // ------------------------------------------------------------
 
-int on_run(char *instructions_file_name, int process_size)
+int on_run(char *instructions_file_name, uint32_t process_size)
 {
 	LOG_TRACE("Running a Syntax Analysis...");
 	unsigned int analysis_result = parse(instructions_file_name);
@@ -205,9 +208,13 @@ int on_run(char *instructions_file_name, int process_size)
 
 		while (this.status EQ RUNNING)
 		{
+			on_send_action(this.conexion, NEW_PROCESS, process_size);
+
 			while (input_file_commands->elements_count > 0)
 			{
-				on_send_instruction(&this.conexion, (char *)list_remove(input_file_commands, 0));
+				on_send_instruction(
+					&this.conexion,
+					list_remove(input_file_commands, 0));
 			}
 
 			this.status = not RUNNING;
@@ -258,17 +265,32 @@ char *on_client_read(char *line, bool *status)
 		return NULL;
 }
 
-int on_send_instruction(void *conexion, char *line)
+ssize_t on_send_action(conexion_t is_conexion, actioncode_t actioncode, uint32_t param)
 {
-	if (line)
+	accion_t *accion = accion_create(actioncode, param);
+
+	void *stream = accion_serializar(accion);
+
+	ssize_t bytes_sent = conexion_enviar_stream(is_conexion, SYS, stream, sizeof(accion_t));
+
+	free(stream);
+
+	accion_destroy(accion);
+
+	return bytes_sent;
+}
+
+ssize_t on_send_instruction(void *conexion, instruction_t *inst)
+{
+	if (inst)
 	{
 		// Si envio algo sera mayor a 0
-		int result = conexion_enviar_mensaje(*(conexion_t *)conexion, line) > 0 ? SUCCESS : ERROR;
+		ssize_t result = instruction_send(*(conexion_t *)conexion, inst) > 0 ? SUCCESS : ERROR;
 
-		free(line);
+		free(inst);
 
 		return result;
 	}
 
-	return ERROR;
+	return (ssize_t)ERROR;
 }

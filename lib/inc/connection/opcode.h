@@ -27,7 +27,10 @@ typedef enum Opcode
 	MSG,
 	// Package - paquete
 	PKG,
-	// TODO: Agregar los opcodes que vayan surgiendo
+	// System Call - syscall
+	SYS,
+	// Command - instruccion
+	CMD,
 } opcode_t;
 
 // ============================================================================================================

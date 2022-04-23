@@ -213,11 +213,6 @@ inline ssize_t servidor_enviar_stream(int opcode, int socket, void *stream, ssiz
 //  Acciones
 // ----------------------
 
-uint32_t servidor_recibir_accion(int socket)
-{
-	return accion_recibir(socket);
-}
-
 ssize_t servidor_enviar_accion(int socket, void *accion)
 {
 	return accion_enviar((accion_t *)accion, socket);
