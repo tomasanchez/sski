@@ -13,11 +13,16 @@
 #include "cpu.h"
 #include "log.h"
 #include "cfg.h"
+#include "conexion.h"
+
 #include <signal.h>
 
 // ============================================================================================================
 //                               ***** Private Functions *****
 // ============================================================================================================
+
+// El modulo servidor propiamente dicho
+static cpu_t this;
 
 cpu_t g_cpu;
 
@@ -72,6 +77,45 @@ on_cpu_destroy(cpu_t *cpu)
 	return EXIT_SUCCESS;
 }
 
+static int conexion_init(void)
+{
+	char *port = puerto_kernel();
+	char *ip = ip_kernel();
+
+	LOG_DEBUG("Connecting <Console> at %s:%s", ip, port);
+	this.conexion = conexion_cliente_create(ip, port);
+
+	if (on_connect(&this.conexion, false) EQ SUCCESS)
+	{
+		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
+	}
+
+	return SUCCESS;
+}
+
+int on_connect(void *conexion, bool offline_mode)
+{
+	if (offline_mode)
+	{
+		LOG_WARNING("Module working in offline mode.");
+		return ERROR;
+	}
+
+	while (!conexion_esta_conectada(*(conexion_t *)conexion))
+	{
+		LOG_TRACE("Connecting...");
+
+		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
+		{
+			LOG_ERROR("Could not connect.");
+			sleep(TIEMPO_ESPERA);
+		}
+	}
+
+	return SUCCESS;
+}
+
+
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -108,6 +152,8 @@ int on_init(cpu_t *cpu)
 int on_run(cpu_t *cpu)
 {
 	LOG_TRACE("Hello World!");
+
+	conexion_init();
 
 	return EXIT_SUCCESS;
 }
