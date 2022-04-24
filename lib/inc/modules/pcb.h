@@ -31,6 +31,8 @@ typedef struct PCB
 	void *page_table;
 	// CPU Burst estimation.
 	uint32_t estimation;
+	// Program Counter.
+	uint32_t pc;
 } pcb_t;
 
 /**
