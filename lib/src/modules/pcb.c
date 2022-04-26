@@ -17,12 +17,12 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 {
 	pcb_t *pcb = malloc(sizeof(pcb_t));
 
-	pcb->id = id;
-	pcb->size = size;
-	pcb->instructions = list_create();
-	pcb->page_table = NULL;
-	pcb->estimation = estimation;
-	pcb->pc = 0;
+	pcb->id = id;					   // Identificador del proceso
+	pcb->size = size;				   // Tamaño en bytes del proceso, el mismo no cambiará a lo largo de la ejecución
+	pcb->instructions = list_create(); // Lista de instrucciones a ejecutar
+	pcb->page_table = NULL;			   // Tabla de páginas del proceso en memoria, esta información la tendremos recién cuando el proceso pase a estado READY
+	pcb->estimation = estimation;	   // Estimación utilizada para planificar los procesos en el algoritmo SRT, la misma tendrá un valor inicial definido por archivo de configuración y será recalculada bajo la fórmula de promedio ponderado
+	pcb->pc = 0;					   // Número de la próxima instrucción a ejecutar
 
 	return pcb;
 }
