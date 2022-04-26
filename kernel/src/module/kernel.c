@@ -108,7 +108,7 @@ int on_run(context_t *context)
 		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("Server listenning. Awaiting for connections.");
+	LOG_DEBUG("Server listening. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(context->server), routine);
