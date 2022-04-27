@@ -13,6 +13,7 @@
 
 #include "pcb.h"
 #include "thread_manager.h"
+#include "conexion.h"
 
 #define MODULE_NAME "cpu"
 
@@ -25,13 +26,18 @@ typedef struct CPU
 
 	// TODO: Add server for Kernel - For PCB.
 	// TODO: Add server for Kernel - For Interruptions
+
 	// TODO: Add client connection to Memory.
+	// La conexion del cliente
+	conexion_t conexion;
 	// CPU's Thread Launcher;
 	thread_manager_t tm;
 	// Current PCB in execution.
 	pcb_t *pcb;
+
 } cpu_t;
 
+int on_connect(void *conexion, bool offline_mode);
 /**
  * @brief Inits a CPU module.
  *
