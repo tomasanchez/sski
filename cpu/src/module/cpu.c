@@ -9,6 +9,7 @@
  *
  */
 #include "conexion_memoria.h"
+#include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
 #include "log.h"
@@ -77,26 +78,6 @@ on_cpu_destroy(cpu_t *cpu)
 	return EXIT_SUCCESS;
 }
 
-static int conexion_init(cpu_t* cpu)
-{
-	char *port = puerto_kernel();
-	char *ip = ip_kernel();
-
-	LOG_DEBUG("Connecting <Cpu> at %s:%s", ip, port);
-	cpu->conexion = conexion_cliente_create(ip, port);
-
-	// Test connection with Kernel
-	//cpu->conexion = conexion_cliente_create("127.0.0.1", "8000");
-
-	if (on_connect(&cpu->conexion, false) EQ SUCCESS)
-	{
-		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
-		// Test connection with Kernel
-		//LOG_DEBUG("Connected as CLIENT at %s:%s", "127.0.0.1", "8000");
-	}
-
-	return SUCCESS;
-}
 
 int on_connect(void *conexion, bool offline_mode)
 {
@@ -164,9 +145,12 @@ int on_run(cpu_t *cpu)
 	// TODO: create thread for memory-conection (CLIENT)
 	thread_manager_launch(&cpu->tm, routine_conexion_memoria, cpu);
 
+	for(;;){
+		LOG_ERROR("Hola Thread 1");
+		sleep(TIEMPO_ESPERA);
+	}
 
-
-	conexion_init(cpu);
+	//conexion_init(cpu);
 
 	//thread_manager_launch(&cpu->tm, )
 

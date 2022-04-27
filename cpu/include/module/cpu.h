@@ -24,14 +24,16 @@
 typedef struct CPU
 {
 
-	// TODO: Add server for Kernel - For PCB.
+	// TODO: Add server for Kernel - For PCB (Dispatch)
 	// TODO: Add server for Kernel - For Interruptions
 
 	// TODO: Add client connection to Memory.
 	// La conexion del cliente
 	conexion_t conexion;
+
 	// CPU's Thread Launcher;
 	thread_manager_t tm;
+
 	// Current PCB in execution.
 	pcb_t *pcb;
 
