@@ -16,7 +16,7 @@ extern context_t g_context;
 //                               ***** Private Functions *****
 // ============================================================================================================
 
-int on_connect(void *conexion, bool offline_mode)
+int on_connect_dispatch(void *conexion, bool offline_mode)
 {
 	if (offline_mode)
 	{
@@ -48,7 +48,7 @@ static int conexion_init(context_t *context)
 	// Test connection with cpu
 	context->conexion_dispatch = conexion_cliente_create(ip, port);
 
-	if (on_connect(&context->conexion_dispatch, false) EQ SUCCESS)
+	if (on_connect_dispatch(&context->conexion_dispatch, false) EQ SUCCESS)
 	{
 		// Test connection with cpu
 		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
