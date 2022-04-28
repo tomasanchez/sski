@@ -22,6 +22,8 @@
 #include "signals.h"
 #include "kernel.h"
 #include "main.h"
+#include "conexion_dispatch.h"
+#include "conexion_interrupt.h"
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****
@@ -45,6 +47,8 @@ static int on_init_context(context_t *context)
 {
 	context->server = servidor_create(ip(), puerto_escucha());
 	// TODO : Init CPU Connection
+	context->conexion_dispatch;
+	context->conexion_interrupt;
 	// TODO: Init Memory Connection
 	context->tm = new_thread_manager();
 
@@ -58,6 +62,8 @@ on_delete_context(context_t *context)
 	// TODO : Destroy CPU Connection
 	// TODO: Destroy Memory Connection
 	thread_manager_destroy(&(context->tm));
+	conexion_destroy(&(context->conexion_dispatch));
+	conexion_destroy(&(context->conexion_interrupt));
 }
 // ============================================================================================================
 //                                   ***** Public Functions  *****
@@ -101,6 +107,8 @@ int on_run(context_t *context)
 {
 
 	// TODO: use different threads for each connection.
+	thread_manager_launch(&context->tm, routine_conexion_dispatch, context);
+	thread_manager_launch(&context->tm, routine_conexion_interrupt, context);
 
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
@@ -136,3 +144,4 @@ void on_before_exit(context_t *context, int exit_code)
 
 	exit(exit_code);
 }
+

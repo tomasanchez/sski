@@ -13,6 +13,7 @@
 #include "cfg.h"
 #include "log.h"
 
+
 /**
  * @brief Kernel module context.
  *
@@ -23,6 +24,8 @@ typedef struct Context
 	servidor_t server;
 	// TODO: Add Kernel-Memory Client dependency
 	// TODO: Add Kernel-CPU Client dependency
+	conexion_t conexion_dispatch;
+	conexion_t conexion_interrupt;
 	thread_manager_t tm;
 } context_t;
 
