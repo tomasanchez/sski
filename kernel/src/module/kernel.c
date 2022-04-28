@@ -21,6 +21,7 @@
 #include "thread_manager.h"
 #include "signals.h"
 #include "kernel.h"
+#include "conexion_memory.h"
 #include "main.h"
 
 // ============================================================================================================
@@ -45,7 +46,8 @@ static int on_init_context(context_t *context)
 {
 	context->server = servidor_create(ip(), puerto_escucha());
 	// TODO : Init CPU Connection
-	// TODO: Init Memory Connection
+	// Init Memory Connection
+	context->conexion_memory;
 	context->tm = new_thread_manager();
 
 	return EXIT_SUCCESS;
@@ -56,9 +58,33 @@ on_delete_context(context_t *context)
 {
 	servidor_destroy(&(context->server));
 	// TODO : Destroy CPU Connection
-	// TODO: Destroy Memory Connection
 	thread_manager_destroy(&(context->tm));
+	// Destroy Memory Connection
+	conexion_destroy(&(context->conexion_memory));
 }
+
+int on_connect(void *conexion, bool offline_mode)
+{
+	if (offline_mode)
+	{
+		LOG_WARNING("Module working in offline mode.");
+		return ERROR;
+	}
+
+	while (!conexion_esta_conectada(*(conexion_t *)conexion))
+	{
+		LOG_TRACE("Connecting...");
+
+		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
+		{
+			LOG_ERROR("Could not connect.");
+			sleep(TIEMPO_ESPERA);
+		}
+	}
+
+	return SUCCESS;
+}
+
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
@@ -100,7 +126,8 @@ int on_init(context_t *context)
 int on_run(context_t *context)
 {
 
-	// TODO: use different threads for each connection.
+	// Use different threads for each connection.
+	thread_manager_launch(&(context->tm), routine_conexion_memoria, context);
 
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
@@ -108,7 +135,7 @@ int on_run(context_t *context)
 		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("Server listening. Awaiting for connections.");
+	LOG_DEBUG("[SERVER-THREAD] - Server listening. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(context->server), routine);

@@ -21,7 +21,8 @@ typedef struct Context
 {
 	// The Kernel Multi-thread Server dependency.
 	servidor_t server;
-	// TODO: Add Kernel-Memory Client dependency
+	// Kernel-Memory Client dependency
+	conexion_t conexion_memory;
 	// TODO: Add Kernel-CPU Client dependency
 	thread_manager_t tm;
 } context_t;
