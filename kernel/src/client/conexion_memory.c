@@ -10,7 +10,7 @@
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
-extern context_t g_context;
+extern kernel_t g_kernel;
 
 // ============================================================================================================
 //                               ***** Private Functions *****
@@ -38,16 +38,16 @@ static int on_connect(void *conexion, bool offline_mode)
 	return SUCCESS;
 }
 
-static int conexion_init(context_t *context)
+static int conexion_init(kernel_t *kernel)
 {
 	char *port = puerto_memoria();
 	char *ip = ip_memoria();
 
 	LOG_DEBUG("[MEMORY-THREAD] - Connecting <Kernel> at %s:%s", ip, port);
 
-	context->conexion_memory = conexion_cliente_create(ip, port);
+	kernel->conexion_memory = conexion_cliente_create(ip, port);
 
-	if (on_connect(&context->conexion_memory, false) EQ SUCCESS)
+	if (on_connect(&kernel->conexion_memory, false) EQ SUCCESS)
 	{
 		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
 	}
@@ -62,11 +62,11 @@ static int conexion_init(context_t *context)
 // Rutina (HILO) de Kernel como cliente.
 void *routine_conexion_memoria(void *data)
 {
-	context_t *context = data;
+	kernel_t *kernel = data;
 
-	conexion_init(context);
+	conexion_init(kernel);
 
-	conexion_enviar_mensaje(context->conexion_memory, "Send message");
+	conexion_enviar_mensaje(kernel->conexion_memory, "Send message");
 
 	for (;;)
 	{

@@ -13,22 +13,23 @@
 #include "cfg.h"
 #include "log.h"
 
-
 /**
- * @brief Kernel module context.
+ * @brief Kernel module.
  *
  */
-typedef struct Context
+typedef struct Kernel
 {
 	// The Kernel Multi-thread Server dependency.
 	servidor_t server;
-	// Kernel-Memory Client dependency
+	// Kernel-Memory Client dependency.
 	conexion_t conexion_memory;
-	// TODO: Add Kernel-CPU Client dependency
+	// Kernel-CPU (Dispatch) connection dependency.
 	conexion_t conexion_dispatch;
+	// Kernel-CPU (Interrupt) connection dependency.
 	conexion_t conexion_interrupt;
+	// Thread Tracker dependency.
 	thread_manager_t tm;
-} context_t;
+} kernel_t;
 
 /**
  * @brief Initializes the Kernel Module with the required structures.
@@ -36,7 +37,7 @@ typedef struct Context
  * @param context the server context structure.
  * @return an status code.
  */
-int on_init(context_t *context);
+int on_init(kernel_t *context);
 
 /**
  * @brief Responsible of Kernel main processing action.
@@ -44,7 +45,7 @@ int on_init(context_t *context);
  * @param context the server context structure.
  * @return an status code.
  */
-int on_run(context_t *context);
+int on_run(kernel_t *context);
 
 /**
  * @brief Method called when Kernel does close. Destroys created structures.
@@ -52,4 +53,4 @@ int on_run(context_t *context);
  * @param context the current processing context
  * @param exit_code an status code
  */
-void on_before_exit(context_t *context, int exit_code);
+void on_before_exit(kernel_t *context, int exit_code);

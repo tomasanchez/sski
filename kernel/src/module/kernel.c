@@ -30,43 +30,40 @@
 //                                   ***** Private Functions  *****
 // ============================================================================================================
 /**
- * @brief Initializes the Kernel Context
+ * @brief Initializes the Kernel
  *
- * @param context the kernel context
+ * @param kernel the module itself
  * @return success or failure
  */
-static int on_init_context(context_t *context);
+static int on_init_context(kernel_t *kernel);
 
 /**
- * @brief Destroy the context elements
+ * @brief Destroy the kernel elements
  *
- * @param context the Kernel Context
+ * @param kernel the Kernel
  */
-static void on_delete_context(context_t *context);
+static void on_delete_context(kernel_t *kernel);
 
-static int on_init_context(context_t *context)
+static int on_init_context(kernel_t *kernel)
 {
-	context->server = servidor_create(ip(), puerto_escucha());
-	context->tm = new_thread_manager();
-
+	kernel->server = servidor_create(ip(), puerto_escucha());
+	kernel->tm = new_thread_manager();
 	return EXIT_SUCCESS;
 }
 
 static void
-on_delete_context(context_t *context)
+on_delete_context(kernel_t *kernel)
 {
-  
-	servidor_destroy(&(context->server));
-  
-	thread_manager_destroy(&(context->tm));
-  
-  // Destroy CPU Connections
-	conexion_destroy(&(context->conexion_dispatch));
-	conexion_destroy(&(context->conexion_interrupt));
-  
+
+	servidor_destroy(&(kernel->server));
+	thread_manager_destroy(&(kernel->tm));
+
+	// Destroy CPU Connections
+	conexion_destroy(&(kernel->conexion_dispatch));
+	conexion_destroy(&(kernel->conexion_interrupt));
+
 	// Destroy Memory Connection
-	conexion_destroy(&(context->conexion_memory));
- 
+	conexion_destroy(&(kernel->conexion_memory));
 }
 
 int on_connect(void *conexion, bool offline_mode)
@@ -95,7 +92,7 @@ int on_connect(void *conexion, bool offline_mode)
 //                                   ***** Public Functions  *****
 // ============================================================================================================
 
-int on_init(context_t *context)
+int on_init(kernel_t *kernel)
 {
 	if (log_init(MODULE_NAME, true) EQ ERROR)
 		return LOG_INITIALIZATION_ERROR;
@@ -111,9 +108,9 @@ int on_init(context_t *context)
 
 	LOG_DEBUG("Configurations loaded.");
 
-	if (on_init_context(context) EQ EXIT_SUCCESS)
+	if (on_init_context(kernel) EQ EXIT_SUCCESS)
 	{
-		LOG_DEBUG("Context initializated");
+		LOG_DEBUG("kernel initializated");
 	}
 
 	/* BO initialization routines */
@@ -129,19 +126,19 @@ int on_init(context_t *context)
 	return EXIT_SUCCESS;
 }
 
-int on_run(context_t *context)
+int on_run(kernel_t *kernel)
 {
 	// Dispatch Different threads for each connection
-  
-  // CPU Connections:
-	thread_manager_launch(&context->tm, routine_conexion_dispatch, context);
-	thread_manager_launch(&context->tm, routine_conexion_interrupt, context);
-  
-  // Memory Connection:
-	thread_manager_launch(&(context->tm), routine_conexion_memoria, context);
-  
-  // Console Connection:
-	if (servidor_escuchar(&(context->server)) == -1)
+
+	// CPU Connections:
+	thread_manager_launch(&kernel->tm, routine_conexion_dispatch, kernel);
+	thread_manager_launch(&kernel->tm, routine_conexion_interrupt, kernel);
+
+	// Memory Connection:
+	thread_manager_launch(&(kernel->tm), routine_conexion_memoria, kernel);
+
+	// Console Connection:
+	if (servidor_escuchar(&(kernel->server)) == -1)
 	{
 		LOG_ERROR("Server could not listen.");
 		return SERVER_RUNTIME_ERROR;
@@ -150,16 +147,16 @@ int on_run(context_t *context)
 	LOG_DEBUG("[SERVER-THREAD] - Server listening. Awaiting for connections.");
 
 	for (;;)
-		servidor_run(&(context->server), routine);
+		servidor_run(&(kernel->server), routine);
 
 	return EXIT_SUCCESS;
 }
 
-void on_before_exit(context_t *context, int exit_code)
+void on_before_exit(kernel_t *kernel, int exit_code)
 {
 	LOG_WARNING("Closing Kernel...");
 
-	on_delete_context(context);
+	on_delete_context(kernel);
 
 	LOG_WARNING("Server has stopped.");
 
@@ -175,4 +172,3 @@ void on_before_exit(context_t *context, int exit_code)
 
 	exit(exit_code);
 }
-

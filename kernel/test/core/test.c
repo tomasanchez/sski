@@ -16,7 +16,7 @@
 #include "ctest.h"
 #include "kernel.h"
 
-context_t g_context;
+kernel_t g_kernel;
 
 int main(int argc, const char *argv[])
 {

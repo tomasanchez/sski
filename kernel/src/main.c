@@ -8,14 +8,14 @@
 
 #include "kernel.h"
 
-context_t g_context;
+kernel_t g_kernel;
 
 int main(void)
 {
-	int status_code = on_init(&g_context);
+	int status_code = on_init(&g_kernel);
 
 	if (status_code == EXIT_SUCCESS)
-		status_code = on_run(&g_context);
+		status_code = on_run(&g_kernel);
 
-	on_before_exit(&g_context, status_code);
+	on_before_exit(&g_kernel, status_code);
 }

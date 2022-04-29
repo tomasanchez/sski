@@ -8,13 +8,13 @@
 #include "log.h"
 #include "kernel.h"
 
-extern context_t g_context;
+extern kernel_t g_kernel;
 
 static void
 _sigint()
 {
 	LOG_WARNING("Se capturó la señal SIGINT");
-	on_before_exit(&(g_context), SIGINT);
+	on_before_exit(&(g_kernel), SIGINT);
 }
 
 static void

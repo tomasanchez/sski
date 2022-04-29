@@ -11,7 +11,7 @@
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
-extern context_t g_context;
+extern kernel_t g_kernel;
 
 // ============================================================================================================
 //                                   ***** Funciones Privadas  *****
@@ -72,7 +72,7 @@ void *routine(void *fd)
 
 			servidor_desconectar_cliente(sender_fd); // Bye!
 
-			thread_manager_end_thread(&g_context.server.tm);
+			thread_manager_end_thread(&g_kernel.server.tm);
 
 			return NULL;
 		}

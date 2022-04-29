@@ -10,7 +10,7 @@
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
-extern context_t g_context;
+extern kernel_t g_kernel;
 
 // ============================================================================================================
 //                               ***** Private Functions *****
@@ -38,7 +38,7 @@ int on_connect_interrupt(void *conexion, bool offline_mode)
 	return SUCCESS;
 }
 
-static int conexion_init(context_t *context)
+static int conexion_init(kernel_t *kernel)
 {
 	char *port = puerto_cpu_interrupt();
 	char *ip = ip_cpu();
@@ -46,9 +46,9 @@ static int conexion_init(context_t *context)
 	LOG_DEBUG("Connecting <Cpu> at %s:%s", ip, port);
 
 	// Test connection with cpu
-	context->conexion_interrupt = conexion_cliente_create(ip, port);
+	kernel->conexion_interrupt = conexion_cliente_create(ip, port);
 
-	if (on_connect_interrupt(&context->conexion_interrupt, false) EQ SUCCESS)
+	if (on_connect_interrupt(&kernel->conexion_interrupt, false) EQ SUCCESS)
 	{
 
 		// Test connection with cpu
@@ -58,22 +58,20 @@ static int conexion_init(context_t *context)
 	return SUCCESS;
 }
 
-
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
 
-
-
-void  *routine_conexion_interrupt(void *data)
+void *routine_conexion_interrupt(void *data)
 {
-	context_t *context = data;
+	kernel_t *kernel = data;
 
-	conexion_init(context);
+	conexion_init(kernel);
 
-	conexion_enviar_mensaje(context->conexion_interrupt, "Mando un msj");
+	conexion_enviar_mensaje(kernel->conexion_interrupt, "Mando un msj");
 
-	for(;;){
+	for (;;)
+	{
 		LOG_WARNING("Hola Thread INTERRUPT");
 		sleep(TIEMPO_ESPERA);
 	}

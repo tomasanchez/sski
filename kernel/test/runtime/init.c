@@ -31,7 +31,7 @@ CTEST(kernel_init, calling_thread_manager_init_init_does_not_fail)
 
 CTEST(kernel_init, calling_servidor_create_does_create_a_valid_server)
 {
-	context_t context;
+	kernel_t context;
 
 	config_init(MODULE_NAME);
 
