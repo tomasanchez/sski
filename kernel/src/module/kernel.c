@@ -23,6 +23,8 @@
 #include "kernel.h"
 #include "conexion_memory.h"
 #include "main.h"
+#include "conexion_dispatch.h"
+#include "conexion_interrupt.h"
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****
@@ -45,9 +47,6 @@ static void on_delete_context(context_t *context);
 static int on_init_context(context_t *context)
 {
 	context->server = servidor_create(ip(), puerto_escucha());
-	// TODO : Init CPU Connection
-	// Init Memory Connection
-	context->conexion_memory;
 	context->tm = new_thread_manager();
 
 	return EXIT_SUCCESS;
@@ -56,11 +55,18 @@ static int on_init_context(context_t *context)
 static void
 on_delete_context(context_t *context)
 {
+  
 	servidor_destroy(&(context->server));
-	// TODO : Destroy CPU Connection
+  
 	thread_manager_destroy(&(context->tm));
+  
+  // Destroy CPU Connections
+	conexion_destroy(&(context->conexion_dispatch));
+	conexion_destroy(&(context->conexion_interrupt));
+  
 	// Destroy Memory Connection
 	conexion_destroy(&(context->conexion_memory));
+ 
 }
 
 int on_connect(void *conexion, bool offline_mode)
@@ -125,10 +131,16 @@ int on_init(context_t *context)
 
 int on_run(context_t *context)
 {
-
-	// Use different threads for each connection.
+	// Dispatch Different threads for each connection
+  
+  // CPU Connections:
+	thread_manager_launch(&context->tm, routine_conexion_dispatch, context);
+	thread_manager_launch(&context->tm, routine_conexion_interrupt, context);
+  
+  // Memory Connection:
 	thread_manager_launch(&(context->tm), routine_conexion_memoria, context);
-
+  
+  // Console Connection:
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
 		LOG_ERROR("Server could not listen.");
@@ -163,3 +175,4 @@ void on_before_exit(context_t *context, int exit_code)
 
 	exit(exit_code);
 }
+
