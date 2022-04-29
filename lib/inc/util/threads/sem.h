@@ -14,6 +14,8 @@
 #include <semaphore.h>
 #include <pthread.h>
 
+#define SHARE_BETWEEN_THREADS 0
+
 /**
  * @brief Shortcut for sem_wait.
  *

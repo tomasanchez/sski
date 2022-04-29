@@ -12,6 +12,14 @@
 #include "thread_manager.h"
 #include "cfg.h"
 #include "log.h"
+#include "sem.h"
+
+typedef struct KernelSynchronizer
+{
+	sem_t dispatch;
+	sem_t interrupt;
+	sem_t memory;
+} ks_t;
 
 /**
  * @brief Kernel module.
@@ -29,6 +37,8 @@ typedef struct Kernel
 	conexion_t conexion_interrupt;
 	// Thread Tracker dependency.
 	thread_manager_t tm;
+	// Kernel Synchronizer dependency.
+	ks_t sync;
 } kernel_t;
 
 /**

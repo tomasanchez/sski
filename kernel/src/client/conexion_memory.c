@@ -2,6 +2,7 @@
 #include "kernel.h"
 #include "instruction.h"
 #include "conexion.h"
+#include "module.h"
 #include "accion.h"
 #include "log.h"
 #include "cfg.h"
@@ -12,44 +13,30 @@
 
 extern kernel_t g_kernel;
 
+/**
+ * @brief Connects a Kernel to a Memory
+ *
+ * @param kernel to connect
+ * @return exit status code.
+ */
+static int on_connect_memory(kernel_t *kernel);
+
 // ============================================================================================================
 //                               ***** Private Functions *****
 // ============================================================================================================
 
-static int on_connect(void *conexion, bool offline_mode)
-{
-	if (offline_mode)
-	{
-		LOG_WARNING("Module working in offline mode.");
-		return ERROR;
-	}
-
-	while (!conexion_esta_conectada(*(conexion_t *)conexion))
-	{
-		LOG_TRACE("Connecting...");
-
-		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
-		{
-			LOG_ERROR("Could not connect.");
-			sleep(TIEMPO_ESPERA);
-		}
-	}
-
-	return SUCCESS;
-}
-
-static int conexion_init(kernel_t *kernel)
+static int on_connect_memory(kernel_t *kernel)
 {
 	char *port = puerto_memoria();
 	char *ip = ip_memoria();
 
-	LOG_DEBUG("[MEMORY-THREAD] - Connecting <Kernel> at %s:%s", ip, port);
+	LOG_DEBUG("[Memory Thread] :=> Connecting <Kernel> at %s:%s", ip, port);
 
 	kernel->conexion_memory = conexion_cliente_create(ip, port);
 
-	if (on_connect(&kernel->conexion_memory, false) EQ SUCCESS)
+	if (on_module_connect(&kernel->conexion_memory, false) EQ SUCCESS)
 	{
-		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
+		LOG_DEBUG("[Memory Thread] :=> Connected as CLIENT at %s:%s", ip, port);
 	}
 
 	return SUCCESS;
@@ -59,18 +46,17 @@ static int conexion_init(kernel_t *kernel)
 //                               ***** Public Functions *****
 // ============================================================================================================
 
-// Rutina (HILO) de Kernel como cliente.
+// ! Main of [Memory Thread]
 void *routine_conexion_memoria(void *data)
 {
 	kernel_t *kernel = data;
 
-	conexion_init(kernel);
-
-	conexion_enviar_mensaje(kernel->conexion_memory, "Send message");
+	on_connect_memory(kernel);
 
 	for (;;)
 	{
-		LOG_WARNING("Thread 2 message");
-		sleep(TIEMPO_ESPERA);
+		LOG_WARNING("[Memory Thread] :=> Waiting PCB to be initialized in Memory");
+		WAIT(kernel->sync.memory);
+		/// TODO : Send Interruption.
 	}
 }

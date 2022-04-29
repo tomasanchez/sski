@@ -27,7 +27,7 @@
 #include "conexion_interrupt.h"
 
 // ============================================================================================================
-//                                   ***** Private Functions  *****
+//                                   ***** Init / Destroy Methods  *****
 // ============================================================================================================
 /**
  * @brief Initializes the Kernel
@@ -44,10 +44,26 @@ static int on_init_context(kernel_t *kernel);
  */
 static void on_delete_context(kernel_t *kernel);
 
+/**
+ * @brief Inits the Kernel Synchronizer
+ *
+ * @param sync to be initialized
+ * @return exit status code
+ */
+static int on_init_sync(ks_t *sync);
+
+/**
+ * @brief Destroys the Kernel Synchronizer
+ *
+ * @param sync to be destroyed
+ */
+static void on_destroy_sync(ks_t *sync);
+
 static int on_init_context(kernel_t *kernel)
 {
 	kernel->server = servidor_create(ip(), puerto_escucha());
 	kernel->tm = new_thread_manager();
+	on_init_sync(&kernel->sync);
 	return EXIT_SUCCESS;
 }
 
@@ -56,6 +72,7 @@ on_delete_context(kernel_t *kernel)
 {
 
 	servidor_destroy(&(kernel->server));
+	on_destroy_sync(&kernel->sync);
 	thread_manager_destroy(&(kernel->tm));
 
 	// Destroy CPU Connections
@@ -66,30 +83,51 @@ on_delete_context(kernel_t *kernel)
 	conexion_destroy(&(kernel->conexion_memory));
 }
 
-int on_connect(void *conexion, bool offline_mode)
+static int on_init_sync(ks_t *sync)
 {
-	if (offline_mode)
-	{
-		LOG_WARNING("Module working in offline mode.");
-		return ERROR;
-	}
+	sem_init(&sync->dispatch, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->interrupt, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->memory, SHARE_BETWEEN_THREADS, 0);
 
-	while (!conexion_esta_conectada(*(conexion_t *)conexion))
-	{
-		LOG_TRACE("Connecting...");
+	return EXIT_SUCCESS;
+}
 
-		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
-		{
-			LOG_ERROR("Could not connect.");
-			sleep(TIEMPO_ESPERA);
-		}
-	}
-
-	return SUCCESS;
+static void on_destroy_sync(ks_t *sync)
+{
+	sem_destroy(&sync->dispatch);
+	sem_destroy(&sync->interrupt);
+	sem_destroy(&sync->memory);
 }
 
 // ============================================================================================================
-//                                   ***** Public Functions  *****
+// !                                  ***** Private Declarations *****
+// ============================================================================================================
+
+/**
+ * @brief Uses a server to handle console connections.
+ *
+ * @param kernel the kernel itself
+ */
+static void
+handle_consoles(kernel_t *kernel);
+
+/**
+ * @brief Uses two threads to make the different connections to a CPU.
+ *
+ * @param kernel the kernel itself
+ */
+static void
+handle_cpu(kernel_t *kernel);
+
+/**
+ * @brief Uses a dedicated thread to connect to a Memory.
+ *
+ * @param kernel the kernel itself
+ */
+static void
+handle_memory(kernel_t *kernel);
+// ============================================================================================================
+// ?                                 ***** Public Functions  *****
 // ============================================================================================================
 
 int on_init(kernel_t *kernel)
@@ -113,10 +151,6 @@ int on_init(kernel_t *kernel)
 		LOG_DEBUG("kernel initializated");
 	}
 
-	/* BO initialization routines */
-
-	/* EO initialization routines */
-
 	signals_init();
 
 	LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
@@ -128,26 +162,16 @@ int on_init(kernel_t *kernel)
 
 int on_run(kernel_t *kernel)
 {
-	// Dispatch Different threads for each connection
+	LOG_TRACE("Handling Memory...");
+	handle_memory(kernel);
+	LOG_DEBUG("Memory: Ok.")
 
-	// CPU Connections:
-	thread_manager_launch(&kernel->tm, routine_conexion_dispatch, kernel);
-	thread_manager_launch(&kernel->tm, routine_conexion_interrupt, kernel);
+	LOG_TRACE("Handling CPU...")
+	handle_cpu(kernel);
+	LOG_DEBUG("CPU: Ok.")
 
-	// Memory Connection:
-	thread_manager_launch(&(kernel->tm), routine_conexion_memoria, kernel);
-
-	// Console Connection:
-	if (servidor_escuchar(&(kernel->server)) == -1)
-	{
-		LOG_ERROR("Server could not listen.");
-		return SERVER_RUNTIME_ERROR;
-	}
-
-	LOG_DEBUG("[SERVER-THREAD] - Server listening. Awaiting for connections.");
-
-	for (;;)
-		servidor_run(&(kernel->server), routine);
+	LOG_TRACE("Handling Consoles...");
+	handle_consoles(kernel);
 
 	return EXIT_SUCCESS;
 }
@@ -160,10 +184,6 @@ void on_before_exit(kernel_t *kernel, int exit_code)
 
 	LOG_WARNING("Server has stopped.");
 
-	/* BO finalization routines */
-
-	/* EO finalization routines */
-
 	config_close();
 
 	LOG_WARNING("Configurations unloaded.");
@@ -171,4 +191,39 @@ void on_before_exit(kernel_t *kernel, int exit_code)
 	log_close();
 
 	exit(exit_code);
+}
+
+// ============================================================================================================
+//                                   ***** Internal Methods  *****
+// ============================================================================================================
+
+static void
+handle_consoles(kernel_t *kernel)
+{
+	// Console Connection:
+	if (servidor_escuchar(&(kernel->server)) == -1)
+	{
+		LOG_ERROR("[Console-Server] :=> Server could not listen.");
+		return;
+	}
+
+	LOG_DEBUG("[Console-Server] :=> Server listening. Awaiting for connections.");
+
+	for (;;)
+		servidor_run(&(kernel->server), routine);
+}
+
+static void
+handle_cpu(kernel_t *kernel)
+{
+	// CPU Connections:
+	thread_manager_launch(&kernel->tm, routine_conexion_dispatch, kernel);
+	thread_manager_launch(&kernel->tm, routine_conexion_interrupt, kernel);
+}
+
+static void
+handle_memory(kernel_t *kernel)
+{
+	// Memory Connection:
+	thread_manager_launch(&(kernel->tm), routine_conexion_memoria, kernel);
 }
