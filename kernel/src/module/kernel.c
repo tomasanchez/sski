@@ -21,6 +21,7 @@
 #include "thread_manager.h"
 #include "signals.h"
 #include "kernel.h"
+#include "conexion_memory.h"
 #include "main.h"
 #include "conexion_dispatch.h"
 #include "conexion_interrupt.h"
@@ -46,10 +47,6 @@ static void on_delete_context(context_t *context);
 static int on_init_context(context_t *context)
 {
 	context->server = servidor_create(ip(), puerto_escucha());
-	// TODO : Init CPU Connection
-	context->conexion_dispatch;
-	context->conexion_interrupt;
-	// TODO: Init Memory Connection
 	context->tm = new_thread_manager();
 
 	return EXIT_SUCCESS;
@@ -58,13 +55,42 @@ static int on_init_context(context_t *context)
 static void
 on_delete_context(context_t *context)
 {
+  
 	servidor_destroy(&(context->server));
-	// TODO : Destroy CPU Connection
-	// TODO: Destroy Memory Connection
+  
 	thread_manager_destroy(&(context->tm));
+  
+  // Destroy CPU Connections
 	conexion_destroy(&(context->conexion_dispatch));
 	conexion_destroy(&(context->conexion_interrupt));
+  
+	// Destroy Memory Connection
+	conexion_destroy(&(context->conexion_memory));
+ 
 }
+
+int on_connect(void *conexion, bool offline_mode)
+{
+	if (offline_mode)
+	{
+		LOG_WARNING("Module working in offline mode.");
+		return ERROR;
+	}
+
+	while (!conexion_esta_conectada(*(conexion_t *)conexion))
+	{
+		LOG_TRACE("Connecting...");
+
+		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
+		{
+			LOG_ERROR("Could not connect.");
+			sleep(TIEMPO_ESPERA);
+		}
+	}
+
+	return SUCCESS;
+}
+
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
@@ -105,18 +131,23 @@ int on_init(context_t *context)
 
 int on_run(context_t *context)
 {
-
-	// TODO: use different threads for each connection.
+	// Dispatch Different threads for each connection
+  
+  // CPU Connections:
 	thread_manager_launch(&context->tm, routine_conexion_dispatch, context);
 	thread_manager_launch(&context->tm, routine_conexion_interrupt, context);
-
+  
+  // Memory Connection:
+	thread_manager_launch(&(context->tm), routine_conexion_memoria, context);
+  
+  // Console Connection:
 	if (servidor_escuchar(&(context->server)) == -1)
 	{
 		LOG_ERROR("Server could not listen.");
 		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("Server listenning. Awaiting for connections.");
+	LOG_DEBUG("[SERVER-THREAD] - Server listening. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(context->server), routine);
