@@ -19,8 +19,6 @@
 #include "instruction.h"
 #include "accion.h"
 
-#define CONF_FILE "console"
-
 #define RUNNING true
 
 /**
@@ -68,24 +66,6 @@ int on_before_exit(void);
 int on_run(char *instructions_file_name, uint32_t process_size);
 
 /**
- * @brief Event handler de establecer conexion
- *
- * @param conexion referencia a una conexion
- * @param offline_mode si trabaja sin conexion
- * @return SUCCESS o ERROR
- */
-int on_connect(void *conexion, bool offline_mode);
-
-/**
- * @brief Event handler para leer a traves de Readline, al recibir EMPTY_STRING cambia el status
- *
- * @param line la linea leida
- * @param status el estado del proceso
- * @return la linea leida o NULL
- */
-char *on_client_read(char *line, bool *status);
-
-/**
  * @brief Event handler para el envio de mensajes
  *
  * @param conexion
@@ -93,5 +73,3 @@ char *on_client_read(char *line, bool *status);
  * @return int
  */
 ssize_t on_send_instruction(void *conexion, instruction_t *inst);
-
-ssize_t on_send_action(conexion_t is_conexion, actioncode_t actioncode, uint32_t param);

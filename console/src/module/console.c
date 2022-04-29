@@ -14,10 +14,10 @@
 #include "instruction.h"
 #include "conexion.h"
 #include "accion.h"
-#include "network.h"
 #include "smartlist.h"
 #include "parser.h"
 #include "scanner.h"
+#include "module.h"
 #include <signal.h>
 
 // ============================================================================================================
@@ -28,6 +28,8 @@
 static console_t this;
 
 t_list *input_file_commands;
+
+#define MODULE_NAME "console"
 
 int yylexerrs = 0;
 
@@ -45,11 +47,11 @@ extern int yynerrs;
 static void cierre_forzoso(int signal);
 
 /**
- * @brief Manda al servidor a escuchar clientes.
+ * @brief Connects the console to a Kernel.
  *
  * @return int
  */
-static int conexion_init(void);
+static int on_connect(void);
 
 /**
  * @brief Bison Parser Wrapper. Runs a syntax analysis.
@@ -74,17 +76,17 @@ static void cierre_forzoso(int signal)
 	}
 }
 
-static int conexion_init(void)
+static int on_connect(void)
 {
 	char *port = puerto_kernel();
 	char *ip = ip_kernel();
 
-	LOG_DEBUG("Connecting <Console> at %s:%s", ip, port);
+	LOG_WARNING("Created <Console> connection at %s:%s", ip, port);
 	this.conexion = conexion_cliente_create(ip, port);
 
-	if (on_connect(&this.conexion, false) EQ SUCCESS)
+	if (on_module_connect(&this.conexion, false) EQ SUCCESS)
 	{
-		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
+		LOG_DEBUG("Connected to <Kernel> as CLIENT at %s:%s", ip, port);
 	}
 
 	return SUCCESS;
@@ -143,12 +145,12 @@ static unsigned int parse(char *instructions_file)
 
 int on_init(void)
 {
-	if (log_init("console", true) EQ ERROR)
+	if (log_init(MODULE_NAME, true) EQ ERROR)
 		return ERROR;
 
 	LOG_DEBUG("Logger started.");
 
-	if (config_init(CONF_FILE) EQ ERROR)
+	if (config_init(MODULE_NAME) EQ ERROR)
 	{
 		LOG_ERROR("Could not open Configuration file.");
 		log_close();
@@ -165,6 +167,51 @@ int on_init(void)
 	LOG_DEBUG("Module started SUCCESSFULLY");
 	this.status = RUNNING;
 	return EXIT_SUCCESS;
+}
+
+int on_run(char *instructions_file_name, uint32_t process_size)
+{
+	LOG_TRACE("Running a Syntax Analysis...");
+	unsigned int analysis_result = parse(instructions_file_name);
+
+	if (analysis_result != YYACCEPT)
+		this.status = not RUNNING;
+
+	if (yynerrs == 0 && yylexerrs == 0)
+	{
+		on_connect();
+
+		while (this.status EQ RUNNING)
+		{
+
+			if (list_size(input_file_commands) == 0)
+			{
+				LOG_ERROR("No instructions were found");
+				return EXIT_FAILURE;
+			}
+
+			LOG_WARNING("Streaming Action...")
+			if (on_send_action(this.conexion, SYS, NEW_PROCESS, process_size) > 0)
+			{
+				LOG_DEBUG("Action sent");
+			}
+
+			LOG_WARNING("Streaming Instructions (%d)", list_size(input_file_commands));
+			while (input_file_commands->elements_count > 0)
+			{
+				if (on_send_instruction(
+						&this.conexion,
+						list_remove(input_file_commands, 0)) > 0)
+				{
+					LOG_DEBUG("Instruction %d sent.", list_size(input_file_commands));
+				}
+			}
+
+			this.status = not RUNNING;
+		}
+	}
+
+	return analysis_result;
 }
 
 int on_before_exit(void)
@@ -194,100 +241,15 @@ int on_before_exit(void)
 //  Event Handlers
 // ------------------------------------------------------------
 
-int on_run(char *instructions_file_name, uint32_t process_size)
-{
-	LOG_TRACE("Running a Syntax Analysis...");
-	unsigned int analysis_result = parse(instructions_file_name);
-
-	if (analysis_result != YYACCEPT)
-		this.status = not RUNNING;
-
-	if (yynerrs == 0 && yylexerrs == 0)
-	{
-		conexion_init();
-
-		while (this.status EQ RUNNING)
-		{
-			on_send_action(this.conexion, NEW_PROCESS, process_size);
-
-			while (input_file_commands->elements_count > 0)
-			{
-				on_send_instruction(
-					&this.conexion,
-					list_remove(input_file_commands, 0));
-			}
-
-			this.status = not RUNNING;
-		}
-	}
-
-	return analysis_result;
-}
-
-int on_connect(void *conexion, bool offline_mode)
-{
-	if (offline_mode)
-	{
-		LOG_WARNING("Module working in offline mode.");
-		return ERROR;
-	}
-
-	while (!conexion_esta_conectada(*(conexion_t *)conexion))
-	{
-		LOG_TRACE("Connecting...");
-
-		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
-		{
-			LOG_ERROR("Could not connect.");
-			sleep(TIEMPO_ESPERA);
-		}
-	}
-
-	return SUCCESS;
-}
-
-char *on_client_read(char *line, bool *status)
-{
-	if (line)
-	{
-		bool is_empty = strcmp(line, EMPTY_STR) EQ 0;
-
-		if (is_empty)
-		{
-			*status = not RUNNING;
-			free(line);
-			return NULL;
-		}
-		else
-			return line;
-	}
-	else
-		return NULL;
-}
-
-ssize_t on_send_action(conexion_t is_conexion, actioncode_t actioncode, uint32_t param)
-{
-	accion_t *accion = accion_create(actioncode, param);
-
-	void *stream = accion_serializar(accion);
-
-	ssize_t bytes_sent = conexion_enviar_stream(is_conexion, SYS, stream, sizeof(accion_t));
-
-	free(stream);
-
-	accion_destroy(accion);
-
-	return bytes_sent;
-}
-
 ssize_t on_send_instruction(void *conexion, instruction_t *inst)
 {
 	if (inst)
 	{
 		// Si envio algo sera mayor a 0
+		LOG_TRACE("Sending Instruction=[code: %d, param0: %d, param1: %d]...", inst->icode, inst->param0, inst->param1);
 		ssize_t result = instruction_send(*(conexion_t *)conexion, inst) > 0 ? SUCCESS : ERROR;
 
-		free(inst);
+		instruction_destroy(inst);
 
 		return result;
 	}

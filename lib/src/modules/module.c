@@ -34,3 +34,20 @@ int on_module_connect(void *connection, bool offline_mode)
 
 	return SUCCESS;
 }
+
+ssize_t on_send_action(conexion_t is_conexion, opcode_t opcode, actioncode_t actioncode, uint32_t param)
+{
+	accion_t *accion = accion_create(actioncode, param);
+
+	LOG_TRACE("Sending Package<%s> with Action=[code: %d, param: %d]", opcode_to_string(opcode), actioncode, param);
+
+	void *stream = accion_serializar(accion);
+
+	ssize_t bytes_sent = conexion_enviar_stream(is_conexion, opcode, stream, sizeof(accion_t));
+
+	free(stream);
+
+	accion_destroy(accion);
+
+	return bytes_sent;
+}
