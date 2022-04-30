@@ -49,6 +49,7 @@ static instruction_t *recibir_instruction(int cliente)
 void *routine(void *fd)
 {
 	int sender_fd = 0;
+	uint32_t sender_pid = 0;
 
 	memcpy((void *)&sender_fd, fd, sizeof(int));
 	free(fd);
@@ -88,11 +89,11 @@ void *routine(void *fd)
 				break;
 
 			case SYS:
-				dispatch_handle_action((void *)accion_recibir(sender_fd));
+				dispatch_handle_syscall((void *)accion_recibir(sender_fd), &sender_pid);
 				break;
 
 			case CMD:
-				dispatch_handle_instruction((void *)recibir_instruction(sender_fd));
+				dispatch_handle_instruction((void *)recibir_instruction(sender_fd), &sender_pid);
 				break;
 
 			default:

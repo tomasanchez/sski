@@ -12,6 +12,6 @@
 
 void *dispatch_imprimir_mensaje(void *args);
 
-void *dispatch_handle_instruction(void *args);
+void *dispatch_handle_instruction(void *args, uint32_t *pid);
 
-void *dispatch_handle_action(void *args);
+void *dispatch_handle_syscall(void *args, uint32_t *pid);

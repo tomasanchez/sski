@@ -25,6 +25,8 @@
 #include "main.h"
 #include "conexion_dispatch.h"
 #include "conexion_interrupt.h"
+#include "pcb.h"
+#include "pids.h"
 
 // ============================================================================================================
 //                                   ***** Init / Destroy Methods  *****
@@ -63,6 +65,8 @@ static int on_init_context(kernel_t *kernel)
 {
 	kernel->server = servidor_create(ip(), puerto_escucha());
 	kernel->tm = new_thread_manager();
+	kernel->pcbs = new_safe_list();
+	kernel->pids = new_pids();
 	on_init_sync(&kernel->sync);
 	return EXIT_SUCCESS;
 }
@@ -70,10 +74,10 @@ static int on_init_context(kernel_t *kernel)
 static void
 on_delete_context(kernel_t *kernel)
 {
-
-	servidor_destroy(&(kernel->server));
 	on_destroy_sync(&kernel->sync);
 	thread_manager_destroy(&(kernel->tm));
+	safe_list_destroy_with(kernel->pcbs, pcb_destroy);
+	pids_destroy(&kernel->pids);
 
 	// Destroy CPU Connections
 	conexion_destroy(&(kernel->conexion_dispatch));
@@ -81,6 +85,8 @@ on_delete_context(kernel_t *kernel)
 
 	// Destroy Memory Connection
 	conexion_destroy(&(kernel->conexion_memory));
+
+	servidor_destroy(&(kernel->server));
 }
 
 static int on_init_sync(ks_t *sync)
