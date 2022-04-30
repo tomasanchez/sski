@@ -48,9 +48,9 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation);
 /**
  * @brief Deallocates memory used by a PCB.
  *
- * @param pcb to be deleted
+ * @param pcb direction to the pcb to be deleted
  */
-void pcb_destroy(pcb_t *pcb);
+void pcb_destroy(void *pcb);
 
 /**
  * @brief Serializes a PCB.
@@ -75,3 +75,5 @@ size_t pcb_bytes_size(pcb_t *pcb);
  * @return a recovered PCB instance
  */
 pcb_t *pcb_from_stream(void *stream);
+
+pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid);

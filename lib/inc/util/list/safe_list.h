@@ -72,3 +72,5 @@ void safe_list_destroy();
  * @param destroyer a consumer function to destroy elements of the list
  */
 void safe_list_destroy_with(safe_list_t *list, void (*destroyer)(void *));
+
+void safe_list_add(safe_list_t *list, void *element);

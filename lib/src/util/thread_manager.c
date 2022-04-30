@@ -69,13 +69,10 @@ new_thread_manager()
 
 void thread_manager_destroy(thread_manager_t *tm)
 {
-
 	if (tm->init)
 	{
 		thread_manager_end_threads(tm);
-
 		pthread_mutex_destroy(&tm->mutex);
-
 		free(tm->threads);
 	}
 
@@ -180,7 +177,7 @@ void thread_manager_end_threads(thread_manager_t *tm)
 	pthread_mutex_lock(&tm->mutex);
 
 	for (ssize_t i = 0l; i < tm->size; i++)
-		pthread_kill(tm->threads[i], SIGTERM);
+		pthread_kill(tm->threads[i], SIGKILL);
 
 	tm->size = 0;
 	pthread_mutex_unlock(&tm->mutex);
