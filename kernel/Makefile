@@ -90,7 +90,7 @@ test: test-build
 # ! Uses Valgrind MemCheck tool
 leaks: compile
 	@mkdir -p $(LOG_FOLDER)
-	valgrind --leak-check=yes --log-file="$(LOG_FOLDER)/$(LEAKS)" --track-origins=yes ./$(OUTPUT)
+	valgrind --leak-check=yes --log-file="$(LOG_FOLDER)/$(LEAKS)" --track-origins=yes --leak-check=full --show-leak-kinds=all ./$(OUTPUT)
 
 # ! Uses Valgrind Helgrind tool
 threads: compile
