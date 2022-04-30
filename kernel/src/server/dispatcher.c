@@ -10,46 +10,15 @@
 #include "accion.h"
 #include "log.h"
 #include "lib.h"
+#include "cfg.h"
+#include "pcb.h"
+#include "kernel.h"
 
 // ============================================================================================================
 //                               ***** Dispatcher -  Definiciones *****
 // ============================================================================================================
 
-// Los PIDs
-bool pids[PIDS];
-
-// ============================================================================================================
-//                               ***** Funciones Privadas - Declaraciones *****
-// ============================================================================================================
-
-// ------------------------------------------------------------
-//  Getters
-// ------------------------------------------------------------
-
-/**
- * @brief Get the primer pid libre
- *
- * @return el ID libre o UNDEFINED
- */
-static uint32_t get_pid_libre(void);
-
-/**
- * @brief Lee un un entero de 32 bits de una porción de memoria
- *
- * @param stream la porción de memoria de la cual leer
- * @param offset el desplazamiento dentro de esa memoria
- * @return el valor leido
- */
-static uint32_t _get_uint32(void *stream, size_t *offset);
-
-/**
- * @brief Lee un entero de tipo INT de una porción de memoria
- *
- * @param args la porción de memoria de la cual leer
- * @param offset el desplazamiento dentro de esa memoria
- * @return el valor leido
- */
-static int _get_cliente(void *args, size_t *offset);
+extern kernel_t g_kernel;
 
 // ============================================================================================================
 //                               ***** Funciones Privadas - Definiciones *****
@@ -66,69 +35,45 @@ void *dispatch_imprimir_mensaje(void *args)
 	return NULL;
 }
 
-void *dispatch_handle_instruction(void *args)
+void *dispatch_handle_instruction(void *args, uint32_t *pid)
 {
 	instruction_t *instruction = ((instruction_t *)args);
 
-	THREAD_SAFE(LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1));
+	LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1);
+
+	pcb_t *pcb = get_pcb_by_pid(g_kernel.pcbs->_list, *pid);
+
+	list_smart_add(pcb->instructions, instruction);
 
 	instruction_destroy(instruction);
 
 	return NULL;
 }
 
-void *dispatch_handle_action(void *args)
+void *dispatch_handle_syscall(void *args, uint32_t *pid)
 {
 	accion_t *accion = ((accion_t *)args);
 
-	THREAD_SAFE(LOG_INFO("Received Action: %d %d", accion->actioncode, accion->param););
+	LOG_INFO("Received Action: %d %d", accion->actioncode, accion->param);
+
+	switch (accion->actioncode)
+	{
+	case NEW_PROCESS:
+		*pid = get_pid_libre(&(g_kernel.pids));
+		if (*pid != UNDEFINED)
+		{
+			ssize_t process_size = accion->param;
+			pcb_t *new_process = new_pcb(*pid, process_size, estimacion_inicial());
+			safe_list_add(g_kernel.pcbs, new_process);
+		}
+
+		break;
+
+	default:
+		break;
+	}
 
 	accion_destroy(accion);
 
 	return NULL;
 }
-
-// ------------------------------------------------------------
-//  Getters
-// ------------------------------------------------------------
-
-static uint32_t get_pid_libre(void)
-{
-	for (uint32_t i = 0; i < PIDS; i++)
-	{
-		if (!pids[i])
-		{
-			pids[i] = true;
-			return i;
-		}
-	}
-
-	return UNDEFINED;
-}
-
-static int _get_cliente(void *args, size_t *offset)
-{
-	int cliente = 0;
-
-	memcpy((void *)&cliente, args + *offset, sizeof(int));
-	*offset += sizeof(int);
-
-	return cliente;
-}
-
-static uint32_t _get_uint32(void *stream, size_t *offset)
-{
-	uint32_t value = 0;
-
-	memcpy((void *)&value, stream + *offset, sizeof(uint32_t));
-	*offset += sizeof(uint32_t);
-
-	return value;
-}
-
-// ----------------------
-//  Wrappers
-// ----------------------
-
-// Obtiene la PATOTA ID
-static uint32_t (*_get_pid)(void *, size_t *) = _get_uint32;

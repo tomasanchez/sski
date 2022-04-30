@@ -12,6 +12,7 @@
 #include "pcb.h"
 #include "instruction.h"
 #include <string.h>
+#include "smartlist.h"
 
 pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 {
@@ -27,18 +28,31 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 	return pcb;
 }
 
-void pcb_destroy(pcb_t *pcb)
+static inline bool _get_by_pid(uint32_t pid, pcb_t *pcb)
 {
-	if (pcb)
-	{
-		list_smart_destroy(pcb->instructions, instruction_destroy);
+	return pcb->id == pid;
+}
 
-		if (pcb->page_table)
-			free(pcb->page_table);
+pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
+{
+	bool clojure(void *pcb) { return _get_by_pid(pid, (pcb_t *)pcb); }
+
+	return list_find(pcbs, clojure);
+}
+
+void pcb_destroy(void *pcb)
+{
+	if ((pcb_t *)pcb)
+	{
+		list_smart_destroy(((pcb_t *)pcb)->instructions, instruction_destroy);
+
+		if (((pcb_t *)pcb)->page_table)
+			free(((pcb_t *)pcb)->page_table);
 
 		free(pcb);
-		pcb = NULL;
 	}
+
+	pcb = NULL;
 }
 
 void *pcb_to_stream(pcb_t *pcb)

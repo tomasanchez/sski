@@ -10,6 +10,8 @@
 
 #include "server.h"
 #include "thread_manager.h"
+#include "safe_list.h"
+#include "pids.h"
 #include "cfg.h"
 #include "log.h"
 #include "sem.h"
@@ -29,6 +31,10 @@ typedef struct Kernel
 {
 	// The Kernel Multi-thread Server dependency.
 	servidor_t server;
+	// Available PID pool
+	pids_t pids;
+	// Kernel instantiated PCBs.
+	safe_list_t *pcbs;
 	// Kernel-Memory Client dependency.
 	conexion_t conexion_memory;
 	// Kernel-CPU (Dispatch) connection dependency.
