@@ -120,6 +120,7 @@ void thread_manager_launch(thread_manager_t *tm,
 						   void *(*thread_routine)(void *),
 						   void *__restrict args)
 {
+
 	if (tm->init)
 	{
 		pthread_mutex_lock(&tm->mutex);
@@ -132,13 +133,14 @@ void thread_manager_launch(thread_manager_t *tm,
 		else
 		{
 			tm->max_threads *= 2;
+			void *previous_reference = tm->threads;
 			tm->threads = realloc(tm->threads, tm->max_threads * sizeof(pthread_t));
+			free(previous_reference);
 			pthread_create(&tm->threads[tm->size], NULL, thread_routine, args);
 			pthread_detach(tm->threads[tm->size]);
 		}
 
 		tm->size++;
-
 		pthread_mutex_unlock(&tm->mutex);
 	}
 }
@@ -177,7 +179,10 @@ void thread_manager_end_threads(thread_manager_t *tm)
 	pthread_mutex_lock(&tm->mutex);
 
 	for (ssize_t i = 0l; i < tm->size; i++)
-		pthread_kill(tm->threads[i], SIGKILL);
+	{
+		pthread_cancel(tm->threads[i]);
+		kill(tm->threads[i], SIGKILL);
+	}
 
 	tm->size = 0;
 	pthread_mutex_unlock(&tm->mutex);
@@ -190,7 +195,5 @@ void thread_manager_terminar_thread(void)
 
 void thread_manager_terminar_thread_all(void)
 {
-	// Se remueve de la lista, neceista mutua exclusión.
-	for (int i = 0; i < this.size; i++)
-		pthread_kill(this.threads[i], SIGTERM);
+	thread_manager_end_threads(&this);
 }
