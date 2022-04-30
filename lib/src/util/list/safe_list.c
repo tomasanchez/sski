@@ -39,6 +39,7 @@ void safe_list_destroy_with(safe_list_t *this, void (*destroyer)(void *))
 	pthread_mutex_lock(&this->_mtx);
 	list_smart_destroy(this->_list, destroyer);
 	pthread_mutex_unlock(&this->_mtx);
+	free(this);
 }
 
 // ============================================================================================================
