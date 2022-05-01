@@ -74,17 +74,21 @@ static int on_init_context(kernel_t *kernel)
 static void
 on_delete_context(kernel_t *kernel)
 {
-	on_destroy_sync(&kernel->sync);
 	thread_manager_destroy(&(kernel->tm));
+	LOG_TRACE("Thread Manager Ended.");
+	on_destroy_sync(&kernel->sync);
+	LOG_TRACE("Syncrhonizer Ended.");
 	safe_list_destroy_with(kernel->pcbs, pcb_destroy);
 	pids_destroy(&kernel->pids);
 
 	// Destroy CPU Connections
 	conexion_destroy(&(kernel->conexion_dispatch));
 	conexion_destroy(&(kernel->conexion_interrupt));
+	LOG_TRACE("CPU Connections Stoppped.");
 
 	// Destroy Memory Connection
 	conexion_destroy(&(kernel->conexion_memory));
+	LOG_TRACE("Memory Connection Stopped.");
 
 	servidor_destroy(&(kernel->server));
 }
