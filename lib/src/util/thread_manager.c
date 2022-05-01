@@ -133,9 +133,7 @@ void thread_manager_launch(thread_manager_t *tm,
 		else
 		{
 			tm->max_threads *= 2;
-			void *previous_reference = tm->threads;
 			tm->threads = realloc(tm->threads, tm->max_threads * sizeof(pthread_t));
-			free(previous_reference);
 			pthread_create(&tm->threads[tm->size], NULL, thread_routine, args);
 			pthread_detach(tm->threads[tm->size]);
 		}
