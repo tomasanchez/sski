@@ -18,10 +18,10 @@
 #include "lib.h"
 #include "log.h"
 #include "cfg.h"
-#include "routines.h"
 #include "thread_manager.h"
 #include "signals.h"
-#include "memoryModule.h"
+#include "memory_module.h"
+#include "memory_routines.h"
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****

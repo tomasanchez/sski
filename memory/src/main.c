@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "memoryModule.h"
+#include "memory_module.h"
 
 context_t g_context;
 
