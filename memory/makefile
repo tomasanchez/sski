@@ -18,7 +18,7 @@ LOG_FOLDER=../log
 # Build Folder
 BUILD_FOLDER=../build
 # Include directory
-INCLUDE_DIRECTORY=./include/ ../lib/inc/
+INCLUDE_DIRECTORY=./inc/ ../lib/inc/
 # Source directory
 SOURCE_DIRECTORY=./src
 # Test Directory

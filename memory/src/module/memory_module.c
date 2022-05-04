@@ -19,14 +19,51 @@
 #include "log.h"
 #include "cfg.h"
 #include "thread_manager.h"
-#include "signals.h"
 #include "memory_module.h"
 #include "memory_routines.h"
+#include "signals.h"
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
+/**
+ * @brief Initializes the Memory Context
+ *
+ * @param context the Memory context
+ * @return success or failure
+ */
+static int on_init_context(context_t *context);
 
+/**
+ * @brief Destroy the context elements
+ *
+ * @param context the Memory Context
+ */
+static void on_delete_context(context_t *context);
+
+static int on_init_context(context_t *context)
+{
+	//context->server = servidor_create(ip(), puerto_escucha());
+	context->server = servidor_create("127.0.0.1", puerto_escucha());
+
+	// TODO : Init Kernel Connection
+
+	// TODO: Init Memory Connection
+	context->tm = new_thread_manager();
+
+	return EXIT_SUCCESS;
+}
+
+static void
+on_delete_context(context_t *context)
+{
+	servidor_destroy(&(context->server));
+
+	// TODO : Destroy Kernel Connection
+
+	// TODO: Destroy Memory Connection
+	thread_manager_destroy(&(context->tm));
+}
 
 
 
@@ -61,7 +98,8 @@ int on_init(context_t *context)
 
 	signals_init();
 
-	LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
+	//LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
+	LOG_DEBUG("Server created at %s:%s", "127.0.0.1", puerto_escucha());
 
 	LOG_DEBUG("Memory Module started SUCCESSFULLY");
 

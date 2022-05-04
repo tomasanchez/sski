@@ -18,20 +18,20 @@ extern cpu_t g_cpu;
 
 static int conexion_init(cpu_t* cpu)
 {
-	char *port = puerto_kernel();
-	char *ip = ip_kernel();
+	char *port = puerto_memoria();
+	char *ip = ip_memoria();
 
 	LOG_DEBUG("Connecting <Cpu> at %s:%s", ip, port);
-	//cpu->conexion = conexion_cliente_create(ip, port);
+	cpu->conexion = conexion_cliente_create(ip, port);
 
 	// Test connection with Kernel
-	cpu->conexion = conexion_cliente_create("127.0.0.1", "8000");
+	//cpu->conexion = conexion_cliente_create("127.0.0.1", "8000");
 
 	if (on_connect(&cpu->conexion, false) EQ SUCCESS)
 	{
-		//LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
+		LOG_DEBUG("Connected as CLIENT at %s:%s", ip, port);
 		// Test connection with Kernel
-		LOG_DEBUG("Connected as CLIENT at %s:%s", "127.0.0.1", "8000");
+		//LOG_DEBUG("Connected as CLIENT at %s:%s", "127.0.0.1", "8000");
 	}
 
 	return SUCCESS;

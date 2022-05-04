@@ -1,5 +1,7 @@
 #include "memory_routines.h"
 #include "memory_module.h"
+#include "memory_dispatcher.h"
+
 
 
 // ============================================================================================================
@@ -13,8 +15,13 @@ extern context_t g_context;
 //                                   ***** Private Functions *****
 // ============================================================================================================
 
-
-
+static char * recibir_mensaje(int cliente)
+{
+	// Bytes recibidos
+	ssize_t size = ERROR;
+	// El mensaje (MSG) recibido
+	return servidor_recibir_mensaje(cliente, &size);
+}
 
 // ============================================================================================================
 //                                   ***** Public Functions  *****
@@ -60,14 +67,6 @@ void *routine(void *fd)
 			{
 			case MSG:
 				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
-				break;
-
-			case SYS:
-				dispatch_handle_action((void *)accion_recibir(sender_fd));
-				break;
-
-			case CMD:
-				dispatch_handle_instruction((void *)recibir_instruction(sender_fd));
 				break;
 
 			default:
