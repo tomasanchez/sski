@@ -7,6 +7,9 @@
 #define CTEST_COLOR_OK
 
 #include "ctest.h"
+#include "memory_module.h"
+
+context_t g_context;
 
 int main(int argc, const char *argv[])
 {
