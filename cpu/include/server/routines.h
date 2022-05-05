@@ -1,3 +1,3 @@
 #pragma once
 
-void *routines(void *fd);
+void *routine(void *fd);

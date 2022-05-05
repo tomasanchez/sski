@@ -8,8 +8,9 @@
  * @copyright Copyright (c) 2022
  *
  */
+
 #include "conexion_memoria.h"
-#include "routines.h"
+#include "../../include/server/routines.h"
 #include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
