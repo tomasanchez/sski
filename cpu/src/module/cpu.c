@@ -8,7 +8,9 @@
  * @copyright Copyright (c) 2022
  *
  */
+
 #include "conexion_memoria.h"
+#include "../../include/server/routines.h"
 #include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
@@ -59,6 +61,8 @@ static int on_cpu_init(cpu_t *cpu)
 
 	cpu->pcb = NULL;
 	cpu->tm = new_thread_manager();
+	cpu->server_dispatch = servidor_create(ip(), puerto_escucha());
+	cpu->server_interrupt = servidor_create(ip(), puerto_escucha());
 
 	// TODO: Add server for Kernel - For PCB.
 	// TODO: Add server for Kernel - For Interruptions
@@ -72,7 +76,9 @@ on_cpu_destroy(cpu_t *cpu)
 	pcb_destroy(cpu->pcb);
 	thread_manager_destroy(&cpu->tm);
 	// TODO: Add server for Kernel - For PCB.
+	servidor_destroy(&(cpu->server_dispatch));
 	// TODO: Add server for Kernel - For Interruptions
+	servidor_destroy(&(cpu->server_interrupt));
 	// TODO: Add client connection to Memory.
 	return EXIT_SUCCESS;
 }
@@ -98,6 +104,28 @@ int on_connect(void *conexion, bool offline_mode)
 
 	return SUCCESS;
 }
+
+// ============================================================================================================
+// !                                  ***** Private Declarations *****
+// ============================================================================================================
+
+
+/**
+ * @brief Uses a server to handle CPU dispatch connections.
+ *
+ * @param cpu the cpu itself
+ */
+static void
+handle_cpu_dispatch(cpu_t *cpu);
+
+/**
+ * @brief Uses a server to handle CPU interrupt connections.
+ *
+ * @param cpu the cpu itself
+ */
+static void
+handle_cpu_interrupt(cpu_t *cpu);
+
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -138,6 +166,14 @@ int on_run(cpu_t *cpu)
 
 	// TODO: create thread for server-dispatch
 	// TODO: create thread for server-interrupt
+	LOG_TRACE("Handling CPU dispatch...")
+	handle_cpu_dispatch(cpu);
+	LOG_DEBUG("CPU dispatch: Ok.")
+
+	LOG_TRACE("Handling CPU interrupt...")
+	handle_cpu_interrupt(cpu);
+	LOG_DEBUG("CPU interrupt: Ok.")
+
 
 	// TODO: create thread for memory-conection (CLIENT)
 	thread_manager_launch(&cpu->tm, routine_conexion_memoria, cpu);
@@ -178,3 +214,37 @@ int on_before_exit(cpu_t *cpu)
 // ------------------------------------------------------------
 //  Event Handlers
 // ------------------------------------------------------------
+
+// ============================================================================================================
+//                                   ***** Internal Methods  *****
+// ============================================================================================================
+
+static void
+handle_cpu_dispatch(cpu_t *cpu)
+{
+	if (servidor_escuchar(&(cpu->server_dispatch)) == -1)
+	{
+		LOG_ERROR("[CPU dispatch-Server] :=> Server could not listen.");
+		return;
+	}
+
+	LOG_DEBUG("[CPU dispatch-Server] :=> Server listening. Awaiting for connections.");
+
+	for (;;)
+		servidor_run(&(cpu->server_dispatch), routine);
+}
+
+static void
+handle_cpu_interrupt(cpu_t *cpu)
+{
+		if (servidor_escuchar(&(cpu->server_interrupt)) == -1)
+	{
+		LOG_ERROR("[CPU interrupt-Server] :=> Server could not listen.");
+		return;
+	}
+
+	LOG_DEBUG("[CPU dispatch-Server] :=> Server listening. Awaiting for connections.");
+
+	for (;;)
+		servidor_run(&(cpu->server_dispatch), routine);
+}
