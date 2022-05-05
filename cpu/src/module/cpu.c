@@ -116,7 +116,7 @@ int on_connect(void *conexion, bool offline_mode)
  * @param cpu the cpu itself
  */
 static void
-handle_cpu(cpu_t *cpu);
+handle_cpu_dispatch(cpu_t *cpu);
 
 /**
  * @brief Uses a server to handle CPU interrupt connections.
@@ -124,7 +124,7 @@ handle_cpu(cpu_t *cpu);
  * @param cpu the cpu itself
  */
 static void
-handle_cpu(cpu_t *cpu);
+handle_cpu_interrupt(cpu_t *cpu);
 
 
 // ============================================================================================================
@@ -219,6 +219,7 @@ int on_before_exit(cpu_t *cpu)
 //                                   ***** Internal Methods  *****
 // ============================================================================================================
 
+static void
 handle_cpu_dispatch(cpu_t *cpu)
 {
 	if (servidor_escuchar(&(cpu->server_dispatch)) == -1)
@@ -233,6 +234,7 @@ handle_cpu_dispatch(cpu_t *cpu)
 		servidor_run(&(cpu->server_dispatch), routine);
 }
 
+static void
 handle_cpu_interrupt(cpu_t *cpu)
 {
 		if (servidor_escuchar(&(cpu->server_interrupt)) == -1)

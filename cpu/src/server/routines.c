@@ -34,16 +34,6 @@ recibir_mensaje(int cliente)
 	return servidor_recibir_mensaje(cliente, &size);
 }
 
-static instruction_t *recibir_instruction(int cliente)
-{
-	ssize_t size = ERROR;
-	void *stream = servidor_recibir_stream(cliente, &size);
-	instruction_t *instruction = instruction_from_stream(stream);
-	free(stream);
-
-	return instruction;
-}
-
 // ============================================================================================================
 //                                   ***** Funciones Publicas  *****
 // ============================================================================================================
@@ -51,7 +41,7 @@ static instruction_t *recibir_instruction(int cliente)
 void *routine(void *fd)
 {
 	int sender_fd = 0;
-	uint32_t sender_pid = 0;
+	//uint32_t sender_pid = 0;  ->  unused variable
 
 	memcpy((void *)&sender_fd, fd, sizeof(int));
 	free(fd);
