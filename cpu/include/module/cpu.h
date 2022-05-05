@@ -14,6 +14,7 @@
 #include "pcb.h"
 #include "thread_manager.h"
 #include "conexion.h"
+#include "server.h"
 
 #define MODULE_NAME "cpu"
 
@@ -25,7 +26,9 @@ typedef struct CPU
 {
 
 	// TODO: Add server for Kernel - For PCB (Dispatch)
+	servidor_t server_dispatch;
 	// TODO: Add server for Kernel - For Interruptions
+	servidor_t server_interrupt;
 
 	// TODO: Add client connection to Memory.
 	// La conexion del cliente
