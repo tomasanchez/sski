@@ -5,36 +5,35 @@
 #include "cfg.h"
 #include "log.h"
 
-
-typedef struct Context
+typedef struct Memory
 {
-	// The MEmory Multi-thread Server dependency.
+	// The Memory Multi-thread Server dependency.
 	servidor_t server;
 
 	thread_manager_t tm;
 
-} context_t;
+} memory_t;
 
 /**
  * @brief Initializes the Memory Module with the required structures.
  *
- * @param context the server context structure.
+ * @param memory the server memory structure.
  * @return an status code.
  */
-int on_init(context_t *context);
+int on_init(memory_t *memory);
 
 /**
  * @brief Responsible of Memory main processing action.
  *
- * @param context the server context structure.
+ * @param memory the server memory structure.
  * @return an status code.
  */
-int on_run(context_t *context);
+int on_run(memory_t *memory);
 
 /**
  * @brief Method called when Memory does close. Destroys created structures.
  *
- * @param context the current processing context
+ * @param memory the current processing memory
  * @param exit_code an status code
  */
-void on_before_exit(context_t *context, int exit_code);
+void on_before_exit(memory_t *memory, int exit_code);

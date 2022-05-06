@@ -9,7 +9,7 @@
 #include "ctest.h"
 #include "memory_module.h"
 
-context_t g_context;
+memory_t g_memory;
 
 int main(int argc, const char *argv[])
 {

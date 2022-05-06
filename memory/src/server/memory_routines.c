@@ -2,20 +2,17 @@
 #include "memory_module.h"
 #include "memory_dispatcher.h"
 
-
-
 // ============================================================================================================
 //                                   ***** Definitions  *****
 // ============================================================================================================
 
-extern context_t g_context;
-
+extern memory_t g_memory;
 
 // ============================================================================================================
 //                                   ***** Private Functions *****
 // ============================================================================================================
 
-static char * recibir_mensaje(int cliente)
+static char *recibir_mensaje(int cliente)
 {
 	// Bytes recibidos
 	ssize_t size = ERROR;
@@ -54,7 +51,7 @@ void *routine(void *fd)
 
 			servidor_desconectar_cliente(sender_fd); // Bye!
 
-			thread_manager_end_thread(&g_context.server.tm);
+			thread_manager_end_thread(&g_memory.server.tm);
 
 			return NULL;
 		}
