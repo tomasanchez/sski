@@ -37,31 +37,28 @@ static int on_init_memory(memory_t *memory);
 /**
  * @brief Destroy the memory elements
  *
- * @param memory the Memory Memory
+ * @param memory the Memory memory
  */
 static void on_delete_memory(memory_t *memory);
 
+/**
+ * @brief Run server
+ *
+ * @param memory
+ */
+static void serve(memory_t *memory);
+
 static int on_init_memory(memory_t *memory)
 {
-	// memory->server = servidor_create(ip(), puerto_escucha());
-	memory->server = servidor_create("127.0.0.1", puerto_escucha());
-
-	// TODO : Init Kernel Connection
-
-	// TODO: Init Memory Connection
+	memory->server = servidor_create(IP, puerto_escucha());
 	memory->tm = new_thread_manager();
 
 	return EXIT_SUCCESS;
 }
 
-static void
-on_delete_memory(memory_t *memory)
+static void on_delete_memory(memory_t *memory)
 {
 	servidor_destroy(&(memory->server));
-
-	// TODO : Destroy Kernel Connection
-
-	// TODO: Destroy Memory Connection
 	thread_manager_destroy(&(memory->tm));
 }
 
@@ -90,15 +87,9 @@ int on_init(memory_t *memory)
 		LOG_DEBUG("Memory initializated");
 	}
 
-	/* BO initialization routines */
-
-	/* EO initialization routines */
-
 	signals_init();
 
-	// LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
-	LOG_DEBUG("Server created at %s:%s", "127.0.0.1", puerto_escucha());
-
+	LOG_DEBUG("Server created at %s:%s", IP, puerto_escucha());
 	LOG_DEBUG("Memory Module started SUCCESSFULLY");
 
 	return EXIT_SUCCESS;
@@ -107,16 +98,7 @@ int on_init(memory_t *memory)
 int on_run(memory_t *memory)
 {
 
-	if (servidor_escuchar(&(memory->server)) == -1)
-	{
-		LOG_ERROR("Server could not listen.");
-		return SERVER_RUNTIME_ERROR;
-	}
-
-	LOG_DEBUG("Server listenning. Awaiting for connections.");
-
-	for (;;)
-		servidor_run(&(memory->server), routine);
+	serve(memory);
 
 	return EXIT_SUCCESS;
 }
@@ -129,10 +111,6 @@ void on_before_exit(memory_t *memory, int exit_code)
 
 	LOG_WARNING("Server has stopped.");
 
-	/* BO finalization routines */
-
-	/* EO finalization routines */
-
 	config_close();
 
 	LOG_WARNING("Configurations unloaded.");
@@ -140,4 +118,18 @@ void on_before_exit(memory_t *memory, int exit_code)
 	log_close();
 
 	exit(exit_code);
+}
+
+void serve(memory_t *memory)
+{
+	if (servidor_escuchar(&(memory->server)) == -1)
+	{
+		LOG_ERROR("Server could not listen.");
+		return SERVER_RUNTIME_ERROR;
+	}
+
+	LOG_DEBUG("Server listenning. Awaiting for connections.");
+
+	for (;;)
+		servidor_run(&(memory->server), routine);
 }

@@ -18,7 +18,6 @@
 // Los PIDs
 bool pids[PIDS];
 
-
 // ============================================================================================================
 //                               ***** Funciones Privadas - Definiciones *****
 // ============================================================================================================
@@ -27,7 +26,7 @@ void *dispatch_imprimir_mensaje(void *args)
 {
 	char *msg = ((char *)args);
 
-	THREAD_SAFE(LOG_INFO("Mensaje: %s", msg));
+	LOG_INFO("Mensaje: %s", msg);
 
 	free(msg);
 
