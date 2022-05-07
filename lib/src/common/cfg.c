@@ -283,3 +283,45 @@ inline int tiempo_maximo_bloqueado(void)
 {
 	return config_int(TIEMPO_MAXIMO_BLOQUEADO);
 }
+
+// -----------------------------------------------------------
+//  Kernel
+// -----------------------------------------------------------
+
+#define PUERTO_ESCUCHA_DISPATCH "PUERTO_ESCUCHA_DISPATCH"
+
+char *
+puerto_escucha_dispatch(void)
+{
+	return config_string(PUERTO_ESCUCHA_DISPATCH);
+}
+
+#define PUERTO_ESCUCHA_INTERRUPT "PUERTO_ESCUCHA_INTERRUPT"
+
+char *
+puerto_escucha_interrupt(void)
+{
+	return config_string(PUERTO_ESCUCHA_INTERRUPT);
+}
+
+#define RETARDO_NOOP "RETARDO_NOOP"
+
+int retardo_noop(void)
+{
+	return config_int(RETARDO_NOOP);
+}
+
+#define REEMPLAZO_TLB "REEMPLAZO_TLB"
+
+char *
+reemplazo_tlb(void)
+{
+	return config_string(REEMPLAZO_TLB);
+}
+
+#define ENTRADAS_TLB "ENTRADAS_TLB"
+
+int entradas_tlb(void)
+{
+	return config_int(ENTRADAS_TLB);
+}
