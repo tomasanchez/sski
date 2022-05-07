@@ -14,7 +14,7 @@ memory_t g_memory;
 int main(int argc, const char *argv[])
 {
 	printf("\033[0;35m");
-	puts("# Example :: Tests");
+	puts("# Memory :: Tests");
 	printf("\033[0m");
 
 	return ctest_main(argc, argv);
