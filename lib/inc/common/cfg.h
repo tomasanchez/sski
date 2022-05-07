@@ -101,3 +101,20 @@ double alfa(void);
 int grado_multiprogramacion(void);
 
 int tiempo_maximo_bloqueado(void);
+
+// -----------------------------------------------------------
+//  CPU
+// -----------------------------------------------------------
+
+char *
+puerto_escucha_dispatch(void);
+
+char *
+puerto_escucha_interrupt(void);
+
+int retardo_noop(void);
+
+char *
+reemplazo_tlb(void);
+
+int entradas_tlb(void);
