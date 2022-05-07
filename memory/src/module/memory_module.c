@@ -27,9 +27,9 @@
 //                                   ***** Private Functions  *****
 // ============================================================================================================
 /**
- * @brief Initializes the Memory Memory
+ * @brief Initializes the Memory module
  *
- * @param memory the Memory memory
+ * @param memory the Memory module
  * @return success or failure
  */
 static int on_init_memory(memory_t *memory);
@@ -37,7 +37,7 @@ static int on_init_memory(memory_t *memory);
 /**
  * @brief Destroy the memory elements
  *
- * @param memory the Memory memory
+ * @param memory the Memory module
  */
 static void on_delete_memory(memory_t *memory);
 
@@ -45,8 +45,9 @@ static void on_delete_memory(memory_t *memory);
  * @brief Run server
  *
  * @param memory
+ * @return SERVER_RUNTIME_ERROR or EXIT_SUCCESS
  */
-static void serve(memory_t *memory);
+static int serve(memory_t *memory);
 
 static int on_init_memory(memory_t *memory)
 {
@@ -120,7 +121,7 @@ void on_before_exit(memory_t *memory, int exit_code)
 	exit(exit_code);
 }
 
-void serve(memory_t *memory)
+int serve(memory_t *memory)
 {
 	if (servidor_escuchar(&(memory->server)) == -1)
 	{
@@ -132,4 +133,6 @@ void serve(memory_t *memory)
 
 	for (;;)
 		servidor_run(&(memory->server), routine);
+
+	return EXIT_SUCCESS;
 }
