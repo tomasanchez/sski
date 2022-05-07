@@ -27,51 +27,47 @@
 //                                   ***** Private Functions  *****
 // ============================================================================================================
 /**
- * @brief Initializes the Memory Context
+ * @brief Initializes the Memory module
  *
- * @param context the Memory context
+ * @param memory the Memory module
  * @return success or failure
  */
-static int on_init_context(context_t *context);
+static int on_init_memory(memory_t *memory);
 
 /**
- * @brief Destroy the context elements
+ * @brief Destroy the memory elements
  *
- * @param context the Memory Context
+ * @param memory the Memory module
  */
-static void on_delete_context(context_t *context);
+static void on_delete_memory(memory_t *memory);
 
-static int on_init_context(context_t *context)
+/**
+ * @brief Run server
+ *
+ * @param memory
+ * @return SERVER_RUNTIME_ERROR or EXIT_SUCCESS
+ */
+static int serve(memory_t *memory);
+
+static int on_init_memory(memory_t *memory)
 {
-	//context->server = servidor_create(ip(), puerto_escucha());
-	context->server = servidor_create("127.0.0.1", puerto_escucha());
-
-	// TODO : Init Kernel Connection
-
-	// TODO: Init Memory Connection
-	context->tm = new_thread_manager();
+	memory->server = servidor_create(IP, puerto_escucha());
+	memory->tm = new_thread_manager();
 
 	return EXIT_SUCCESS;
 }
 
-static void
-on_delete_context(context_t *context)
+static void on_delete_memory(memory_t *memory)
 {
-	servidor_destroy(&(context->server));
-
-	// TODO : Destroy Kernel Connection
-
-	// TODO: Destroy Memory Connection
-	thread_manager_destroy(&(context->tm));
+	servidor_destroy(&(memory->server));
+	thread_manager_destroy(&(memory->tm));
 }
-
-
 
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
 
-int on_init(context_t *context)
+int on_init(memory_t *memory)
 {
 	if (log_init(MODULE_NAME, true) EQ ERROR)
 		return LOG_INITIALIZATION_ERROR;
@@ -87,53 +83,34 @@ int on_init(context_t *context)
 
 	LOG_DEBUG("Configurations loaded.");
 
-	if (on_init_context(context) EQ EXIT_SUCCESS)
+	if (on_init_memory(memory) EQ EXIT_SUCCESS)
 	{
-		LOG_DEBUG("Context initializated");
+		LOG_DEBUG("Memory initializated");
 	}
-
-	/* BO initialization routines */
-
-	/* EO initialization routines */
 
 	signals_init();
 
-	//LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
-	LOG_DEBUG("Server created at %s:%s", "127.0.0.1", puerto_escucha());
-
+	LOG_DEBUG("Server created at %s:%s", IP, puerto_escucha());
 	LOG_DEBUG("Memory Module started SUCCESSFULLY");
 
 	return EXIT_SUCCESS;
 }
 
-int on_run(context_t *context)
+int on_run(memory_t *memory)
 {
 
-	if (servidor_escuchar(&(context->server)) == -1)
-	{
-		LOG_ERROR("Server could not listen.");
-		return SERVER_RUNTIME_ERROR;
-	}
-
-	LOG_DEBUG("Server listenning. Awaiting for connections.");
-
-	for (;;)
-		servidor_run(&(context->server), routine);
+	serve(memory);
 
 	return EXIT_SUCCESS;
 }
 
-void on_before_exit(context_t *context, int exit_code)
+void on_before_exit(memory_t *memory, int exit_code)
 {
 	LOG_WARNING("Closing Memory...");
 
-	on_delete_context(context);
+	on_delete_memory(memory);
 
 	LOG_WARNING("Server has stopped.");
-
-	/* BO finalization routines */
-
-	/* EO finalization routines */
 
 	config_close();
 
@@ -142,4 +119,20 @@ void on_before_exit(context_t *context, int exit_code)
 	log_close();
 
 	exit(exit_code);
+}
+
+int serve(memory_t *memory)
+{
+	if (servidor_escuchar(&(memory->server)) == -1)
+	{
+		LOG_ERROR("Server could not listen.");
+		return SERVER_RUNTIME_ERROR;
+	}
+
+	LOG_DEBUG("Server listenning. Awaiting for connections.");
+
+	for (;;)
+		servidor_run(&(memory->server), routine);
+
+	return EXIT_SUCCESS;
 }

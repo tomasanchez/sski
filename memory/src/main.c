@@ -13,15 +13,14 @@
 #include <stdlib.h>
 #include "memory_module.h"
 
-context_t g_context;
+memory_t g_memory;
 
 int main(void)
 {
-	int status_code = on_init(&g_context);
+	int status_code = on_init(&g_memory);
 
 	if (status_code == EXIT_SUCCESS)
-		status_code = on_run(&g_context);
+		status_code = on_run(&g_memory);
 
-	on_before_exit(&g_context, status_code);
+	on_before_exit(&g_memory, status_code);
 }
-

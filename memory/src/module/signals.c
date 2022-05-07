@@ -8,13 +8,13 @@
 #include "log.h"
 #include "memory_module.h"
 
-extern context_t g_context;
+extern memory_t g_memory;
 
 static void
 _sigint()
 {
 	LOG_WARNING("Se capturó la señal SIGINT");
-	on_before_exit(&(g_context), SIGINT);
+	on_before_exit(&(g_memory), SIGINT);
 }
 
 static void

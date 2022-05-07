@@ -2,34 +2,31 @@
 #include "memory_module.h"
 #include "memory_dispatcher.h"
 
-
-
 // ============================================================================================================
 //                                   ***** Definitions  *****
 // ============================================================================================================
 
-extern context_t g_context;
-
+extern memory_t g_memory;
 
 // ============================================================================================================
 //                                   ***** Private Functions *****
 // ============================================================================================================
 
-static char * recibir_mensaje(int cliente)
+static char *recibir_mensaje(int socket)
 {
 	// Bytes recibidos
 	ssize_t size = ERROR;
 	// El mensaje (MSG) recibido
-	return servidor_recibir_mensaje(cliente, &size);
+	return servidor_recibir_mensaje(socket, &size);
 }
 
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
 
-// TAKES SENDER FD AS INPUT
 void *routine(void *fd)
 {
+	// client's socket (File Descriptor)
 	int sender_fd = 0;
 
 	memcpy((void *)&sender_fd, fd, sizeof(int));
@@ -52,15 +49,13 @@ void *routine(void *fd)
 				LOG_DEBUG("Lost connection with Client <%d>", sender_fd);
 			}
 
-			servidor_desconectar_cliente(sender_fd); // Bye!
-
-			thread_manager_end_thread(&g_context.server.tm);
+			servidor_desconectar_cliente(sender_fd);
+			thread_manager_end_thread(&g_memory.server.tm);
 
 			return NULL;
 		}
 		else
 		{
-			// We got some good server from a client
 			LOG_TRACE("Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
 
 			switch (opcode)
