@@ -74,6 +74,7 @@ on_cpu_destroy(cpu_t *cpu)
 	thread_manager_destroy(&cpu->tm);
 	servidor_destroy(&(cpu->server_dispatch));
 	servidor_destroy(&(cpu->server_interrupt));
+	conexion_destroy(&(cpu->conexion));
 	return EXIT_SUCCESS;
 }
 
