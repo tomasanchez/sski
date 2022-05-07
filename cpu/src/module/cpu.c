@@ -61,12 +61,9 @@ static int on_cpu_init(cpu_t *cpu)
 
 	cpu->pcb = NULL;
 	cpu->tm = new_thread_manager();
-	cpu->server_dispatch = servidor_create(ip(), puerto_escucha());
-	cpu->server_interrupt = servidor_create(ip(), puerto_escucha());
+	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
+	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
 
-	// TODO: Add server for Kernel - For PCB.
-	// TODO: Add server for Kernel - For Interruptions
-	// TODO: Add client connection to Memory.
 	return EXIT_SUCCESS;
 }
 
@@ -75,58 +72,50 @@ on_cpu_destroy(cpu_t *cpu)
 {
 	pcb_destroy(cpu->pcb);
 	thread_manager_destroy(&cpu->tm);
-	// TODO: Add server for Kernel - For PCB.
 	servidor_destroy(&(cpu->server_dispatch));
-	// TODO: Add server for Kernel - For Interruptions
 	servidor_destroy(&(cpu->server_interrupt));
-	// TODO: Add client connection to Memory.
 	return EXIT_SUCCESS;
-}
-
-int on_connect(void *conexion, bool offline_mode)
-{
-	if (offline_mode)
-	{
-		LOG_WARNING("Module working in offline mode.");
-		return ERROR;
-	}
-
-	while (!conexion_esta_conectada(*(conexion_t *)conexion))
-	{
-		LOG_TRACE("Connecting...");
-
-		if (conexion_conectar((conexion_t *)conexion) EQ ERROR)
-		{
-			LOG_ERROR("Could not connect.");
-			sleep(TIEMPO_ESPERA);
-		}
-	}
-
-	return SUCCESS;
 }
 
 // ============================================================================================================
 // !                                  ***** Private Declarations *****
 // ============================================================================================================
 
+/**
+ * @brief Runs both CPU servers in different threads.
+ *
+ * @param cpu the CPU module context object
+ * @return should be exit success.
+ */
+static int serve_kernel(cpu_t *data);
 
 /**
- * @brief Uses a server to handle CPU dispatch connections.
+ * @brief A procedure for the Dispatch-Server
  *
- * @param cpu the cpu itself
+ * @param sv_data the server itself
+ * @return null ptr
  */
-static void
-handle_cpu_dispatch(cpu_t *cpu);
+static void *
+dispatch_server_routine(void *sv_data);
 
 /**
- * @brief Uses a server to handle CPU interrupt connections.
+ * @brief A procedure for the Interrupt-Server
  *
- * @param cpu the cpu itself
+ * @param sv_data the server itself
+ * @return null ptr
  */
-static void
-handle_cpu_interrupt(cpu_t *cpu);
+static void *
+interrupt_server_routine(void *sv_data);
 
-
+/**
+ * @brief Starts a server logging the server name
+ *
+ * @param server a server reference
+ * @param server_name the server name to be logged
+ * @return should return an exit code of succes
+ */
+static int
+on_run_server(servidor_t *server, const char *server_name);
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -162,33 +151,16 @@ int on_init(cpu_t *cpu)
 
 int on_run(cpu_t *cpu)
 {
-	LOG_TRACE("Hello World!");
 
-	// TODO: create thread for server-dispatch
-	// TODO: create thread for server-interrupt
-	LOG_TRACE("Handling CPU dispatch...")
-	handle_cpu_dispatch(cpu);
-	LOG_DEBUG("CPU dispatch: Ok.")
+	serve_kernel(cpu);
 
-	LOG_TRACE("Handling CPU interrupt...")
-	handle_cpu_interrupt(cpu);
-	LOG_DEBUG("CPU interrupt: Ok.")
-
-
-	// TODO: create thread for memory-conection (CLIENT)
 	thread_manager_launch(&cpu->tm, routine_conexion_memoria, cpu);
 
 	for (;;)
 	{
-		LOG_ERROR("Hola Thread 1");
 		sleep(TIEMPO_ESPERA);
+		LOG_INFO("[CPU] :=> Sleep...");
 	}
-
-	// conexion_init(cpu);
-
-	// thread_manager_launch(&cpu->tm, )
-
-	// conexion_enviar_mensaje(cpu->conexion, "Mando un msj");
 
 	return EXIT_SUCCESS;
 }
@@ -219,32 +191,48 @@ int on_before_exit(cpu_t *cpu)
 //                                   ***** Internal Methods  *****
 // ============================================================================================================
 
-static void
-handle_cpu_dispatch(cpu_t *cpu)
+static int serve_kernel(cpu_t *cpu)
 {
-	if (servidor_escuchar(&(cpu->server_dispatch)) == -1)
-	{
-		LOG_ERROR("[CPU dispatch-Server] :=> Server could not listen.");
-		return;
-	}
 
-	LOG_DEBUG("[CPU dispatch-Server] :=> Server listening. Awaiting for connections.");
+	thread_manager_launch(&cpu->tm, dispatch_server_routine, &cpu->server_dispatch);
+	thread_manager_launch(&cpu->tm, interrupt_server_routine, &cpu->server_interrupt);
 
-	for (;;)
-		servidor_run(&(cpu->server_dispatch), routine);
+	return EXIT_SUCCESS;
 }
 
-static void
-handle_cpu_interrupt(cpu_t *cpu)
+static void *
+dispatch_server_routine(void *sv_data)
 {
-		if (servidor_escuchar(&(cpu->server_interrupt)) == -1)
+	servidor_t *server = (servidor_t *)sv_data;
+
+	on_run_server(server, "Dispatch-Server");
+
+	return NULL;
+}
+
+static void *
+interrupt_server_routine(void *sv_data)
+{
+	servidor_t *server = (servidor_t *)sv_data;
+
+	on_run_server(server, "Interrupt-Server");
+
+	return NULL;
+}
+
+static int
+on_run_server(servidor_t *server, const char *server_name)
+{
+	if (servidor_escuchar(server) == -1)
 	{
-		LOG_ERROR("[CPU interrupt-Server] :=> Server could not listen.");
-		return;
+		LOG_ERROR("[CPU:%s] :=> Server could not listen.", server_name);
+		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("[CPU dispatch-Server] :=> Server listening. Awaiting for connections.");
+	LOG_DEBUG("[CPU:%s] :=> Server listening. Awaiting for connections.", server_name);
 
 	for (;;)
-		servidor_run(&(cpu->server_dispatch), routine);
+		servidor_run(server, request_handler);
+
+	return EXIT_SUCCESS;
 }
