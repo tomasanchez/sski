@@ -7,6 +7,8 @@
 	- [Docs](#docs)
 		- [Modules](#modules)
 		- [Console](#console)
+			- [Design](#design)
+			- [Logic](#logic)
 	- [License](#license)
 
 ##  Code for GoOS' KISS Assignment
@@ -21,7 +23,13 @@
 
 ### Console
 
+#### Design
+
 ![Class Diagram](./assets/docs/console/class_diagram.svg)
+
+#### Logic
+
+![Logic](assets/docs/console/module_logic.svg)
 
 ## License
 
