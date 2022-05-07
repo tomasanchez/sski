@@ -1,6 +1,6 @@
 {
   "name": "kiss",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Kernel de Implementacion Super Simple",
   "main": "Makefile",
   "repository": "https://github.com/sisoputnfrba/tp-2022-1c-code-for-goOS.git",
