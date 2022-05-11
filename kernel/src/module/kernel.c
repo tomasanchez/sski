@@ -67,6 +67,7 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->tm = new_thread_manager();
 	kernel->pcbs = new_safe_list();
 	kernel->pids = new_pids();
+	kernel->multiprogramming_grade = grado_multiprogramacion();
 	on_init_sync(&kernel->sync);
 	return EXIT_SUCCESS;
 }
