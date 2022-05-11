@@ -45,7 +45,7 @@ void *safe_queue_peek(safe_queue_t *this)
 	if (this)
 	{
 		pthread_mutex_lock(&this->_mtx);
-		e = queue_peek(this);
+		e = queue_peek(this->_queue);
 		pthread_mutex_unlock(&this->_mtx);
 	}
 
