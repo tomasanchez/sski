@@ -12,6 +12,7 @@
 #include "ctest.h"
 #include "instruction.h"
 #include "smartlist.h"
+#include "instruction_lambdas.h"
 
 CTEST(instruction, when_instructionToStream_then_canBeRecovered)
 {
@@ -62,5 +63,37 @@ CTEST(instruction, when_instructionListToStream_then_canBeRecovered)
 	}
 	// Esto asume que EXIT, READ y WRITE son consecutivos
 
+	list_smart_destroy(recovered, instruction_destroy);
+}
+
+CTEST(instruction, when_instructions_fold_then_canBeRecovered)
+{
+	t_list *instructions = list_create();
+
+	uint32_t param1 = 10, param2 = 124;
+
+	instruction_t *exit_i = instruction_create(C_REQUEST_EXIT, param1, param2);
+	instruction_t *read_i = instruction_create(C_REQUEST_READ, param1, param2);
+	instruction_t *write_i = instruction_create(C_REQUEST_WRITE, param1, param2);
+
+	list_smart_add(instructions, exit_i);
+	list_smart_add(instructions, read_i);
+	list_smart_add(instructions, write_i);
+
+	void *folded = instructions_fold(instructions);
+
+	t_list *recovered = instruction_list_from(folded);
+
+	ASSERT_EQUAL(list_size(instructions), list_size(recovered));
+
+	for (int i = 0; i < list_size(recovered); i++)
+	{
+		instruction_t *i_recovered = list_get(recovered, i);
+		ASSERT_EQUAL(C_REQUEST_EXIT + i, i_recovered->icode);
+		ASSERT_EQUAL(param1, i_recovered->param0);
+		ASSERT_EQUAL(param2, i_recovered->param1);
+	}
+
+	list_smart_destroy(instructions, instruction_destroy);
 	list_smart_destroy(recovered, instruction_destroy);
 }
