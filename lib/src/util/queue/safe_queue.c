@@ -36,3 +36,18 @@ void safe_queue_pop(safe_queue_t *this)
 	queue_pop(this->_queue);
 	pthread_mutex_unlock(&this->_mtx);
 }
+
+void *safe_queue_peek(safe_queue_t *this)
+{
+	// The element to be peeked in the queue
+	void *e = NULL;
+
+	if (this)
+	{
+		pthread_mutex_lock(&this->_mtx);
+		e = queue_peek(this);
+		pthread_mutex_unlock(&this->_mtx);
+	}
+
+	return e;
+}
