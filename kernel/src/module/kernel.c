@@ -37,14 +37,14 @@
  * @param kernel the module itself
  * @return success or failure
  */
-static int on_init_context(kernel_t *kernel);
+static int on_init_kernel(kernel_t *kernel);
 
 /**
  * @brief Destroy the kernel elements
  *
  * @param kernel the Kernel
  */
-static void on_delete_context(kernel_t *kernel);
+static void on_delete_kernel(kernel_t *kernel);
 
 /**
  * @brief Inits the Kernel Synchronizer
@@ -61,7 +61,7 @@ static int on_init_sync(ks_t *sync);
  */
 static void on_destroy_sync(ks_t *sync);
 
-static int on_init_context(kernel_t *kernel)
+static int on_init_kernel(kernel_t *kernel)
 {
 	kernel->server = servidor_create(ip(), puerto_escucha());
 	kernel->tm = new_thread_manager();
@@ -72,7 +72,7 @@ static int on_init_context(kernel_t *kernel)
 }
 
 static void
-on_delete_context(kernel_t *kernel)
+on_delete_kernel(kernel_t *kernel)
 {
 	thread_manager_destroy(&(kernel->tm));
 	LOG_TRACE("Thread Manager Ended.");
@@ -156,7 +156,7 @@ int on_init(kernel_t *kernel)
 
 	LOG_DEBUG("Configurations loaded.");
 
-	if (on_init_context(kernel) EQ EXIT_SUCCESS)
+	if (on_init_kernel(kernel) EQ EXIT_SUCCESS)
 	{
 		LOG_DEBUG("kernel initializated");
 	}
@@ -190,7 +190,7 @@ void on_before_exit(kernel_t *kernel, int exit_code)
 {
 	LOG_WARNING("Closing Kernel...");
 
-	on_delete_context(kernel);
+	on_delete_kernel(kernel);
 
 	LOG_WARNING("Server has stopped.");
 
