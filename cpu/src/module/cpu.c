@@ -117,6 +117,22 @@ interrupt_server_routine(void *sv_data);
  */
 static int
 on_run_server(servidor_t *server, const char *server_name);
+
+/**
+ * @brief
+ *
+ * @param cpu
+ */
+void cycle(cpu_t* cpu);
+
+/**
+ * @brief
+ *
+ * @return instruction_t
+ */
+instruction_t* instructionFetch();
+
+
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -159,7 +175,8 @@ int on_run(cpu_t *cpu)
 
 	for (;;)
 	{
-		sleep(TIEMPO_ESPERA);
+		cycle(cpu);
+
 		LOG_INFO("[CPU] :=> Sleep...");
 	}
 
@@ -183,6 +200,37 @@ int on_before_exit(cpu_t *cpu)
 
 	return exit_code;
 }
+
+void cycle(cpu_t* cpu){
+
+	instruction_t* instruction;
+
+	instruction = instructionFetch(cpu);
+
+	//TODO: Decode
+
+	//TODO: Fetch Operands
+
+	//TODO: Execute NO_OP
+
+	//TODO: Execute I/O
+
+	//TODO: Execute EXIT
+
+
+}
+
+instruction_t* instructionFetch(cpu_t *cpu)
+{
+	instruction_t* instruction = list_get(cpu->pcb->instructions,cpu->pcb->pc);
+
+	cpu->pcb->pc++;
+	return instruction;
+}
+
+//TODO:
+//funcion Decode .....
+
 
 // ------------------------------------------------------------
 //  Event Handlers
