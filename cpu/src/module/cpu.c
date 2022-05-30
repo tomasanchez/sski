@@ -11,14 +11,12 @@
 
 #include "conexion_memoria.h"
 #include "request_handler.h"
-#include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
 #include "log.h"
 #include "cfg.h"
 #include "conexion.h"
 #include "accion.h"
-#include "instruction.h"
 
 #include <signal.h>
 

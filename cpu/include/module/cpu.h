@@ -15,6 +15,7 @@
 #include "thread_manager.h"
 #include "conexion.h"
 #include "server.h"
+#include "instruction.h"
 
 #define MODULE_NAME "cpu"
 
