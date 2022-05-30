@@ -65,3 +65,11 @@ int on_run(cpu_t *cpu);
  * @return an exit staus code
  */
 int on_before_exit(cpu_t *cpu);
+
+/**
+ * @brief determina si la próxima etapa (Fetch Operands) es necesaria.
+ *
+ * @param instruction
+ * @return bool
+ */
+bool decode(instruction_t *instruction);
