@@ -11,14 +11,12 @@
 
 #include "conexion_memoria.h"
 #include "request_handler.h"
-#include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
 #include "log.h"
 #include "cfg.h"
 #include "conexion.h"
 #include "accion.h"
-#include "instruction.h"
 
 #include <signal.h>
 
@@ -123,15 +121,14 @@ on_run_server(servidor_t *server, const char *server_name);
  *
  * @param cpu
  */
-void cycle(cpu_t* cpu);
+void cycle(cpu_t *cpu);
 
 /**
  * @brief
  *
  * @return instruction_t
  */
-instruction_t* instructionFetch();
-
+instruction_t *instructionFetch();
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -201,36 +198,36 @@ int on_before_exit(cpu_t *cpu)
 	return exit_code;
 }
 
-void cycle(cpu_t* cpu){
+void cycle(cpu_t *cpu)
+{
 
-	instruction_t* instruction;
+	instruction_t *instruction;
 
 	instruction = instructionFetch(cpu);
 
-	//TODO: Decode
+	decode(instruction);
 
-	//TODO: Fetch Operands
+	// TODO: Fetch Operands
 
-	//TODO: Execute NO_OP
+	// TODO: Execute NO_OP
 
-	//TODO: Execute I/O
+	// TODO: Execute I/O
 
-	//TODO: Execute EXIT
-
-
+	// TODO: Execute EXIT
 }
 
-instruction_t* instructionFetch(cpu_t *cpu)
+instruction_t *instructionFetch(cpu_t *cpu)
 {
-	instruction_t* instruction = list_get(cpu->pcb->instructions,cpu->pcb->pc);
+	instruction_t *instruction = list_get(cpu->pcb->instructions, cpu->pcb->pc);
 
 	cpu->pcb->pc++;
 	return instruction;
 }
 
-//TODO:
-//funcion Decode .....
-
+bool decode(instruction_t *instruction)
+{
+	return instruction->icode == C_REQUEST_COPY;
+}
 
 // ------------------------------------------------------------
 //  Event Handlers
