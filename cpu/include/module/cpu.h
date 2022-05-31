@@ -74,3 +74,17 @@ int on_before_exit(cpu_t *cpu);
  * @return bool
  */
 bool decode(instruction_t *instruction);
+
+/**
+ * @brief Ejecuta la instrucción
+ * @param param1 first parameter
+ * @param param2 second parameter
+ * @param data module connection
+ */
+void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data);
+
+/**
+ * @brief ejecuta instrucción NO_OP
+ *
+ */
+void execute_NO_OP(uint time);

@@ -209,8 +209,7 @@ void cycle(cpu_t *cpu)
 
 	// TODO: Fetch Operands
 
-	// TODO: Execute NO_OP
-
+	instruction_execute(instruction, 0, 0, NULL);
 	// TODO: Execute I/O
 
 	// TODO: Execute EXIT
@@ -281,4 +280,25 @@ on_run_server(servidor_t *server, const char *server_name)
 		servidor_run(server, request_handler);
 
 	return EXIT_SUCCESS;
+}
+
+void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data)
+{
+	switch (instruction->icode)
+	{
+	case C_REQUEST_NO_OP:
+		execute_NO_OP(retardo_noop());
+		break;
+
+		// TODO C_REQUEST_IO
+		// TODO C_REQUEST_EXIT
+
+	default:
+		break;
+	}
+}
+
+void execute_NO_OP(uint time)
+{
+	sleep(time);
 }
