@@ -45,6 +45,8 @@ typedef struct Kernel
 	thread_manager_t tm;
 	// Kernel Synchronizer dependency.
 	ks_t sync;
+	// The MAX number of process that will be running at the same time.
+	int multiprogramming_grade;
 } kernel_t;
 
 /**

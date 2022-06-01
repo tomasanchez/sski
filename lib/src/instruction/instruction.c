@@ -16,9 +16,6 @@
 #include "conexion.h"
 #include "smartlist.h"
 
-// Global Variable for list operations
-size_t _instruction_offset = 0lu;
-
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -82,14 +79,6 @@ instruction_t *instruction_from_stream(void *stream)
 	offset += sizeof(uint32_t);
 
 	return instruction_create(_icode, _param0, _param1);
-}
-
-void *instruction_reduce(void *buffer, void *next)
-{
-	size_t offset = sizeof(instruction_t);
-	memcpy(&buffer + _instruction_offset, next, offset);
-	_instruction_offset += offset;
-	return buffer;
 }
 
 void *instruction_list_from(void *stream)
