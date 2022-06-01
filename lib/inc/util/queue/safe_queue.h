@@ -59,7 +59,7 @@ void safe_queue_push(safe_queue_t *queue, void *element);
  *
  * @return void
  */
-void safe_queue_pop(safe_queue_t *queue);
+void *safe_queue_pop(safe_queue_t *queue);
 
 /**
  * @brief Safe Peeks a queue of elements
