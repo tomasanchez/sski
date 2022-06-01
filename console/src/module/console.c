@@ -12,6 +12,7 @@
 #include "lib.h"
 #include "context.h"
 #include "instruction.h"
+#include "instruction_lambdas.h"
 #include "conexion.h"
 #include "accion.h"
 #include "smartlist.h"
@@ -61,6 +62,14 @@ static int on_connect(void);
  */
 static unsigned int parse(char *instructions_file);
 
+/**
+ * @brief Sends a package with a lsit of instructions.
+ *
+ * @param conexion the connection to send the instructions
+ * @param instructions the list
+ * @return ssize_t
+ */
+ssize_t on_send_instructions(void *conexion, t_list *instructions);
 // ============================================================================================================
 //                                   ***** Funciones Privadas - Definiciones  *****
 // ============================================================================================================
@@ -197,15 +206,21 @@ int on_run(char *instructions_file_name, uint32_t process_size)
 			}
 
 			LOG_WARNING("Streaming Instructions (%d)", list_size(input_file_commands));
-			while (input_file_commands->elements_count > 0)
+
+			if (!list_is_empty(input_file_commands))
 			{
-				if (on_send_instruction(
-						&this.conexion,
-						list_remove(input_file_commands, 0)) > 0)
-				{
-					LOG_DEBUG("Instruction %d sent.", list_size(input_file_commands));
-				}
+				on_send_instructions(&this.conexion, input_file_commands);
 			}
+
+			// while (input_file_commands->elements_count > 0)
+			// {
+			// 	if (on_send_instruction(
+			// 			&this.conexion,
+			// 			list_remove(input_file_commands, 0)) > 0)
+			// 	{
+			// 		LOG_DEBUG("Instruction %d sent.", list_size(input_file_commands));
+			// 	}
+			// }
 
 			this.status = not RUNNING;
 		}
@@ -255,4 +270,13 @@ ssize_t on_send_instruction(void *conexion, instruction_t *inst)
 	}
 
 	return (ssize_t)ERROR;
+}
+
+ssize_t on_send_instructions(void *conexion, t_list *instructions)
+{
+	void *stream = instructions_fold(instructions);
+	size_t size = list_size(instructions) * sizeof(instruction_t) + sizeof(uint32_t);
+	ssize_t ret = conexion_enviar_stream(*(conexion_t *)conexion, CMD, stream, size);
+	free(stream);
+	return ret;
 }
