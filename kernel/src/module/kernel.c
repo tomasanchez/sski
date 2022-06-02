@@ -68,6 +68,7 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->pcbs = new_safe_list();
 	kernel->pids = new_pids();
 	kernel->multiprogramming_grade = grado_multiprogramacion();
+	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade);
 	on_init_sync(&kernel->sync);
 	return EXIT_SUCCESS;
 }
@@ -78,6 +79,7 @@ on_delete_kernel(kernel_t *kernel)
 	thread_manager_destroy(&(kernel->tm));
 	LOG_TRACE("Thread Manager Ended.");
 	on_destroy_sync(&kernel->sync);
+	scheduler_delete(kernel->scheduler);
 	LOG_TRACE("Syncrhonizer Ended.");
 	safe_list_destroy_with(kernel->pcbs, pcb_destroy);
 	pids_destroy(&kernel->pids);
@@ -96,16 +98,13 @@ on_delete_kernel(kernel_t *kernel)
 
 static int on_init_sync(ks_t *sync)
 {
-	sem_init(&sync->dispatch, SHARE_BETWEEN_THREADS, 0);
 	sem_init(&sync->interrupt, SHARE_BETWEEN_THREADS, 0);
 	sem_init(&sync->memory, SHARE_BETWEEN_THREADS, 0);
-
 	return EXIT_SUCCESS;
 }
 
 static void on_destroy_sync(ks_t *sync)
 {
-	sem_destroy(&sync->dispatch);
 	sem_destroy(&sync->interrupt);
 	sem_destroy(&sync->memory);
 }
