@@ -38,6 +38,14 @@ void *safe_queue_pop(safe_queue_t *this)
 	return e;
 }
 
+bool safe_queue_is_empty(safe_queue_t *this)
+{
+	pthread_mutex_lock(&this->_mtx);
+	bool is_empty = queue_is_empty(this->_queue);
+	pthread_mutex_unlock(&this->_mtx);
+	return is_empty;
+}
+
 void *safe_queue_peek(safe_queue_t *this)
 {
 	// The element to be peeked in the queue
