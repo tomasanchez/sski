@@ -19,6 +19,7 @@ new_pcb_unit(pcb_t *pcb)
 	pcb_unit_t *process = malloc(sizeof(pcb_unit_t));
 	process->_pcb = pcb;
 	process->state = NEW;
+	return process;
 }
 
 void pcb_unit_destroy(void *pcb_unit)

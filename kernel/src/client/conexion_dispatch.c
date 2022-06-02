@@ -49,7 +49,6 @@ void *routine_conexion_dispatch(void *data)
 	for (;;)
 	{
 		LOG_WARNING("[Dispatch Thread] :=> Waiting PCB to be dispatched");
-		WAIT(kernel->sync.dispatch);
 		// TODO: Send PCB.
 		conexion_enviar_mensaje(kernel->conexion_dispatch, "Mando un msj");
 	}

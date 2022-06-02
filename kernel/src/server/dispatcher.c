@@ -51,6 +51,8 @@ void *dispatch_handle_instruction(void *args, uint32_t *pid)
 
 	pcb->instructions = instructions;
 
+	SIGNAL(g_kernel.scheduler.req_admit);
+
 	return NULL;
 }
 
