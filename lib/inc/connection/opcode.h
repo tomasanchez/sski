@@ -31,6 +31,10 @@ typedef enum Opcode
 	SYS,
 	// Command - instruccion
 	CMD,
+	// I/O - Return
+	INOUT,
+	// PCB
+	PCB
 } opcode_t;
 
 // ============================================================================================================

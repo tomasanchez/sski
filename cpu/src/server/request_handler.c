@@ -8,6 +8,7 @@
 #include "log.h"
 #include "cfg.h"
 #include "cpu.h"
+#include "pcb_controller.h"
 
 // ============================================================================================================
 //                                   ***** Definiciones y Estructuras  *****
@@ -32,6 +33,19 @@ recibir_mensaje(int cliente)
 	ssize_t size = ERROR;
 	// El mensaje (MSG) recibido
 	return servidor_recibir_mensaje(cliente, &size);
+}
+
+void return_pcb(int sender_fd)
+{
+	size_t pcb_size = pcb_bytes_size(g_cpu.pcb);
+	void *stream = malloc(pcb_size + sizeof(g_cpu.time));
+	void *pcb_stream = pcb_to_stream(g_cpu.pcb);
+
+	memcpy(stream, pcb_stream, pcb_size);
+	memcpy(stream + pcb_size, &g_cpu.time, sizeof(g_cpu.time));
+
+	servidor_enviar_stream(INOUT, sender_fd, stream, pcb_size+sizeof(g_cpu.time));
+
 }
 
 // ============================================================================================================
@@ -76,6 +90,11 @@ void *request_handler(void *fd)
 			{
 			case MSG:
 				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
+				break;
+			case PCB:
+				receive_pcb(sender_fd);
+				WAIT(g_cpu.sem_pcb);
+				return_pcb(sender_fd);
 				break;
 			default:
 				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
