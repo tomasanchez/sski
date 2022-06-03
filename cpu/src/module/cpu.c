@@ -205,12 +205,12 @@ void cycle(cpu_t *cpu)
 	instruction_t *instruction;
 
 	instruction = instructionFetch(cpu);
-  
+
   operands_t operandos;
-  
+
   if(decode(instruction)){
     operandos = fetch_operands(cpu);
-  };
+  }
 
 
 	instruction_execute(instruction, 0, 0, NULL);
