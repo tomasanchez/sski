@@ -245,3 +245,41 @@ inline ssize_t conexion_enviar_stream(conexion_t this, opcode_t opcode, void *st
 {
 	return conexion_esta_conectada(this) ? enviar_stream(opcode, strean, size, this.socket) : ERROR;
 }
+
+void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
+{
+	/**
+	 * Referencia a Exportar buffer - el buffer recibido;
+	 */
+	void *buffer_stream;
+
+	// Variable local tamaño
+	size_t opcode = 0;
+
+	// Valor de Retorno bytes - Los bytes recibidos o ERROR
+	ssize_t recv_ret = recv(socket, &opcode, sizeof(int), MSG_WAITALL);
+
+	if (recv_ret EQ ERROR)
+		return NULL;
+
+	size_t size = 0;
+
+	recv_ret = recv(socket, &size, sizeof(int), MSG_WAITALL);
+
+	if(size == 0)
+		return NULL;
+
+	buffer_stream = malloc(size);
+
+	recv_ret = recv(socket, buffer_stream, size, MSG_WAITALL);
+
+	if (recv_ret EQ ERROR)
+	{
+		free(buffer_stream);
+		return NULL;
+	}
+
+	*bytes_size = size;
+
+	return buffer_stream;
+}

@@ -15,11 +15,13 @@
 #include "cfg.h"
 #include "log.h"
 #include "sem.h"
+#include "scheduler.h"
 
 typedef struct KernelSynchronizer
 {
-	sem_t dispatch;
+	// Synchronizes Interruption raise to CPU
 	sem_t interrupt;
+	// Synchronizes Memory Requests
 	sem_t memory;
 } ks_t;
 
@@ -45,6 +47,10 @@ typedef struct Kernel
 	thread_manager_t tm;
 	// Kernel Synchronizer dependency.
 	ks_t sync;
+	// Kernel's Scheduler
+	scheduler_t scheduler;
+	// The MAX number of process that will be running at the same time.
+	int multiprogramming_grade;
 } kernel_t;
 
 /**

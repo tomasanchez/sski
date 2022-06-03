@@ -20,6 +20,12 @@
 
 extern kernel_t g_kernel;
 
+/**
+ * @brief Logs and instruction.
+ *
+ * @param i an instruction reference
+ */
+void log_instruction(void *i);
 // ============================================================================================================
 //                               ***** Funciones Privadas - Definiciones *****
 // ============================================================================================================
@@ -37,15 +43,15 @@ void *dispatch_imprimir_mensaje(void *args)
 
 void *dispatch_handle_instruction(void *args, uint32_t *pid)
 {
-	instruction_t *instruction = ((instruction_t *)args);
+	void *instructions = (t_list *)args;
 
-	LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1);
+	list_iterate(instructions, log_instruction);
 
 	pcb_t *pcb = get_pcb_by_pid(g_kernel.pcbs->_list, *pid);
 
-	list_smart_add(pcb->instructions, instruction);
+	pcb->instructions = instructions;
 
-	instruction_destroy(instruction);
+	SIGNAL(g_kernel.scheduler.req_admit);
 
 	return NULL;
 }
@@ -76,4 +82,10 @@ void *dispatch_handle_syscall(void *args, uint32_t *pid)
 	accion_destroy(accion);
 
 	return NULL;
+}
+
+void log_instruction(void *i)
+{
+	instruction_t *instruction = (instruction_t *)i;
+	LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1);
 }

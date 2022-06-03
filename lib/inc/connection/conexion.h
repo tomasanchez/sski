@@ -156,3 +156,5 @@ ssize_t enviar_stream(opcode_t opcode, void *stream, size_t stream_size, int soc
  * @return los bytes enviados o ERROR.
  */
 ssize_t conexion_enviar_stream(conexion_t is_conexion, opcode_t opcode, void *stream, size_t size);
+
+void *conexion_recibir_stream(int socket, ssize_t *bytes_size);
