@@ -19,6 +19,7 @@
 #include "conexion.h"
 #include "accion.h"
 #include "instruction.h"
+#include "operands.h"
 
 #include <signal.h>
 
@@ -85,7 +86,7 @@ on_cpu_destroy(cpu_t *cpu)
 /**
  * @brief Runs both CPU servers in different threads.
  *
- * @param cpu the CPU module context object
+ * @param cpu the CPU module context object#include "operands.h"
  * @return should be exit success.
  */
 static int serve_kernel(cpu_t *data);
@@ -171,7 +172,7 @@ int on_run(cpu_t *cpu)
 
 	serve_kernel(cpu);
 
-	thread_manager_launch(&cpu->tm, routine_conexion_memoria, cpu);
+	routine_conexion_memoria(cpu);
 
 	for (;;)
 	{
@@ -209,7 +210,7 @@ void cycle(cpu_t* cpu){
 
 	//TODO: Decode
 
-	//TODO: Fetch Operands
+	operands_t operandos = fetch_operands(cpu);
 
 	//TODO: Execute NO_OP
 
@@ -219,6 +220,25 @@ void cycle(cpu_t* cpu){
 
 
 }
+
+operands_t fetch_operands(cpu_t* cpu){
+
+	ssize_t bytes = -1;
+
+	void* send_stream = pcb_to_stream(cpu->pcb);
+
+	conexion_enviar_stream(cpu->conexion,OP, send_stream, pcb_bytes_size(cpu->pcb));
+
+	void* receive_stream =	conexion_recibir_stream(cpu->conexion.socket, &bytes);
+
+	operands_t ret = operandos_from_stream(receive_stream);
+
+	free(send_stream);
+	free(receive_stream);
+
+	return ret;
+}
+
 
 instruction_t* instructionFetch(cpu_t *cpu)
 {

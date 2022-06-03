@@ -55,9 +55,4 @@ void *routine_conexion_memoria(void *data)
 
 	conexion_enviar_mensaje(cpu->conexion, "Hello from CPU");
 
-	for (;;)
-	{
-		LOG_WARNING("[CPU:Client-Memory] :=> Sleeping...");
-		sleep(TIEMPO_ESPERA);
-	}
 }

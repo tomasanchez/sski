@@ -35,7 +35,7 @@ static inline bool _get_by_pid(uint32_t pid, pcb_t *pcb)
 
 pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
 {
-	bool clojure(void *pcb) { return _get_by_pid(pid, (pcb_t *)pcb); }
+	bool clojure(void *pcb); { return _get_by_pid(pid, (pcb_t *)pcb); }
 
 	return list_find(pcbs, clojure);
 }
