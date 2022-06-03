@@ -30,11 +30,20 @@ void safe_queue_push(safe_queue_t *this, void *element)
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void safe_queue_pop(safe_queue_t *this)
+void *safe_queue_pop(safe_queue_t *this)
 {
 	pthread_mutex_lock(&this->_mtx);
-	queue_pop(this->_queue);
+	void *e = queue_pop(this->_queue);
 	pthread_mutex_unlock(&this->_mtx);
+	return e;
+}
+
+bool safe_queue_is_empty(safe_queue_t *this)
+{
+	pthread_mutex_lock(&this->_mtx);
+	bool is_empty = queue_is_empty(this->_queue);
+	pthread_mutex_unlock(&this->_mtx);
+	return is_empty;
 }
 
 void *safe_queue_peek(safe_queue_t *this)

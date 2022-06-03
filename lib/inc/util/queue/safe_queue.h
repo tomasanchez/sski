@@ -59,7 +59,7 @@ void safe_queue_push(safe_queue_t *queue, void *element);
  *
  * @return void
  */
-void safe_queue_pop(safe_queue_t *queue);
+void *safe_queue_pop(safe_queue_t *queue);
 
 /**
  * @brief Safe Peeks a queue of elements
@@ -68,3 +68,11 @@ void safe_queue_pop(safe_queue_t *queue);
  * @return an element reference
  */
 void *safe_queue_peek(safe_queue_t *queue);
+
+/**
+ * @brief Tells wether a queue is empty or not (thread safe)
+ *
+ * @param queue the queue itself
+ * @return true when no elements are equeued, false when there are elements
+ */
+bool safe_queue_is_empty(safe_queue_t *queue);

@@ -105,15 +105,6 @@ void *instruction_to_stream(void *instruction);
 instruction_t *instruction_from_stream(void *stream);
 
 /**
- * @brief Reduces an instruction into a buffer.
- *
- * @param buffer the accumulator
- * @param next the next instruction
- * @return the accumulator
- */
-void *instruction_reduce(void *buffer, void *next);
-
-/**
  * @brief List instructions from a stream.
  *
  * @param stream must be [size (uint32_t)][data (instruction_t)][data...]

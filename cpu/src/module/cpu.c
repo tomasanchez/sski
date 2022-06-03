@@ -11,7 +11,6 @@
 
 #include "conexion_memoria.h"
 #include "request_handler.h"
-#include "cpu.h"
 #include "lib.h"
 #include "cpu.h"
 #include "log.h"
@@ -20,7 +19,6 @@
 #include "accion.h"
 #include "instruction.h"
 #include "operands.h"
-
 #include <signal.h>
 
 // ============================================================================================================
@@ -124,15 +122,14 @@ on_run_server(servidor_t *server, const char *server_name);
  *
  * @param cpu
  */
-void cycle(cpu_t* cpu);
+void cycle(cpu_t *cpu);
 
 /**
  * @brief
  *
  * @return instruction_t
  */
-instruction_t* instructionFetch();
-
+instruction_t *instructionFetch();
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -202,23 +199,24 @@ int on_before_exit(cpu_t *cpu)
 	return exit_code;
 }
 
-void cycle(cpu_t* cpu){
+void cycle(cpu_t *cpu)
+{
 
-	instruction_t* instruction;
+	instruction_t *instruction;
 
 	instruction = instructionFetch(cpu);
-
-	//TODO: Decode
-
-	operands_t operandos = fetch_operands(cpu);
-
-	//TODO: Execute NO_OP
-
-	//TODO: Execute I/O
-
-	//TODO: Execute EXIT
+  
+  operands_t operandos;
+  
+  if(decode(instruction)){
+    operandos = fetch_operands(cpu);
+  };
 
 
+	instruction_execute(instruction, 0, 0, NULL);
+	// TODO: Execute I/O
+
+	// TODO: Execute EXIT
 }
 
 operands_t fetch_operands(cpu_t* cpu){
@@ -239,18 +237,18 @@ operands_t fetch_operands(cpu_t* cpu){
 	return ret;
 }
 
-
-instruction_t* instructionFetch(cpu_t *cpu)
+instruction_t *instructionFetch(cpu_t *cpu)
 {
-	instruction_t* instruction = list_get(cpu->pcb->instructions,cpu->pcb->pc);
+	instruction_t *instruction = list_get(cpu->pcb->instructions, cpu->pcb->pc);
 
 	cpu->pcb->pc++;
 	return instruction;
 }
 
-//TODO:
-//funcion Decode .....
-
+bool decode(instruction_t *instruction)
+{
+	return instruction->icode == C_REQUEST_COPY;
+}
 
 // ------------------------------------------------------------
 //  Event Handlers
@@ -304,4 +302,25 @@ on_run_server(servidor_t *server, const char *server_name)
 		servidor_run(server, request_handler);
 
 	return EXIT_SUCCESS;
+}
+
+void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data)
+{
+	switch (instruction->icode)
+	{
+	case C_REQUEST_NO_OP:
+		execute_NO_OP(retardo_noop());
+		break;
+
+		// TODO C_REQUEST_IO
+		// TODO C_REQUEST_EXIT
+
+	default:
+		break;
+	}
+}
+
+void execute_NO_OP(uint time)
+{
+	sleep(time);
 }

@@ -6,6 +6,7 @@
 #include "accion.h"
 #include "log.h"
 #include "cfg.h"
+#include "pcb.h"
 
 // ============================================================================================================
 //                                   ***** Definiciones y Estructuras  *****
@@ -40,6 +41,19 @@ static instruction_t *recibir_instruction(int cliente)
 	free(stream);
 
 	return instruction;
+}
+
+/**
+ * @brief Recieves a list of instructions
+ *
+ * @param fd the socket of the client
+ * @return an instruction list.
+ */
+static t_list *recibir_instructions(int fd)
+{
+	ssize_t size = ERROR;
+	void *stream = servidor_recibir_stream(fd, &size);
+	return instruction_list_from(stream);
 }
 
 // ============================================================================================================
@@ -93,7 +107,7 @@ void *routine(void *fd)
 				break;
 
 			case CMD:
-				dispatch_handle_instruction((void *)recibir_instruction(sender_fd), &sender_pid);
+				dispatch_handle_instruction((void *)recibir_instructions(sender_fd), &sender_pid);
 				break;
 
 			default:
