@@ -20,11 +20,12 @@ typedef struct Scheduler
 	sem_t dom;
 	// Request to admit
 	sem_t req_admit;
-
 	// NEW Queue
 	safe_queue_t *new;
 	// READY Queue
 	safe_queue_t *ready;
+	// Get scheduler next
+	void *(*get_next)(scheduler_t);
 } scheduler_t;
 
 /**

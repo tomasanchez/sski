@@ -23,7 +23,23 @@ typedef struct KernelSynchronizer
 	sem_t interrupt;
 	// Synchronizes Memory Requests
 	sem_t memory;
+	// Request Dispatch
+	sem_t dispatch_req;
+	// Dispatched
+	sem_t dispatch_sent;
 } ks_t;
+
+/**
+ * @brief Kernel's Data Transfer Object
+ *
+ */
+typedef struct KernelDTO
+{
+	// The proper stream.
+	void *stream;
+	// The size in bytes.
+	size_t size;
+} kernel_dto;
 
 /**
  * @brief Kernel module.
@@ -51,6 +67,8 @@ typedef struct Kernel
 	scheduler_t scheduler;
 	// The MAX number of process that will be running at the same time.
 	int multiprogramming_grade;
+	// A stream to be sent into stream.
+	kernel_dto dispatch_dto;
 } kernel_t;
 
 /**

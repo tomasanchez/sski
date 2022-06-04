@@ -100,6 +100,8 @@ static int on_init_sync(ks_t *sync)
 {
 	sem_init(&sync->interrupt, SHARE_BETWEEN_THREADS, 0);
 	sem_init(&sync->memory, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->dispatch_req, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->dispatch_sent, SHARE_BETWEEN_THREADS, 0);
 	return EXIT_SUCCESS;
 }
 
@@ -107,6 +109,8 @@ static void on_destroy_sync(ks_t *sync)
 {
 	sem_destroy(&sync->interrupt);
 	sem_destroy(&sync->memory);
+	sem_destroy(&sync->dispatch_req);
+	sem_destroy(&sync->dispatch_sent);
 }
 
 // ============================================================================================================

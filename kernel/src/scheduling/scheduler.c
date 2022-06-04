@@ -37,3 +37,8 @@ void scheduler_delete(scheduler_t scheduler)
 	sem_destroy(&scheduler.dom);
 	sem_destroy(&scheduler.req_admit);
 }
+
+void *schedule(void *data)
+{
+	scheduler_t *scheduler = (scheduler_t *)data;
+}
