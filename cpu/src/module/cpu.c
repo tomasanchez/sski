@@ -62,6 +62,7 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->tm = new_thread_manager();
 	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
+	sem_init(&(cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
 
 	return EXIT_SUCCESS;
 }
@@ -74,6 +75,7 @@ on_cpu_destroy(cpu_t *cpu)
 	servidor_destroy(&(cpu->server_dispatch));
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
+	sem_destroy(&(cpu->sem_pcb));
 	return EXIT_SUCCESS;
 }
 
@@ -319,8 +321,10 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 		execute_NO_OP(retardo_noop());
 		break;
 
-		// TODO C_REQUEST_IO
-		// TODO C_REQUEST_EXIT
+	case C_REQUEST_IO:
+		execute_IO(data);
+
+	// TODO C_REQUEST_EXIT
 
 	default:
 		break;
@@ -330,4 +334,9 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 void execute_NO_OP(uint time)
 {
 	sleep(time);
+}
+
+void *execute_IO(cpu_t *cpu)
+{
+	SIGNAL(cpu->sem_pcb);
 }

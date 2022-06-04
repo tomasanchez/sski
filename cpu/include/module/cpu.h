@@ -16,6 +16,7 @@
 #include "conexion.h"
 #include "server.h"
 #include "instruction.h"
+#include "sem.h"
 
 #define MODULE_NAME "cpu"
 
@@ -40,6 +41,12 @@ typedef struct CPU
 
 	// Current PCB in execution.
 	pcb_t *pcb;
+
+	// CPU's SEM
+	sem_t sem_pcb;
+
+	//time in miliseconds
+	uint32_t time;
 
 } cpu_t;
 
@@ -88,3 +95,9 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
  *
  */
 void execute_NO_OP(uint time);
+
+/**
+ * @brief ejecuta instruccion IO
+ *
+ */
+void *execute_IO(cpu_t *cpu);
