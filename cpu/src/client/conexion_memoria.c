@@ -55,4 +55,5 @@ void *routine_conexion_memoria(void *data)
 
 	conexion_enviar_mensaje(cpu->conexion, "Hello from CPU");
 
+	return NULL;
 }

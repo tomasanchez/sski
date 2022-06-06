@@ -16,7 +16,7 @@
 #include "conexion.h"
 #include "server.h"
 #include "instruction.h"
-#include "sem.h"
+#include "sync.h"
 
 #define MODULE_NAME "cpu"
 
@@ -45,9 +45,11 @@ typedef struct CPU
 	// CPU's SEM
 	sem_t sem_pcb;
 
-	//time in miliseconds
+	// time in miliseconds
 	uint32_t time;
 
+	// Thread Synchronizer
+	cpu_sync_t sync;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
@@ -100,4 +102,4 @@ void execute_NO_OP(uint time);
  * @brief ejecuta instruccion IO
  *
  */
-void *execute_IO(cpu_t *cpu);
+void execute_IO(cpu_t *cpu);

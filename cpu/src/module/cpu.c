@@ -64,6 +64,8 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
 	sem_init(&(cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
 
+	cpu->sync = init_sync();
+
 	return EXIT_SUCCESS;
 }
 
@@ -76,6 +78,7 @@ on_cpu_destroy(cpu_t *cpu)
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
 	sem_destroy(&(cpu->sem_pcb));
+	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
 }
 
@@ -138,7 +141,7 @@ instruction_t *instructionFetch();
  *
  * @return operands_t
  */
-operands_t fetch_operands(cpu_t* cpu);
+operands_t fetch_operands(cpu_t *cpu);
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -182,9 +185,11 @@ int on_run(cpu_t *cpu)
 
 	for (;;)
 	{
+		// WAIT TO RECEIVE A CPU from a Kernel.
+		LOG_TRACE("Waiting for[CPU] :=> Waiting for a process...");
+		WAIT(cpu->sync.pcb_received);
+		LOG_DEBUG("[CPU] :=> Executing process...");
 		cycle(cpu);
-
-		LOG_INFO("[CPU] :=> Sleep...");
 	}
 
 	return EXIT_SUCCESS;
@@ -215,12 +220,12 @@ void cycle(cpu_t *cpu)
 
 	instruction = instructionFetch(cpu);
 
-  operands_t operandos;
+	operands_t operandos;
 
-  if(decode(instruction)){
-    operandos = fetch_operands(cpu);
-  }
-
+	if (decode(instruction))
+	{
+		operandos = fetch_operands(cpu);
+	}
 
 	instruction_execute(instruction, 0, 0, NULL);
 	// TODO: Execute I/O
@@ -228,15 +233,16 @@ void cycle(cpu_t *cpu)
 	// TODO: Execute EXIT
 }
 
-operands_t fetch_operands(cpu_t* cpu){
+operands_t fetch_operands(cpu_t *cpu)
+{
 
 	ssize_t bytes = -1;
 
-	void* send_stream = pcb_to_stream(cpu->pcb);
+	void *send_stream = pcb_to_stream(cpu->pcb);
 
-	conexion_enviar_stream(cpu->conexion,OP, send_stream, pcb_bytes_size(cpu->pcb));
+	conexion_enviar_stream(cpu->conexion, OP, send_stream, pcb_bytes_size(cpu->pcb));
 
-	void* receive_stream =	conexion_recibir_stream(cpu->conexion.socket, &bytes);
+	void *receive_stream = conexion_recibir_stream(cpu->conexion.socket, &bytes);
 
 	operands_t ret = operandos_from_stream(receive_stream);
 
@@ -324,7 +330,7 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 	case C_REQUEST_IO:
 		execute_IO(data);
 
-	// TODO C_REQUEST_EXIT
+		// TODO C_REQUEST_EXIT
 
 	default:
 		break;
@@ -336,7 +342,7 @@ void execute_NO_OP(uint time)
 	sleep(time);
 }
 
-void *execute_IO(cpu_t *cpu)
+void execute_IO(cpu_t *cpu)
 {
 	SIGNAL(cpu->sem_pcb);
 }

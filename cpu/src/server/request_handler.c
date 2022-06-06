@@ -44,8 +44,7 @@ void return_pcb(int sender_fd)
 	memcpy(stream, pcb_stream, pcb_size);
 	memcpy(stream + pcb_size, &g_cpu.time, sizeof(g_cpu.time));
 
-	servidor_enviar_stream(INOUT, sender_fd, stream, pcb_size+sizeof(g_cpu.time));
-
+	servidor_enviar_stream(INOUT, sender_fd, stream, pcb_size + sizeof(g_cpu.time));
 }
 
 // ============================================================================================================
@@ -93,6 +92,7 @@ void *request_handler(void *fd)
 				break;
 			case PCB:
 				receive_pcb(sender_fd);
+				SIGNAL(g_cpu.sync.pcb_received);
 				WAIT(g_cpu.sem_pcb);
 				return_pcb(sender_fd);
 				break;
