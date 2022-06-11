@@ -103,3 +103,10 @@ void execute_NO_OP(uint time);
  *
  */
 void execute_IO(cpu_t *cpu);
+
+/**
+ * @brief ejecuta instrucción READ
+ *
+ * @return uint32_t
+ */
+void execute_READ();

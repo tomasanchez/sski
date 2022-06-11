@@ -228,9 +228,7 @@ void cycle(cpu_t *cpu)
 	}
 
 	instruction_execute(instruction, 0, 0, NULL);
-	// TODO: Execute I/O
 
-	// TODO: Execute EXIT
 }
 
 operands_t fetch_operands(cpu_t *cpu)
@@ -329,8 +327,19 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 
 	case C_REQUEST_IO:
 		execute_IO(data);
+		break;
 
-		// TODO C_REQUEST_EXIT
+	// TODO C_REQUEST_READ
+	case C_REQUEST_READ:
+		//uint32_t memory_response = execute_READ();
+		execute_READ();
+		break;
+
+	// TODO C_REQUEST_EXIT
+
+	// TODO C_REQUEST_WRITE
+
+	// TODO C_REQUEST_COPY
 
 	default:
 		break;
@@ -345,4 +354,9 @@ void execute_NO_OP(uint time)
 void execute_IO(cpu_t *cpu)
 {
 	SIGNAL(cpu->sem_pcb);
+}
+
+void execute_READ()
+{
+	return ;
 }
