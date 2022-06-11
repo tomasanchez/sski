@@ -225,9 +225,12 @@ void cycle(cpu_t *cpu)
 	if (decode(instruction))
 	{
 		operandos = fetch_operands(cpu);
+		instruction->param0 = operandos.op1;
+		instruction->param1 = operandos.op2;
 	}
 
-	instruction_execute(instruction, 0, 0, NULL);
+
+	instruction_execute(instruction, NULL);
 
 }
 
@@ -317,8 +320,10 @@ on_run_server(servidor_t *server, const char *server_name)
 	return EXIT_SUCCESS;
 }
 
-void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data)
+uint32_t instruction_execute(instruction_t *instruction, void *data)
 {
+	uint32_t return_value = 0;
+
 	switch (instruction->icode)
 	{
 	case C_REQUEST_NO_OP:
@@ -329,10 +334,10 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 		execute_IO(data);
 		break;
 
-	// TODO C_REQUEST_READ
-	case C_REQUEST_READ:
-		//uint32_t memory_response = execute_READ();
-		execute_READ();
+	case C_REQUEST_READ:;
+		uint32_t memory_response = execute_READ(instruction->param0);
+		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response);
+		return_value = memory_response;
 		break;
 
 	// TODO C_REQUEST_EXIT
@@ -344,6 +349,8 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 	default:
 		break;
 	}
+
+	return return_value;
 }
 
 void execute_NO_OP(uint time)
@@ -356,7 +363,25 @@ void execute_IO(cpu_t *cpu)
 	SIGNAL(cpu->sem_pcb);
 }
 
-void execute_READ()
+uint32_t execute_READ(uint32_t param1)
 {
-	return ;
+	ssize_t bytes = -1;
+	uint32_t return_value = 0;
+
+	void *send_stream = malloc(sizeof(param1));
+
+	//Serializo
+	memcpy(send_stream, &param1, sizeof(param1));
+
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(param1));
+
+	free(send_stream);
+
+	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
+
+	return_value = *(uint32_t*)receive_stream;
+
+	free(receive_stream);
+
+	return return_value;
 }
