@@ -329,8 +329,11 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 
 	case C_REQUEST_IO:
 		execute_IO(data);
+		break;
 
-		// TODO C_REQUEST_EXIT
+	case C_REQUEST_EXIT:
+		execute_EXIT(data);
+		break;
 
 	default:
 		break;
@@ -344,5 +347,12 @@ void execute_NO_OP(uint time)
 
 void execute_IO(cpu_t *cpu)
 {
+	cpu->pcb_result = INOUT;
+	SIGNAL(cpu->sem_pcb);
+}
+
+void execute_EXIT(cpu_t *cpu)
+{
+	cpu->pcb_result = PCB;
 	SIGNAL(cpu->sem_pcb);
 }
