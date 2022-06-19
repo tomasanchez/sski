@@ -35,6 +35,8 @@ char *opcode_to_string(opcode_t opcode)
 	// Command - instruction
 	case CMD:
 		return "Instrucción";
+	case PCB:
+		return "PCB";
 	case RD:
 		return "Memory Read";
 	default:
