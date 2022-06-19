@@ -334,17 +334,17 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		execute_IO(data);
 		break;
 
+	case C_REQUEST_EXIT:
+		execute_EXIT(data);
+		break;
+
 	case C_REQUEST_READ:;
 		uint32_t memory_response = execute_READ(instruction->param0);
 		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response);
 		return_value = memory_response;
 		break;
-
-	// TODO C_REQUEST_EXIT
-
-	// TODO C_REQUEST_WRITE
-
-	// TODO C_REQUEST_COPY
+      
+	// TODO: C_REQUEST_WRITE
 
 	default:
 		break;
@@ -360,6 +360,13 @@ void execute_NO_OP(uint time)
 
 void execute_IO(cpu_t *cpu)
 {
+	cpu->pcb_result = INOUT;
+	SIGNAL(cpu->sem_pcb);
+}
+
+void execute_EXIT(cpu_t *cpu)
+{
+	cpu->pcb_result = PCB;
 	SIGNAL(cpu->sem_pcb);
 }
 

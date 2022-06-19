@@ -42,6 +42,7 @@ typedef struct CPU
 	// Current PCB in execution.
 	pcb_t *pcb;
 
+
 	// CPU's SEM
 	sem_t sem_pcb;
 
@@ -50,6 +51,10 @@ typedef struct CPU
 
 	// Thread Synchronizer
 	cpu_sync_t sync;
+
+	// op code
+	opcode_t pcb_result;
+
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
@@ -105,6 +110,12 @@ void execute_NO_OP(uint time);
 void execute_IO(cpu_t *cpu);
 
 /**
+ * @brief ejecuta instruccion EXIT
+ *
+ */
+void execute_EXIT(cpu_t *cpu);
+
+/*
  * @brief ejecuta instrucción READ
  *
  * @return uint32_t
