@@ -37,6 +37,8 @@ char *opcode_to_string(opcode_t opcode)
 		return "Instrucción";
 	case PCB:
 		return "PCB";
+	case SWAP:
+		return "Swap";
 	case RD:
 		return "Memory Read";
 	default:
