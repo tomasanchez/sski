@@ -35,6 +35,12 @@ char *opcode_to_string(opcode_t opcode)
 	// Command - instruction
 	case CMD:
 		return "Instrucción";
+	case PCB:
+		return "PCB";
+	case SWAP:
+		return "Swap";
+	case RD:
+		return "Memory Read";
 	default:
 		return "Código de operación no reconocido";
 	}

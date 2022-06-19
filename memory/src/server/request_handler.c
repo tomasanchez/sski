@@ -1,6 +1,8 @@
 #include "memory_routines.h"
 #include "memory_module.h"
 #include "memory_dispatcher.h"
+#include "kernel_controller.h"
+#include "cpu_controller.h"
 
 // ============================================================================================================
 //                                   ***** Definitions  *****
@@ -62,6 +64,14 @@ void *routine(void *fd)
 			{
 			case MSG:
 				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
+				break;
+
+			case RD:
+				cpu_controller_read(sender_fd);
+				break;
+
+			case SWAP:
+				kernel_controller_swap(sender_fd);
 				break;
 
 			default:
