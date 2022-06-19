@@ -349,6 +349,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		break;
 
 	case C_REQUEST_COPY:
+		;
 		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
 		LOG_TRACE("Copy Memory Value from %d to %d with the value: %d", instruction->param1, instruction->param0, memory_response_write);
 		return_value = memory_response_write;
