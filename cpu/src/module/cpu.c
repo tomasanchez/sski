@@ -343,8 +343,10 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response);
 		return_value = memory_response;
 		break;
-      
-	// TODO: C_REQUEST_WRITE
+
+	// TODO:
+	case C_REQUEST_WRITE:
+
 
 	default:
 		break;
@@ -391,4 +393,19 @@ uint32_t execute_READ(uint32_t param1)
 	free(receive_stream);
 
 	return return_value;
+}
+
+void execute_WRITE(uint32_t position,uint32_t value)
+{
+	operands_t* operands = malloc(sizeof(operands_t));
+
+	operands->op1 = position;
+	operands->op2 = value;
+
+	void *send_stream = operandos_to_stream(operands);
+
+	conexion_enviar_stream(g_cpu.conexion, WT, send_stream, sizeof(operands_t));
+
+	free(send_stream);
+	free(operands);
 }
