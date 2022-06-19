@@ -45,7 +45,7 @@ void cpu_controller_read(int socket)
 
 	if (bytes_sent > 0)
 	{
-		LOG_DEBUG("Value <%d> was sent [%d bytes]", value, bytes_sent);
+		LOG_DEBUG("Value <%d> was sent [%ld bytes]", value, bytes_sent);
 	}
 	else
 	{
