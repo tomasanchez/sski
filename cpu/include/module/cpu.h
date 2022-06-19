@@ -121,3 +121,17 @@ void execute_EXIT(cpu_t *cpu);
  * @return uint32_t
  */
 uint32_t execute_READ(uint32_t param1);
+
+/**
+ * @brief ejecuta instruccion WRITE
+ *
+ */
+void
+execute_WRITE(uint32_t position,uint32_t value);
+
+/**
+ * @brief ejecuto la instruccion COPY
+ * @return uint32_t
+ */
+uint32_t
+execute_COPY(uint32_t param1, uint32_t param2);
