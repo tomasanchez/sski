@@ -339,14 +339,20 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		break;
 
 	case C_REQUEST_READ:;
-		uint32_t memory_response = execute_READ(instruction->param0);
-		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response);
-		return_value = memory_response;
+		uint32_t memory_response_read = execute_READ(instruction->param0);
+		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response_read);
+		return_value = memory_response_read;
 		break;
 
-	// TODO:
 	case C_REQUEST_WRITE:
+		execute_WRITE(instruction->param0, instruction->param1);
+		break;
 
+	case C_REQUEST_COPY:
+		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
+		LOG_TRACE("Copy Memory Value from %d to %d with the value: %d", instruction->param1, instruction->param0, memory_response_write);
+		return_value = memory_response_write;
+		break;
 
 	default:
 		break;
