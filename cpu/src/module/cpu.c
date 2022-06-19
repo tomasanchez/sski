@@ -395,7 +395,8 @@ uint32_t execute_READ(uint32_t param1)
 	return return_value;
 }
 
-void execute_WRITE(uint32_t position,uint32_t value)
+void
+execute_WRITE(uint32_t position,uint32_t value)
 {
 	operands_t* operands = malloc(sizeof(operands_t));
 
@@ -408,4 +409,13 @@ void execute_WRITE(uint32_t position,uint32_t value)
 
 	free(send_stream);
 	free(operands);
+}
+
+uint32_t
+execute_COPY(uint32_t param1, uint32_t param2)
+{
+	uint32_t read_value = execute_READ(param2);
+	execute_WRITE(param1, read_value);
+
+	return read_value;
 }
