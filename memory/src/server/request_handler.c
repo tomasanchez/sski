@@ -1,6 +1,7 @@
 #include "memory_routines.h"
 #include "memory_module.h"
 #include "memory_dispatcher.h"
+#include "kernel_controller.h"
 #include "cpu_controller.h"
 
 // ============================================================================================================
@@ -67,6 +68,10 @@ void *routine(void *fd)
 
 			case RD:
 				cpu_controller_read(sender_fd);
+				break;
+
+			case SWAP:
+				kernel_controller_swap(sender_fd);
 				break;
 
 			default:
