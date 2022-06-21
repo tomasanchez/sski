@@ -27,6 +27,8 @@ typedef struct KernelSynchronizer
 	sem_t dispatch_req;
 	// Dispatched
 	sem_t dispatch_sent;
+	// Use PCB response.
+	sem_t use_pcb;
 } ks_t;
 
 /**
@@ -94,3 +96,10 @@ int on_run(kernel_t *context);
  * @param exit_code an status code
  */
 void on_before_exit(kernel_t *context, int exit_code);
+
+/**
+ * @brief Clear the DTO of a Kernel
+ *
+ * @param dto
+ */
+void clear_dto(kernel_dto dto);

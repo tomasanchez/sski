@@ -28,11 +28,25 @@ void *short_term_schedule(void *data)
 void execute(kernel_t *kernel, pcb_unit_t *pcb)
 {
 	pcb->state = EXECUTING;
-
 	void *stream = pcb_to_stream(pcb->_pcb);
+
 	kernel->dispatch_dto.stream = stream;
 	kernel->dispatch_dto.size = pcb_size(pcb);
+
 	SIGNAL(kernel->sync.dispatch_req);
 	WAIT(kernel->sync.dispatch_sent);
+	pcb_destroy(pcb->_pcb);
+
+	WAIT(kernel->sync.use_pcb);
+
 	free(stream);
+}
+
+pcb_t *recover_pcb(kernel_t *kernel)
+{
+	pcb_t *pcb = pcb_from_stream(kernel->dispatch_dto.stream);
+	free(kernel->dispatch_dto.stream);
+	kernel->dispatch_dto.stream = NULL;
+	kernel->dispatch_dto.size = 0;
+	return pcb;
 }
