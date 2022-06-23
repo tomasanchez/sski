@@ -26,7 +26,9 @@ void *short_term_schedule(void *data)
 	for (;;)
 	{
 		pcb_t *pcb = sched.get_next(&sched);
-		execute(kernel, pcb);
+
+		if (pcb)
+			execute(kernel, pcb);
 	}
 }
 

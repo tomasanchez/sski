@@ -27,6 +27,8 @@
 #include "conexion_interrupt.h"
 #include "pcb.h"
 #include "pids.h"
+#include "lts.h"
+#include "sts.h"
 #include "cpu_controller.h"
 
 // ============================================================================================================
@@ -146,6 +148,14 @@ handle_cpu(kernel_t *kernel);
  */
 static void
 handle_memory(kernel_t *kernel);
+
+/**
+ * @brief Creates the corresponding Schedulers
+ *
+ * @param kernel reference
+ */
+static void
+schedule_kernel(kernel_t *kernel);
 // ============================================================================================================
 // ?                                 ***** Public Functions  *****
 // ============================================================================================================
@@ -189,6 +199,8 @@ int on_run(kernel_t *kernel)
 	LOG_TRACE("Handling CPU...")
 	handle_cpu(kernel);
 	LOG_DEBUG("CPU: Ok.")
+
+	schedule_kernel(kernel);
 
 	LOG_TRACE("Handling Consoles...");
 	handle_consoles(kernel);
@@ -246,4 +258,13 @@ handle_memory(kernel_t *kernel)
 {
 	// Memory Connection:
 	thread_manager_launch(&(kernel->tm), routine_conexion_memoria, kernel);
+}
+
+static void
+schedule_kernel(kernel_t *kernel)
+{
+	// Long Term Schedule
+	thread_manager_launch(&kernel->tm, long_time_schedule, kernel);
+	// Short Term Schedule
+	thread_manager_launch(&kernel->tm, short_term_schedule, kernel);
 }

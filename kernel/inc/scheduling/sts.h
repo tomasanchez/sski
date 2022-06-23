@@ -10,3 +10,5 @@
  */
 
 #pragma once
+
+void *short_term_schedule(void *data);
