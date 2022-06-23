@@ -19,4 +19,4 @@
  * @param scheduler the Scheduler object
  * @return a PCB
  */
-void *get_next_fifo(scheduler_t *scheduler);
+void *get_next_fifo(void *scheduler);

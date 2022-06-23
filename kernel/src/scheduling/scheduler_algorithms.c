@@ -10,7 +10,8 @@
  */
 #include "scheduler_algorithms.h"
 
-void *get_next_fifo(scheduler_t *scheduler)
+void *get_next_fifo(void *scheduler)
 {
-	return safe_queue_pop(scheduler->ready);
+	scheduler_t *s = (scheduler_t *)scheduler;
+	return safe_queue_pop(s->ready);
 }

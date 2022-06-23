@@ -59,8 +59,3 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 		break;
 	}
 }
-
-pcb_t *recover_pcb(kernel_t *kernel)
-{
-	return NULL;
-}

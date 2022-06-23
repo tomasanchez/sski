@@ -43,4 +43,5 @@ void scheduler_delete(scheduler_t scheduler)
 void *schedule(void *data)
 {
 	scheduler_t *scheduler = (scheduler_t *)data;
+	return scheduler;
 }

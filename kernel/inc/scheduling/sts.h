@@ -9,4 +9,4 @@
  *
  */
 
-void *get_next_fifo(scheduler_t *scheduler);
+#pragma once

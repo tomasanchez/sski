@@ -12,6 +12,8 @@
 #pragma once
 
 #include "sem.h"
+#include "conexion.h"
+#include "pcb.h"
 
 typedef struct CpuController
 {
