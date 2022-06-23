@@ -33,16 +33,6 @@ recibir_mensaje(int cliente)
 	return servidor_recibir_mensaje(cliente, &size);
 }
 
-static instruction_t *recibir_instruction(int cliente)
-{
-	ssize_t size = ERROR;
-	void *stream = servidor_recibir_stream(cliente, &size);
-	instruction_t *instruction = instruction_from_stream(stream);
-	free(stream);
-
-	return instruction;
-}
-
 /**
  * @brief Recieves a list of instructions
  *

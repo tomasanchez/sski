@@ -43,4 +43,5 @@ static int on_connect_dispatch(kernel_t *kernel)
 void *routine_conexion_dispatch(void *data)
 {
 	on_connect_dispatch((kernel_t *)data);
+	return NULL;
 }
