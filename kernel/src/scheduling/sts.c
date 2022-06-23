@@ -16,6 +16,7 @@
 #include "log.h"
 
 void execute(kernel_t *kernel, pcb_t *pcb);
+void terminate(kernel_t *kernel, pcb_t *pcb);
 
 void *short_term_schedule(void *data)
 {
@@ -54,8 +55,19 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 	case PCB_BLOCKED:
 		break;
 
+	case PCB_TERMINATED:
+		terminate(kernel, pcb);
+		break;
+
 	default:
 		safe_queue_push(kernel->scheduler.ready, pcb);
 		break;
 	}
+}
+
+void terminate(kernel_t *kernel, pcb_t *pcb)
+{
+	SIGNAL(kernel->scheduler.dom);
+	pcb_destroy(pcb);
+	pcb = NULL;
 }
