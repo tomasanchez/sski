@@ -17,8 +17,8 @@
 pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 {
 	pcb_t *pcb = malloc(sizeof(pcb_t));
-
 	pcb->id = id;					   // Identificador del proceso
+	pcb->status = NONE;				   // Estado del PCB.
 	pcb->size = size;				   // Tamaño en bytes del proceso, el mismo no cambiará a lo largo de la ejecución
 	pcb->instructions = list_create(); // Lista de instrucciones a ejecutar
 	pcb->page_table = NULL;			   // Tabla de páginas del proceso en memoria, esta información la tendremos recién cuando el proceso pase a estado READY
@@ -69,12 +69,14 @@ void *pcb_to_stream(pcb_t *pcb)
 	 * @brief The serialized stream will be:
 	 *
 	 * --------------------------------------------------------------
-	 * ID | SIZE | ESTIMATION | PC | <List_Count> | Instructions...
+	 * ID | STATUS | SIZE | ESTIMATION | PC | <List_Count> | Instructions...
 	 * --------------------------------------------------------------
 	 *
 	 */
 	memcpy(stream + offset, &pcb->id, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
+	memcpy(stream + offset, &pcb->status, sizeof(pcb->status));
+	offset += sizeof(pcb->status);
 	memcpy(stream + offset, &pcb->size, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(stream + offset, &pcb->estimation, sizeof(uint32_t));
@@ -116,13 +118,14 @@ pcb_t *pcb_from_stream(void *stream)
 	size_t offset = 0;
 	memcpy(&pcb->id, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
+	memcpy(&pcb->status, stream + offset, sizeof(pcb->status));
+	offset += sizeof(pcb->status);
 	memcpy(&pcb->size, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(&pcb->estimation, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(&pcb->pc, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
-
 	pcb->instructions = instruction_list_from(stream + offset);
 	pcb->page_table = NULL;
 
@@ -135,6 +138,7 @@ size_t pcb_bytes_size(pcb_t *pcb)
 	size_t size = 0;
 	// The size of [ID, SIZE, ESTIMATION, PC]
 	size += sizeof(uint32_t) * 4;
+	size += sizeof(pcb->status);
 	// Size of the List_SIZE value.
 	size += sizeof(uint32_t);
 	// The size of the instruction list.

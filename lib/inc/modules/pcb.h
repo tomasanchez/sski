@@ -15,6 +15,18 @@
 #include <stdlib.h>
 #include "smartlist.h"
 
+typedef enum Status
+{
+	NONE = -1,
+	PCB_NEW,
+	PCB_READY,
+	PCB_EXECUTING,
+	PCB_SUSPENDED_READY,
+	PCB_BLOCKED,
+	PCB_SUSPENDED_BLOCKED,
+	PCB_TERMINATED
+} pcb_status_t;
+
 /**
  * @brief Process Control Block.
  *
@@ -23,6 +35,8 @@ typedef struct PCB
 {
 	// The Process Identifier.
 	uint32_t id;
+	// The PCB status
+	pcb_status_t status;
 	// Final size in bytes of the process.
 	size_t size;
 	// List of instructions to be executed.

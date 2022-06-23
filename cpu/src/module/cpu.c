@@ -64,6 +64,8 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
 	sem_init(&(cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
 
+	cpu->sync = init_sync();
+
 	return EXIT_SUCCESS;
 }
 
@@ -76,6 +78,7 @@ on_cpu_destroy(cpu_t *cpu)
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
 	sem_destroy(&(cpu->sem_pcb));
+	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
 }
 
@@ -138,7 +141,7 @@ instruction_t *instructionFetch();
  *
  * @return operands_t
  */
-operands_t fetch_operands(cpu_t* cpu);
+operands_t fetch_operands(cpu_t *cpu);
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -182,9 +185,11 @@ int on_run(cpu_t *cpu)
 
 	for (;;)
 	{
+		// WAIT TO RECEIVE A CPU from a Kernel.
+		LOG_TRACE("Waiting for[CPU] :=> Waiting for a process...");
+		WAIT(cpu->sync.pcb_received);
+		LOG_DEBUG("[CPU] :=> Executing process...");
 		cycle(cpu);
-
-		LOG_INFO("[CPU] :=> Sleep...");
 	}
 
 	return EXIT_SUCCESS;
@@ -215,28 +220,30 @@ void cycle(cpu_t *cpu)
 
 	instruction = instructionFetch(cpu);
 
-  operands_t operandos;
+	operands_t operandos;
 
-  if(decode(instruction)){
-    operandos = fetch_operands(cpu);
-  }
+	if (decode(instruction))
+	{
+		operandos = fetch_operands(cpu);
+		instruction->param0 = operandos.op1;
+		instruction->param1 = operandos.op2;
+	}
 
 
-	instruction_execute(instruction, 0, 0, NULL);
-	// TODO: Execute I/O
+	instruction_execute(instruction, NULL);
 
-	// TODO: Execute EXIT
 }
 
-operands_t fetch_operands(cpu_t* cpu){
+operands_t fetch_operands(cpu_t *cpu)
+{
 
 	ssize_t bytes = -1;
 
-	void* send_stream = pcb_to_stream(cpu->pcb);
+	void *send_stream = pcb_to_stream(cpu->pcb);
 
-	conexion_enviar_stream(cpu->conexion,OP, send_stream, pcb_bytes_size(cpu->pcb));
+	conexion_enviar_stream(cpu->conexion, OP, send_stream, pcb_bytes_size(cpu->pcb));
 
-	void* receive_stream =	conexion_recibir_stream(cpu->conexion.socket, &bytes);
+	void *receive_stream = conexion_recibir_stream(cpu->conexion.socket, &bytes);
 
 	operands_t ret = operandos_from_stream(receive_stream);
 
@@ -313,8 +320,10 @@ on_run_server(servidor_t *server, const char *server_name)
 	return EXIT_SUCCESS;
 }
 
-void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data)
+uint32_t instruction_execute(instruction_t *instruction, void *data)
 {
+	uint32_t return_value = 0;
+
 	switch (instruction->icode)
 	{
 	case C_REQUEST_NO_OP:
@@ -323,12 +332,34 @@ void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t p
 
 	case C_REQUEST_IO:
 		execute_IO(data);
+		break;
 
-	// TODO C_REQUEST_EXIT
+	case C_REQUEST_EXIT:
+		execute_EXIT(data);
+		break;
+
+	case C_REQUEST_READ:;
+		uint32_t memory_response_read = execute_READ(instruction->param0);
+		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response_read);
+		return_value = memory_response_read;
+		break;
+
+	case C_REQUEST_WRITE:
+		execute_WRITE(instruction->param0, instruction->param1);
+		break;
+
+	case C_REQUEST_COPY:
+		;
+		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
+		LOG_TRACE("Copy Memory Value from %d to %d with the value: %d", instruction->param1, instruction->param0, memory_response_write);
+		return_value = memory_response_write;
+		break;
 
 	default:
 		break;
 	}
+
+	return return_value;
 }
 
 void execute_NO_OP(uint time)
@@ -336,7 +367,62 @@ void execute_NO_OP(uint time)
 	sleep(time);
 }
 
-void *execute_IO(cpu_t *cpu)
+void execute_IO(cpu_t *cpu)
 {
+	cpu->pcb_result = INOUT;
 	SIGNAL(cpu->sem_pcb);
+}
+
+void execute_EXIT(cpu_t *cpu)
+{
+	cpu->pcb_result = PCB;
+	SIGNAL(cpu->sem_pcb);
+}
+
+uint32_t execute_READ(uint32_t param1)
+{
+	ssize_t bytes = -1;
+	uint32_t return_value = 0;
+
+	void *send_stream = malloc(sizeof(param1));
+
+	//Serializo
+	memcpy(send_stream, &param1, sizeof(param1));
+
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(param1));
+
+	free(send_stream);
+
+	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
+
+	return_value = *(uint32_t*)receive_stream;
+
+	free(receive_stream);
+
+	return return_value;
+}
+
+void
+execute_WRITE(uint32_t position,uint32_t value)
+{
+	operands_t* operands = malloc(sizeof(operands_t));
+
+	operands->op1 = position;
+	operands->op2 = value;
+
+	void *send_stream = operandos_to_stream(operands);
+
+	conexion_enviar_stream(g_cpu.conexion, WT, send_stream, sizeof(operands_t));
+
+	free(send_stream);
+	free(operands);
+}
+
+uint32_t
+execute_COPY(uint32_t param1, uint32_t param2)
+{
+	uint32_t read_value = execute_READ(param2);
+	execute_WRITE(param1, read_value);
+
+	return read_value;
 }

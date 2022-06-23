@@ -16,7 +16,7 @@
 #include "conexion.h"
 #include "server.h"
 #include "instruction.h"
-#include "sem.h"
+#include "sync.h"
 
 #define MODULE_NAME "cpu"
 
@@ -42,11 +42,18 @@ typedef struct CPU
 	// Current PCB in execution.
 	pcb_t *pcb;
 
+
 	// CPU's SEM
 	sem_t sem_pcb;
 
-	//time in miliseconds
+	// time in miliseconds
 	uint32_t time;
+
+	// Thread Synchronizer
+	cpu_sync_t sync;
+
+	// op code
+	opcode_t pcb_result;
 
 } cpu_t;
 
@@ -88,7 +95,7 @@ bool decode(instruction_t *instruction);
  * @param param2 second parameter
  * @param data module connection
  */
-void instruction_execute(instruction_t *instruction, uint32_t param1, uint32_t param2, void *data);
+uint32_t instruction_execute(instruction_t *instruction, void *data);
 
 /**
  * @brief ejecuta instrucción NO_OP
@@ -100,4 +107,31 @@ void execute_NO_OP(uint time);
  * @brief ejecuta instruccion IO
  *
  */
-void *execute_IO(cpu_t *cpu);
+void execute_IO(cpu_t *cpu);
+
+/**
+ * @brief ejecuta instruccion EXIT
+ *
+ */
+void execute_EXIT(cpu_t *cpu);
+
+/*
+ * @brief ejecuta instrucción READ
+ *
+ * @return uint32_t
+ */
+uint32_t execute_READ(uint32_t param1);
+
+/**
+ * @brief ejecuta instruccion WRITE
+ *
+ */
+void
+execute_WRITE(uint32_t position,uint32_t value);
+
+/**
+ * @brief ejecuto la instruccion COPY
+ * @return uint32_t
+ */
+uint32_t
+execute_COPY(uint32_t param1, uint32_t param2);

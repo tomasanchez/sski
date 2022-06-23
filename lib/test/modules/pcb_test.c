@@ -10,6 +10,7 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 #include "ctest.h"
 #include "pcb.h"
 #include "instruction.h"
@@ -18,7 +19,7 @@ static void fill_list(t_list *list);
 
 CTEST(pcb, when_pcbToStream_then_canBeRecovered)
 {
-	uint32_t id = 10, size = 50, estimation = 1000;
+	uint32_t id = rand(), size = rand(), estimation = rand();
 	pcb_t *pcb = new_pcb(id, size, estimation);
 	fill_list(pcb->instructions);
 
@@ -47,7 +48,7 @@ CTEST(pcb, when_pcbToStream_then_canBeRecovered)
 
 inline void fill_list(t_list *list)
 {
-	uint32_t g_param0 = 10, g_param2 = 124;
+	uint32_t g_param0 = rand(), g_param2 = rand();
 
 	instruction_t *exit_i = instruction_create(C_REQUEST_EXIT, g_param0, g_param2);
 	instruction_t *read_i = instruction_create(C_REQUEST_READ, g_param0, g_param2);
