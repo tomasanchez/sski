@@ -32,18 +32,6 @@ typedef struct KernelSynchronizer
 } ks_t;
 
 /**
- * @brief Kernel's Data Transfer Object
- *
- */
-typedef struct KernelDTO
-{
-	// The proper stream.
-	void *stream;
-	// The size in bytes.
-	size_t size;
-} kernel_dto;
-
-/**
  * @brief Kernel module.
  *
  */
@@ -69,8 +57,6 @@ typedef struct Kernel
 	scheduler_t scheduler;
 	// The MAX number of process that will be running at the same time.
 	int multiprogramming_grade;
-	// A stream to be sent into stream.
-	kernel_dto dispatch_dto;
 } kernel_t;
 
 /**
@@ -96,10 +82,3 @@ int on_run(kernel_t *context);
  * @param exit_code an status code
  */
 void on_before_exit(kernel_t *context, int exit_code);
-
-/**
- * @brief Clear the DTO of a Kernel
- *
- * @param dto
- */
-void clear_dto(kernel_dto dto);

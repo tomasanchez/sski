@@ -11,6 +11,7 @@
 
 #include "scheduler.h"
 #include "pcb_unit.h"
+#include "scheduler_algorithms.h"
 
 scheduler_t new_scheduler(int dom)
 {
@@ -19,6 +20,7 @@ scheduler_t new_scheduler(int dom)
 	// Init queues
 	s.new = new_safe_queue();
 	s.ready = new_safe_queue();
+	s.get_next = get_next_fifo;
 
 	// Init semaphores
 	sem_init(&s.dom, SHARE_BETWEEN_THREADS, dom);

@@ -25,7 +25,7 @@ typedef struct Scheduler
 	// READY Queue
 	safe_queue_t *ready;
 	// Get scheduler next
-	void *(*get_next)(scheduler_t);
+	void *(*get_next)(scheduler_t *);
 } scheduler_t;
 
 /**

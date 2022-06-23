@@ -42,15 +42,5 @@ static int on_connect_dispatch(kernel_t *kernel)
 // ! Main of [DISPATCH-THREAD]
 void *routine_conexion_dispatch(void *data)
 {
-	kernel_t *kernel = data;
-
-	on_connect_dispatch(kernel);
-
-	for (;;)
-	{
-		LOG_WARNING("[Dispatch Thread] :=> Waiting PCB to be dispatched");
-		WAIT(kernel->sync.interrupt);
-		conexion_enviar_stream(kernel->conexion_dispatch, PCB, kernel->dispatch_dto.stream, kernel->dispatch_dto.size);
-		SIGNEL(kernel->sync.interrupt);
-	}
+	on_connect_dispatch((kernel_t *)data);
 }

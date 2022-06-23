@@ -60,8 +60,8 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 	{
 		// Sets to ready a new process and enqueues.
 		pcb_t *pcb = safe_queue_pop(new);
-		pcb_unit_t *process = new_pcb_unit(pcb);
-		safe_queue_push(ready, process);
+		pcb->status = PCB_NEW;
+		safe_queue_push(ready, pcb);
 
 		// Request page table.
 		if (conexion_esta_conectada(memory))

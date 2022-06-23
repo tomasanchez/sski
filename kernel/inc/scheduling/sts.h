@@ -8,3 +8,5 @@
  * @copyright Copyright (c) 2022
  *
  */
+
+void *get_next_fifo(scheduler_t *scheduler);

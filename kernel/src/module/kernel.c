@@ -27,6 +27,7 @@
 #include "conexion_interrupt.h"
 #include "pcb.h"
 #include "pids.h"
+#include "cpu_controller.h"
 
 // ============================================================================================================
 //                                   ***** Init / Destroy Methods  *****
@@ -70,6 +71,8 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->multiprogramming_grade = grado_multiprogramacion();
 	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade);
 	on_init_sync(&kernel->sync);
+
+	init_cpu_controller();
 	return EXIT_SUCCESS;
 }
 
@@ -93,6 +96,7 @@ on_delete_kernel(kernel_t *kernel)
 	conexion_destroy(&(kernel->conexion_memory));
 	LOG_TRACE("Memory Connection Stopped.");
 
+	destroy_cpu_controller();
 	servidor_destroy(&(kernel->server));
 }
 
