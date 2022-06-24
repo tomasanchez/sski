@@ -64,10 +64,10 @@ void *dispatch_handle_instruction(void *args, uint32_t *pid)
 
 	int sem_value = -99;
 
-	sem_getvalue(&g_kernel.scheduler.req_admit, &sem_value);
+	sem_getvalue(g_kernel.scheduler.req_admit, &sem_value);
 	LOG_WARNING("[Server] :=> Semaphore has value <%d> Before Signal", sem_value);
 	SIGNAL(g_kernel.scheduler.req_admit);
-	sem_getvalue(&g_kernel.scheduler.req_admit, &sem_value);
+	sem_getvalue(g_kernel.scheduler.req_admit, &sem_value);
 	LOG_WARNING("[Server] :=> Semaphore has value <%d> After Signal", sem_value);
 
 	return NULL;

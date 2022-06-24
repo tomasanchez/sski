@@ -235,11 +235,11 @@ handle_consoles(kernel_t *kernel)
 	// Console Connection:
 	if (servidor_escuchar(&(kernel->server)) == -1)
 	{
-		LOG_ERROR("[Console-Server] :=> Server could not listen.");
+		LOG_ERROR("[Server] :=> Server could not listen.");
 		return;
 	}
 
-	LOG_DEBUG("[Console-Server] :=> Server listening. Awaiting for connections.");
+	LOG_DEBUG("[Server] :=> Server listening. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(kernel->server), routine);

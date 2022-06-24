@@ -13,5 +13,6 @@
 void *get_next_fifo(void *scheduler)
 {
 	scheduler_t *s = (scheduler_t *)scheduler;
+
 	return safe_queue_pop(s->ready);
 }

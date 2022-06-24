@@ -20,15 +20,23 @@ void terminate(kernel_t *kernel, pcb_t *pcb);
 
 void *short_term_schedule(void *data)
 {
+	LOG_TRACE("[STS] :=> Initializing Short Term Scheduler");
+
 	kernel_t *kernel = (kernel_t *)data;
 	scheduler_t sched = kernel->scheduler;
 
 	for (;;)
 	{
+		LOG_INFO("[STS] :=> Entering Short Term Scheduler");
 		pcb_t *pcb = sched.get_next(&sched);
 
 		if (pcb)
 			execute(kernel, pcb);
+		else
+		{
+			LOG_ERROR("[STS] :=> No PCB to execute");
+			sleep(10);
+		}
 	}
 }
 

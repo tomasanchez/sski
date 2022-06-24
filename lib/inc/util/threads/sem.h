@@ -22,7 +22,7 @@
  * @param sem the semaphore to be locked
  * @return the applied function result of sem_wait
  */
-#define WAIT(sem) sem_wait(&sem)
+#define WAIT(sem) sem_wait(sem)
 
 /**
  * @brief Shortcut for sem_post.
@@ -30,7 +30,7 @@
  * @param sem the sempahore to be signal
  * @return the applied function result sem_post
  */
-#define SIGNAL(sem) sem_post(&sem)
+#define SIGNAL(sem) sem_post(sem)
 
 /**
  * @brief  Shortcut for using a statement between a mutex exclusion.
