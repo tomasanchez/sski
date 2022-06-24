@@ -19,4 +19,4 @@
  * @param kernel_ref a kernel reference
  */
 void *
-long_time_schedule(void *kernel_ref);
+long_term_schedule(void *kernel_ref);

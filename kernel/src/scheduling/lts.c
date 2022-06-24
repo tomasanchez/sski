@@ -34,8 +34,10 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory);
 // ============================================================================================================
 
 void *
-long_time_schedule(void *kernel_ref)
+long_term_schedule(void *kernel_ref)
 {
+	LOG_TRACE("Initializing Long Term Scheduler");
+
 	kernel_t *kernel = kernel_ref;
 	scheduler_t sched = kernel->scheduler;
 

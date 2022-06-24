@@ -264,7 +264,7 @@ static void
 schedule_kernel(kernel_t *kernel)
 {
 	// Long Term Schedule
-	thread_manager_launch(&kernel->tm, long_time_schedule, kernel);
+	thread_manager_launch(&kernel->tm, long_term_schedule, kernel);
 	// Short Term Schedule
 	thread_manager_launch(&kernel->tm, short_term_schedule, kernel);
 }
