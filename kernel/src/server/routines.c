@@ -67,12 +67,12 @@ void *routine(void *fd)
 			if (opcode == DC)
 			{
 				// Connection closed
-				LOG_WARNING("Client <%d> has ended connection", sender_fd);
+				LOG_WARNING("[Server] :=> Client <%d> has ended connection", sender_fd);
 			}
 			else
 			{
-				LOG_ERROR("Error while recieving a message from Client <%d>", sender_fd);
-				LOG_DEBUG("Lost connection with Client <%d>", sender_fd);
+				LOG_ERROR("[Server] :=> Error while recieving a message from Client <%d>", sender_fd);
+				LOG_DEBUG("[Server] :=> Lost connection with Client <%d>", sender_fd);
 			}
 
 			servidor_desconectar_cliente(sender_fd); // Bye!
@@ -84,7 +84,7 @@ void *routine(void *fd)
 		else
 		{
 			// We got some good server from a client
-			LOG_TRACE("Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
+			LOG_TRACE("[Server] :=> Client<%d> Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
 
 			switch (opcode)
 			{
@@ -101,7 +101,7 @@ void *routine(void *fd)
 				break;
 
 			default:
-				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
+				LOG_ERROR("[Server] :=> Client<%d> sent an unrecognized operation code (%d)", sender_fd, opcode);
 				break;
 			}
 		}
