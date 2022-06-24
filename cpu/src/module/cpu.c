@@ -187,7 +187,7 @@ int on_run(cpu_t *cpu)
 	{
 		// WAIT TO RECEIVE A CPU from a Kernel.
 		LOG_TRACE("Waiting for[CPU] :=> Waiting for a process...");
-		WAIT(cpu->sync.pcb_received);
+		WAIT(&cpu->sync.pcb_received);
 		LOG_DEBUG("[CPU] :=> Executing process...");
 		cycle(cpu);
 	}
@@ -229,9 +229,7 @@ void cycle(cpu_t *cpu)
 		instruction->param1 = operandos.op2;
 	}
 
-
 	instruction_execute(instruction, NULL);
-
 }
 
 operands_t fetch_operands(cpu_t *cpu)
@@ -348,8 +346,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		execute_WRITE(instruction->param0, instruction->param1);
 		break;
 
-	case C_REQUEST_COPY:
-		;
+	case C_REQUEST_COPY:;
 		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
 		LOG_TRACE("Copy Memory Value from %d to %d with the value: %d", instruction->param1, instruction->param0, memory_response_write);
 		return_value = memory_response_write;
@@ -370,13 +367,13 @@ void execute_NO_OP(uint time)
 void execute_IO(cpu_t *cpu)
 {
 	cpu->pcb_result = INOUT;
-	SIGNAL(cpu->sem_pcb);
+	SIGNAL(&cpu->sem_pcb);
 }
 
 void execute_EXIT(cpu_t *cpu)
 {
 	cpu->pcb_result = PCB;
-	SIGNAL(cpu->sem_pcb);
+	SIGNAL(&cpu->sem_pcb);
 }
 
 uint32_t execute_READ(uint32_t param1)
@@ -386,7 +383,7 @@ uint32_t execute_READ(uint32_t param1)
 
 	void *send_stream = malloc(sizeof(param1));
 
-	//Serializo
+	// Serializo
 	memcpy(send_stream, &param1, sizeof(param1));
 
 	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(param1));
@@ -395,17 +392,16 @@ uint32_t execute_READ(uint32_t param1)
 
 	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
 
-	return_value = *(uint32_t*)receive_stream;
+	return_value = *(uint32_t *)receive_stream;
 
 	free(receive_stream);
 
 	return return_value;
 }
 
-void
-execute_WRITE(uint32_t position,uint32_t value)
+void execute_WRITE(uint32_t position, uint32_t value)
 {
-	operands_t* operands = malloc(sizeof(operands_t));
+	operands_t *operands = malloc(sizeof(operands_t));
 
 	operands->op1 = position;
 	operands->op2 = value;
