@@ -57,11 +57,12 @@ on_cpu_destroy(cpu_t *cpu);
 
 static int on_cpu_init(cpu_t *cpu)
 {
-
 	cpu->pcb = NULL;
 	cpu->tm = new_thread_manager();
 	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
+
+	cpu->sem_pcb = malloc(sizeof(sem_t));
 	sem_init(&(cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
 
 	cpu->sync = init_sync();
@@ -78,6 +79,7 @@ on_cpu_destroy(cpu_t *cpu)
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
 	sem_destroy(&(cpu->sem_pcb));
+	free(cpu->sem_pcb);
 	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
 }

@@ -44,7 +44,7 @@ typedef struct CPU
 
 
 	// CPU's SEM
-	sem_t sem_pcb;
+	sem_t *sem_pcb;
 
 	// time in miliseconds
 	uint32_t time;
