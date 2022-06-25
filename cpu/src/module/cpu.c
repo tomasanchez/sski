@@ -63,7 +63,7 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
 
 	cpu->sem_pcb = malloc(sizeof(sem_t));
-	sem_init(&(cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
+	sem_init((cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
 
 	cpu->sync = init_sync();
 
@@ -78,7 +78,7 @@ on_cpu_destroy(cpu_t *cpu)
 	servidor_destroy(&(cpu->server_dispatch));
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
-	sem_destroy(&(cpu->sem_pcb));
+	sem_destroy((cpu->sem_pcb));
 	free(cpu->sem_pcb);
 	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
@@ -189,7 +189,7 @@ int on_run(cpu_t *cpu)
 	{
 		// WAIT TO RECEIVE A CPU from a Kernel.
 		LOG_TRACE("Waiting for[CPU] :=> Waiting for a process...");
-		WAIT(&cpu->sync.pcb_received);
+		WAIT(cpu->sync.pcb_received);
 		LOG_DEBUG("[CPU] :=> Executing process...");
 		cycle(cpu);
 	}
@@ -369,13 +369,13 @@ void execute_NO_OP(uint time)
 void execute_IO(cpu_t *cpu)
 {
 	cpu->pcb_result = INOUT;
-	SIGNAL(&cpu->sem_pcb);
+	SIGNAL(cpu->sem_pcb);
 }
 
 void execute_EXIT(cpu_t *cpu)
 {
 	cpu->pcb_result = PCB;
-	SIGNAL(&cpu->sem_pcb);
+	SIGNAL(cpu->sem_pcb);
 }
 
 uint32_t execute_READ(uint32_t param1)

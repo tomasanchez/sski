@@ -9,6 +9,7 @@
  *
  */
 
+#include <stdlib.h>
 #include "sync.h"
 
 cpu_sync_t
