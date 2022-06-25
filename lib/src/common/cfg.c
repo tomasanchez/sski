@@ -325,3 +325,63 @@ int entradas_tlb(void)
 {
 	return config_int(ENTRADAS_TLB);
 }
+
+// -----------------------------------------------------------
+//  Memoria
+// -----------------------------------------------------------
+
+#define TAM_MEMORIA "TAM_MEMORIA"
+
+inline int tam_memoria(void)
+{
+	return config_int(TAM_MEMORIA);
+}
+
+#define TAM_PAGINA "TAM_PAGINA"
+
+inline int tam_pagina(void)
+{
+	return config_int(TAM_PAGINA);
+}
+
+#define ENTRADAS_POR_TABLA "ENTRADAS_POR_TABLA"
+
+inline int entradas_por_tabla(void)
+{
+	return config_int(ENTRADAS_POR_TABLA);
+}
+
+#define RETARDO_MEMORIA "RETARDO_MEMORIA"
+
+inline int retardo_memoria(void)
+{
+	return config_int(RETARDO_MEMORIA);
+}
+
+#define ALGORITMO_REEMPLAZO "ALGORITMO_REEMPLAZO"
+
+inline char *algoritmo_reemplazo(void)
+{
+	return config_string(ALGORITMO_REEMPLAZO);
+}
+
+#define MARCOS_POR_PROCESO "MARCOS_POR_PROCESO"
+
+inline int marcos_por_proceso(void)
+{
+	return config_int(MARCOS_POR_PROCESO);
+}
+
+#define RETARDO_SWAP "RETARDO_SWAP"
+
+inline int retardo_swap(void)
+{
+	return config_int(RETARDO_SWAP);
+}
+
+#define PATH_SWAP "PATH_SWAP"
+
+inline char *path_swap(void)
+{
+	return config_string(PATH_SWAP);
+}
