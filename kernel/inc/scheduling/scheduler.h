@@ -17,14 +17,15 @@
 typedef struct Scheduler
 {
 	// Degree Of Multiprogramming
-	sem_t dom;
+	sem_t *dom;
 	// Request to admit
-	sem_t req_admit;
-
+	sem_t *req_admit;
 	// NEW Queue
 	safe_queue_t *new;
 	// READY Queue
 	safe_queue_t *ready;
+	// Get scheduler next
+	void *(*get_next)(void *);
 } scheduler_t;
 
 /**

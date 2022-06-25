@@ -27,6 +27,9 @@
 #include "conexion_interrupt.h"
 #include "pcb.h"
 #include "pids.h"
+#include "lts.h"
+#include "sts.h"
+#include "cpu_controller.h"
 
 // ============================================================================================================
 //                                   ***** Init / Destroy Methods  *****
@@ -70,6 +73,8 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->multiprogramming_grade = grado_multiprogramacion();
 	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade);
 	on_init_sync(&kernel->sync);
+
+	init_cpu_controller();
 	return EXIT_SUCCESS;
 }
 
@@ -93,6 +98,7 @@ on_delete_kernel(kernel_t *kernel)
 	conexion_destroy(&(kernel->conexion_memory));
 	LOG_TRACE("Memory Connection Stopped.");
 
+	destroy_cpu_controller();
 	servidor_destroy(&(kernel->server));
 }
 
@@ -100,6 +106,9 @@ static int on_init_sync(ks_t *sync)
 {
 	sem_init(&sync->interrupt, SHARE_BETWEEN_THREADS, 0);
 	sem_init(&sync->memory, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->dispatch_req, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->dispatch_sent, SHARE_BETWEEN_THREADS, 0);
+	sem_init(&sync->use_pcb, SHARE_BETWEEN_THREADS, 0);
 	return EXIT_SUCCESS;
 }
 
@@ -107,6 +116,9 @@ static void on_destroy_sync(ks_t *sync)
 {
 	sem_destroy(&sync->interrupt);
 	sem_destroy(&sync->memory);
+	sem_destroy(&sync->dispatch_req);
+	sem_destroy(&sync->dispatch_sent);
+	sem_destroy(&sync->use_pcb);
 }
 
 // ============================================================================================================
@@ -136,6 +148,14 @@ handle_cpu(kernel_t *kernel);
  */
 static void
 handle_memory(kernel_t *kernel);
+
+/**
+ * @brief Creates the corresponding Schedulers
+ *
+ * @param kernel reference
+ */
+static void
+schedule_kernel(kernel_t *kernel);
 // ============================================================================================================
 // ?                                 ***** Public Functions  *****
 // ============================================================================================================
@@ -180,6 +200,8 @@ int on_run(kernel_t *kernel)
 	handle_cpu(kernel);
 	LOG_DEBUG("CPU: Ok.")
 
+	schedule_kernel(kernel);
+
 	LOG_TRACE("Handling Consoles...");
 	handle_consoles(kernel);
 
@@ -213,11 +235,11 @@ handle_consoles(kernel_t *kernel)
 	// Console Connection:
 	if (servidor_escuchar(&(kernel->server)) == -1)
 	{
-		LOG_ERROR("[Console-Server] :=> Server could not listen.");
+		LOG_ERROR("[Server] :=> Server could not listen.");
 		return;
 	}
 
-	LOG_DEBUG("[Console-Server] :=> Server listening. Awaiting for connections.");
+	LOG_DEBUG("[Server] :=> Server listening. Awaiting for connections.");
 
 	for (;;)
 		servidor_run(&(kernel->server), routine);
@@ -236,4 +258,13 @@ handle_memory(kernel_t *kernel)
 {
 	// Memory Connection:
 	thread_manager_launch(&(kernel->tm), routine_conexion_memoria, kernel);
+}
+
+static void
+schedule_kernel(kernel_t *kernel)
+{
+	// Long Term Schedule
+	thread_manager_launch(&kernel->tm, long_term_schedule, kernel);
+	// Short Term Schedule
+	thread_manager_launch(&kernel->tm, short_term_schedule, kernel);
 }

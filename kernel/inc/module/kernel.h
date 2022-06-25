@@ -23,6 +23,12 @@ typedef struct KernelSynchronizer
 	sem_t interrupt;
 	// Synchronizes Memory Requests
 	sem_t memory;
+	// Request Dispatch
+	sem_t dispatch_req;
+	// Dispatched
+	sem_t dispatch_sent;
+	// Use PCB response.
+	sem_t use_pcb;
 } ks_t;
 
 /**

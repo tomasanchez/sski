@@ -92,8 +92,8 @@ void *request_handler(void *fd)
 				break;
 			case PCB:
 				receive_pcb(sender_fd);
-				SIGNAL(g_cpu.sync.pcb_received);
-				WAIT(g_cpu.sem_pcb);
+				SIGNAL(&g_cpu.sync.pcb_received);
+				WAIT(&g_cpu.sem_pcb);
 				return_pcb(sender_fd);
 				break;
 			default:

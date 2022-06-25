@@ -42,14 +42,6 @@ static int on_connect_dispatch(kernel_t *kernel)
 // ! Main of [DISPATCH-THREAD]
 void *routine_conexion_dispatch(void *data)
 {
-	kernel_t *kernel = data;
-
-	on_connect_dispatch(kernel);
-
-	for (;;)
-	{
-		LOG_WARNING("[Dispatch Thread] :=> Waiting PCB to be dispatched");
-		// TODO: Send PCB.
-		conexion_enviar_mensaje(kernel->conexion_dispatch, "Mando un msj");
-	}
+	on_connect_dispatch((kernel_t *)data);
+	return NULL;
 }

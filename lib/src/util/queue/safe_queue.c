@@ -33,7 +33,8 @@ void safe_queue_push(safe_queue_t *this, void *element)
 void *safe_queue_pop(safe_queue_t *this)
 {
 	pthread_mutex_lock(&this->_mtx);
-	void *e = queue_pop(this->_queue);
+
+	void *e = queue_is_empty(this->_queue) ? NULL : queue_pop(this->_queue);
 	pthread_mutex_unlock(&this->_mtx);
 	return e;
 }

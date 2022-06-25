@@ -33,16 +33,6 @@ recibir_mensaje(int cliente)
 	return servidor_recibir_mensaje(cliente, &size);
 }
 
-static instruction_t *recibir_instruction(int cliente)
-{
-	ssize_t size = ERROR;
-	void *stream = servidor_recibir_stream(cliente, &size);
-	instruction_t *instruction = instruction_from_stream(stream);
-	free(stream);
-
-	return instruction;
-}
-
 /**
  * @brief Recieves a list of instructions
  *
@@ -77,12 +67,12 @@ void *routine(void *fd)
 			if (opcode == DC)
 			{
 				// Connection closed
-				LOG_WARNING("Client <%d> has ended connection", sender_fd);
+				LOG_WARNING("[Server] :=> Client <%d> has ended connection", sender_fd);
 			}
 			else
 			{
-				LOG_ERROR("Error while recieving a message from Client <%d>", sender_fd);
-				LOG_DEBUG("Lost connection with Client <%d>", sender_fd);
+				LOG_ERROR("[Server] :=> Error while recieving a message from Client <%d>", sender_fd);
+				LOG_DEBUG("[Server] :=> Lost connection with Client <%d>", sender_fd);
 			}
 
 			servidor_desconectar_cliente(sender_fd); // Bye!
@@ -94,7 +84,7 @@ void *routine(void *fd)
 		else
 		{
 			// We got some good server from a client
-			LOG_TRACE("Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
+			LOG_TRACE("[Server] :=> Client<%d> Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
 
 			switch (opcode)
 			{
@@ -111,7 +101,7 @@ void *routine(void *fd)
 				break;
 
 			default:
-				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
+				LOG_ERROR("[Server] :=> Client<%d> sent an unrecognized operation code (%d)", sender_fd, opcode);
 				break;
 			}
 		}

@@ -34,18 +34,24 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory);
 // ============================================================================================================
 
 void *
-long_time_schedule(void *kernel_ref)
+long_term_schedule(void *kernel_ref)
 {
+	LOG_TRACE("[LTS] :=> Initializing Long Term Scheduler");
+
 	kernel_t *kernel = kernel_ref;
 	scheduler_t sched = kernel->scheduler;
+	int dom = -1, request = -99;
 
 	for (;;)
 	{
-		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade");
+		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade...");
+		sem_getvalue(sched.dom, &dom);
 		// Wait for programs to end...
 		WAIT(sched.dom);
-		LOG_DEBUG("[LTS] :=> Process can be accepted");
+		LOG_DEBUG("[LTS] :=> There are <%d> available slots for processing", dom - 1);
 		// Wait for a process to be created.
+		sem_getvalue(sched.req_admit, &request);
+		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
 		WAIT(sched.req_admit);
 		admit(sched.new, sched.ready, kernel->conexion_memory);
 		LOG_DEBUG("[LTS] :=> Process admitted");
@@ -60,22 +66,26 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 	{
 		// Sets to ready a new process and enqueues.
 		pcb_t *pcb = safe_queue_pop(new);
-		pcb_unit_t *process = new_pcb_unit(pcb);
-		safe_queue_push(ready, process);
 
-		// Request page table.
-		if (conexion_esta_conectada(memory))
+		if (pcb != NULL)
 		{
-			accion_t *req_page = accion_create(NEW_PROCESS, 0);
-			accion_enviar(req_page, memory.socket);
-			accion_t *recv_page = accion_recibir(memory.socket);
+			pcb->status = PCB_NEW;
+			safe_queue_push(ready, pcb);
 
-			uint32_t *page_ref = malloc(sizeof(uint32_t));
-			*page_ref = recv_page->param;
-			pcb->page_table = page_ref;
+			// Request page table.
+			if (conexion_esta_conectada(memory))
+			{
+				accion_t *req_page = accion_create(NEW_PROCESS, 0);
+				accion_enviar(req_page, memory.socket);
+				accion_t *recv_page = accion_recibir(memory.socket);
 
-			accion_destroy(req_page);
-			accion_destroy(recv_page);
+				uint32_t *page_ref = malloc(sizeof(uint32_t));
+				*page_ref = recv_page->param;
+				pcb->page_table = page_ref;
+
+				accion_destroy(req_page);
+				accion_destroy(recv_page);
+			}
 		}
 	}
 }

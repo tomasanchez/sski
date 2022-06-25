@@ -53,10 +53,5 @@ void *routine_conexion_memoria(void *data)
 
 	on_connect_memory(kernel);
 
-	for (;;)
-	{
-		LOG_WARNING("[Memory Thread] :=> Waiting PCB to be initialized in Memory");
-		WAIT(kernel->sync.memory);
-		/// TODO : Send Interruption.
-	}
+	return NULL;
 }

@@ -47,10 +47,5 @@ void *routine_conexion_interrupt(void *data)
 
 	on_connect_interrupt(kernel);
 
-	for (;;)
-	{
-		LOG_WARNING("[Interrupt Thread] :=> Waiting for an Interruption");
-		WAIT(kernel->sync.interrupt);
-		// TODO: Send Interruption
-	}
+	return NULL;
 }
