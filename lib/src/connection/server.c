@@ -113,6 +113,9 @@ servidor_t servidor_create(char *ip, char *port)
 
 	server.iniciado = false;
 
+	// As no client would be connected - set to error.
+	server.client = -1;
+
 	server.tm = new_thread_manager();
 
 	return server;
@@ -122,6 +125,9 @@ void servidor_destroy(servidor_t *server)
 {
 	if (server)
 		conexion_destroy(&server->conexion);
+
+	if (server->client > 0)
+		servidor_desconectar_cliente(server->client);
 
 	thread_manager_destroy(&server->tm);
 }
@@ -137,38 +143,52 @@ inline int servidor_escuchar(servidor_t *server)
 
 void servidor_run(servidor_t *server, void *(*interceptor)(void *))
 {
+
+	int fd = -1;
+
+	fd = server_accept_client(server);
+
+	if (fd > 0)
+	{
+		int *newfd = malloc(sizeof(int));
+		*newfd = fd;
+		thread_manager_launch(&server->tm, interceptor, (void *)newfd);
+	}
+}
+
+int server_accept_client(servidor_t *server)
+{
+
+	// Error number
 	errno = 0;
-	// La remote address
+
+	// Address
 	struct sockaddr_storage remoteaddr;
-	// La longigutd de la address
+	//  Address' length
 	socklen_t addrlen = sizeof remoteaddr;
 
-	// Acepto un nuevo cliente
-	int fd = ERROR;
+	int fd = -1;
 
 	fd = accept(server->conexion.socket, (struct sockaddr *)&remoteaddr, &addrlen);
 
 	if (fd > 0)
 	{
 		char remoteIP[INET6_ADDRSTRLEN];
-		int *newfd = malloc(sizeof(int));
 
-		LOG_DEBUG("Nueva conexión de %s en el socket %d.",
+		LOG_DEBUG("[Server] :=> A new connection from <%s> is using socket <%d>.",
 				  inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&remoteaddr),
 							remoteIP, INET6_ADDRSTRLEN),
 				  fd);
 
-		*newfd = fd;
-
-		thread_manager_launch(&server->tm, interceptor, (void *)newfd);
+		server->client = fd;
 	}
 	else
 	{
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
-			LOG_WARNING("Un error ocurrió durante accept()");
+			LOG_ERROR("[Server] :=> Error while accepting a new connection.");
 	}
 
-	return;
+	return fd;
 }
 
 void servidor_desconectar_cliente(int socket)

@@ -32,6 +32,8 @@ typedef struct Servidor
 	conexion_t conexion;
 	// Si inició o no
 	bool iniciado;
+	// Last client socket accepted
+	int client;
 	// Thread Tracker
 	thread_manager_t tm;
 } servidor_t;
@@ -79,6 +81,14 @@ int servidor_escuchar(servidor_t *servidor);
  * @returns una referencia al socket.
  */
 void servidor_run(servidor_t *is_servidor, void *(*rutina)(void *));
+
+/**
+ * @brief Accepts a client
+ *
+ * @param server our server to run
+ * @returns a socket
+ */
+int server_accept_client(servidor_t *server);
 
 /**
  * @brief Cierra la conexión del cliente especificado.
