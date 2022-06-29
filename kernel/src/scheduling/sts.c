@@ -74,7 +74,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 		break;
 
 	default:
-		LOG_INFO("[STS] :=> PCB<%d> has been interrupted", pcb->id);
+		LOG_TRACE("[STS] :=> PCB<%d> has been interrupted", pcb->id);
 		safe_queue_push(kernel->scheduler.ready, pcb);
 		break;
 	}

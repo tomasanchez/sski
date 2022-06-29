@@ -181,18 +181,20 @@ int on_init(cpu_t *cpu)
 
 int on_run(cpu_t *cpu)
 {
-
 	serve_kernel(cpu);
+	// routine_conexion_memoria(cpu);
 
-	routine_conexion_memoria(cpu);
+	LOG_DEBUG("Module is OK.");
 
 	for (;;)
 	{
 		// WAIT TO RECEIVE A CPU from a Kernel.
-		LOG_TRACE("Waiting for[CPU] :=> Waiting for a process...");
+		LOG_TRACE("[CPU] :=> Waiting for a process...");
 		WAIT(cpu->sync.pcb_received);
-		LOG_DEBUG("[CPU] :=> Executing process...");
-		cycle(cpu);
+		LOG_DEBUG("[CPU] :=> Executing PCB<%d>...", cpu->pcb->id);
+
+		while (cpu->pcb != NULL)
+			cycle(cpu);
 	}
 
 	return EXIT_SUCCESS;
@@ -225,29 +227,45 @@ void cycle(cpu_t *cpu)
 	// When no int then should execute instruction
 	if (!cpu->has_interruption)
 	{
+		LOG_TRACE("[CPU] :=> Fetching instruction...");
 		// The instruction to be executed
 		instruction_t *instruction;
-
 		// Fetch
 		instruction = instruction_fetch(cpu);
 
-		// Operands to used
-		operands_t operandos = {0, 0};
-
-		if (decode(instruction))
+		if (instruction)
 		{
-			operandos = fetch_operands(cpu);
-			instruction->param0 = operandos.op1;
-			instruction->param1 = operandos.op2;
-		}
+			LOG_DEBUG("[CPU] :=> Instruction fetch");
+			// Operands to used
+			operands_t operandos = {0, 0};
 
-		instruction_execute(instruction, NULL);
+			if (decode(instruction))
+			{
+				LOG_INFO("[CPU] :=> Fetching operands...");
+				operandos = fetch_operands(cpu);
+				instruction->param0 = operandos.op1;
+				instruction->param1 = operandos.op2;
+			}
+			else
+			{
+				LOG_INFO("[CPU] :=> No operands to fetch");
+			}
+
+			LOG_DEBUG("[CPU] :=> Executing instruction...");
+			instruction_execute(instruction, cpu);
+		}
+		else
+		{
+			LOG_ERROR("No instruction was fetched.");
+		}
 	}
 	// Otherwise must return the PCB as it is
 	else
 	{
+		LOG_ERROR("[CPU] :=> Interruption received.");
 		cpu->pcb->status = PCB_READY;
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, 0);
+		cpu->has_interruption = false;
 	}
 }
 
@@ -329,7 +347,7 @@ on_run_server(servidor_t *server, const char *server_name)
 		return SERVER_RUNTIME_ERROR;
 	}
 
-	LOG_DEBUG("[CPU:%s] :=> Server listening. Awaiting for connections.", server_name);
+	LOG_DEBUG("[CPU:%s] :=> Server listening... Awaiting for connections.", server_name);
 
 	for (;;)
 		servidor_run(server, request_handler);
@@ -349,7 +367,9 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 	switch (instruction->icode)
 	{
 	case C_REQUEST_NO_OP:
+		LOG_WARNING("[CPU] :=> Executing instruction: NO_OP");
 		execute_NO_OP(retardo_noop());
+		LOG_DEBUG("[CPU] :=> Instruction executed.");
 		break;
 
 	case C_REQUEST_IO:
@@ -357,7 +377,9 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		break;
 
 	case C_REQUEST_EXIT:
+		LOG_WARNING("[CPU] :=> Executing instruction: EXIT");
 		execute_EXIT(instruction, data);
+		LOG_ERROR("[CPU] :=> Process terminated.");
 		break;
 
 	case C_REQUEST_READ:;
@@ -385,7 +407,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 void execute_NO_OP(uint time)
 {
-	sleep(time);
+	sleep(time / 1000);
 }
 
 void execute_IO(instruction_t *instruction, cpu_t *cpu)
@@ -407,8 +429,21 @@ void execute_IO(instruction_t *instruction, cpu_t *cpu)
 
 void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 {
-	cpu->pcb->status = PCB_TERMINATED;
-	return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
+	if (cpu->pcb)
+	{
+		cpu->pcb->status = PCB_TERMINATED;
+
+		if (instruction == NULL)
+		{
+			LOG_WARNING("[CPU] :=> Instruction is NULL")
+		}
+
+		return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction ? instruction->param0 : 0);
+	}
+	else
+	{
+		LOG_ERROR("[CPU] :=> PCB to exit is NULL.");
+	}
 }
 
 uint32_t execute_READ(uint32_t param1)

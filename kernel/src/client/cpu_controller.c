@@ -13,6 +13,11 @@
 #include "pcb.h"
 #include "kernel.h"
 
+#define LOG_PCB(pcb)                                                                                                       \
+	{                                                                                                                      \
+		LOG_INFO("[Server] :=> PCB<%d>(size: %lu, estimation: %d, pc: %d)", pcb->id, pcb->size, pcb->estimation, pcb->pc); \
+	}
+
 cpu_controller_t this;
 
 void init_cpu_controller(void)
@@ -62,8 +67,13 @@ void *
 cpu_controller_receive_pcb(conexion_t connection_dispatch)
 {
 	ssize_t bytes_received = 0;
-	void *stream = conexion_recibir_stream(connection_dispatch.socket, &bytes_received);
-	pcb_t *recovered_pcb = pcb_from_stream(stream + sizeof(opcode_t));
+	void *stream = NULL;
+
+	SAFE_STATEMENT(&this.cpu_dispatch, stream = conexion_recibir_stream(connection_dispatch.socket, &bytes_received));
+	LOG_WARNING("[Client-Dispatch] :=> Package received [%ld bytes] ", bytes_received);
+
+	pcb_t *recovered_pcb = pcb_from_stream(stream);
+	LOG_PCB(recovered_pcb);
 	free(stream);
 	return recovered_pcb;
 }

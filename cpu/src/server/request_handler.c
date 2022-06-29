@@ -51,12 +51,12 @@ request_handler(void *fd)
 		{
 			if (opcode == DC)
 			{
-				LOG_WARNING("Client <%d> has ended connection", sender_fd);
+				LOG_WARNING("[Server] :=> Client <%d> has ended connection", sender_fd);
 			}
 			else
 			{
-				LOG_ERROR("Error while recieving a message from Client <%d>", sender_fd);
-				LOG_DEBUG("Lost connection with Client <%d>", sender_fd);
+				LOG_ERROR("[Server] :=> Error while recieving a message from Client <%d>", sender_fd);
+				LOG_DEBUG("[Server] :=> Lost connection with Client <%d>", sender_fd);
 			}
 
 			servidor_desconectar_cliente(sender_fd);
@@ -68,7 +68,7 @@ request_handler(void *fd)
 		}
 		else
 		{
-			LOG_TRACE("Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
+			LOG_TRACE("[Server] :=> Client<%d>: Requests <%s> operation.", sender_fd, opcode_to_string(opcode));
 
 			switch (opcode)
 			{
@@ -81,7 +81,7 @@ request_handler(void *fd)
 				SIGNAL(g_cpu.sync.pcb_received);
 				break;
 			default:
-				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
+				LOG_ERROR("[Server] :=> Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
 				break;
 			}
 		}
