@@ -266,7 +266,7 @@ void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
 
 	recv_ret = recv(socket, &size, sizeof(int), MSG_WAITALL);
 
-	if(size == 0)
+	if (size == 0 || recv_ret <= 0)
 		return NULL;
 
 	buffer_stream = malloc(size);
@@ -279,7 +279,7 @@ void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
 		return NULL;
 	}
 
-	*bytes_size = size;
+	*bytes_size = size + 2 * sizeof(int);
 
 	return buffer_stream;
 }
