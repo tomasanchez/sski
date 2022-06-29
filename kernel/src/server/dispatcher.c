@@ -62,13 +62,10 @@ void *dispatch_handle_instruction(void *args, uint32_t *pid)
 
 	pcb->instructions = instructions;
 
-	int sem_value = -99;
-
-	sem_getvalue(g_kernel.scheduler.req_admit, &sem_value);
-	LOG_WARNING("[Server] :=> Semaphore has value <%d> Before Signal", sem_value);
 	SIGNAL(g_kernel.scheduler.req_admit);
-	sem_getvalue(g_kernel.scheduler.req_admit, &sem_value);
-	LOG_WARNING("[Server] :=> Semaphore has value <%d> After Signal", sem_value);
+
+	LOG_DEBUG("[Server] :=> The PCB <%d> was moved to NEW queue", *pid);
+	safe_queue_push(g_kernel.scheduler.new, pcb);
 
 	return NULL;
 }
@@ -114,5 +111,6 @@ void *dispatch_handle_syscall(void *args, uint32_t *pid)
 void log_instruction(void *i)
 {
 	instruction_t *instruction = (instruction_t *)i;
-	LOG_INFO("Received Instruction: %d %d %d", instruction->icode, instruction->param0, instruction->param1);
+	LOG_INFO("[Server] :=> Received Instruction: {code: %d,  param0: %d, param1: %d}",
+			 instruction->icode, instruction->param0, instruction->param1);
 }

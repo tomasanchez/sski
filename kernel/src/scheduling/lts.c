@@ -54,7 +54,6 @@ long_term_schedule(void *kernel_ref)
 		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
 		WAIT(sched.req_admit);
 		admit(sched.new, sched.ready, kernel->conexion_memory);
-		LOG_DEBUG("[LTS] :=> Process admitted");
 	}
 
 	return NULL;
@@ -64,17 +63,20 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 {
 	if (new != NULL && ready != NULL)
 	{
+		LOG_TRACE("[LTS] :=> Admitting a new process...");
 		// Sets to ready a new process and enqueues.
 		pcb_t *pcb = safe_queue_pop(new);
 
 		if (pcb != NULL)
 		{
 			pcb->status = PCB_NEW;
+			LOG_INFO("[LTS] :=> Process <%d> changed status to NEW", pcb->id);
 			safe_queue_push(ready, pcb);
 
 			// Request page table.
 			if (conexion_esta_conectada(memory))
 			{
+				LOG_TRACE("[LTS] :=> Request page table...");
 				accion_t *req_page = accion_create(NEW_PROCESS, 0);
 				accion_enviar(req_page, memory.socket);
 				accion_t *recv_page = accion_recibir(memory.socket);
@@ -85,7 +87,22 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 
 				accion_destroy(req_page);
 				accion_destroy(recv_page);
+				LOG_DEBUG("[LTS] :=> Page table received");
 			}
+			else
+			{
+				LOG_WARNING("[LTS] :=> Memory is not connected");
+			}
+
+			LOG_TRACE("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
 		}
+		else
+		{
+			LOG_ERROR("[LTS] :=> No process to be admit");
+		}
+	}
+	else
+	{
+		LOG_ERROR("[LTS] :=> Error while admitting a new process");
 	}
 }
