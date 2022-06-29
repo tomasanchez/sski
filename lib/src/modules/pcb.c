@@ -40,6 +40,11 @@ pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
 	return list_find(pcbs, clojure);
 }
 
+bool pcb_sort_by_estimation(void *e1, void *e2)
+{
+	return ((pcb_t *)e1)->estimation <= ((pcb_t *)e2)->estimation;
+}
+
 void pcb_destroy(void *pcb)
 {
 	if ((pcb_t *)pcb)

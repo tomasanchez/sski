@@ -91,3 +91,12 @@ size_t pcb_bytes_size(pcb_t *pcb);
 pcb_t *pcb_from_stream(void *stream);
 
 pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid);
+
+/**
+ * @brief Tells what PCB should go before the other.
+ *
+ * @param e1 a PCB instance
+ * @param e2 another PCB instance
+ * @return true if first pcb has less estimation than second one, false otherwise.
+ */
+bool pcb_sort_by_estimation(void *e1, void *e2);

@@ -46,6 +46,32 @@ CTEST(pcb, when_pcbToStream_then_canBeRecovered)
 	pcb_destroy(recovered);
 }
 
+CTEST(pcb, when_pcb_has_less_estimation_goes_first)
+{
+	uint32_t id = rand(), size = rand(), estimation = rand();
+
+	pcb_t *pcb = new_pcb(id, size, estimation);
+	pcb_t *pcb2 = new_pcb(id, size, estimation + 1);
+
+	ASSERT_TRUE(pcb_sort_by_estimation(pcb, pcb2));
+
+	pcb_destroy(pcb);
+	pcb_destroy(pcb2);
+}
+
+CTEST(pcb, when_pcb_has_less_estimation_goes_second)
+{
+	uint32_t id = rand(), size = rand(), estimation = rand();
+
+	pcb_t *pcb = new_pcb(id, size, estimation + 1);
+	pcb_t *pcb2 = new_pcb(id, size, estimation);
+
+	ASSERT_FALSE(pcb_sort_by_estimation(pcb, pcb2));
+
+	pcb_destroy(pcb);
+	pcb_destroy(pcb2);
+}
+
 inline void fill_list(t_list *list)
 {
 	uint32_t g_param0 = rand(), g_param2 = rand();
