@@ -28,7 +28,6 @@ char *opcode_to_string(opcode_t opcode)
 	// Package - paquete
 	case PKG:
 		return "Paquete";
-	// TODO : Agregar los casos correspondientes
 	// System Call - syscall
 	case SYS:
 		return "Syscall";
@@ -41,7 +40,9 @@ char *opcode_to_string(opcode_t opcode)
 		return "Swap";
 	case RD:
 		return "Memory Read";
+	case INT:
+		return "Interruption";
 	default:
-		return "Código de operación no reconocido";
+		return "Unrecognized";
 	}
 }

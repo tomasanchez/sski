@@ -34,3 +34,15 @@ pcb_t *receive_pcb(int fd)
 	LOG_PCB(pcb);
 	return pcb;
 }
+
+ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time)
+{
+	size_t pcb_size = pcb_bytes_size(pcb);
+	void *stream = malloc(pcb_size + sizeof(time));
+	void *pcb_stream = pcb_to_stream(pcb);
+
+	memcpy(stream, pcb_stream, pcb_size);
+	memcpy(stream + pcb_size, &time, sizeof(time));
+
+	return servidor_enviar_stream(INOUT, fd, stream, pcb_size + sizeof(time));
+}

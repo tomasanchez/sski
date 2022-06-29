@@ -26,35 +26,22 @@
  */
 typedef struct CPU
 {
-
-	// TODO: Add server for Kernel - For PCB (Dispatch)
+	// Server for Kernel - For PCB (Dispatch)
 	servidor_t server_dispatch;
-	// TODO: Add server for Kernel - For Interruptions
+	// Server for Kernel - For Interruptions
 	servidor_t server_interrupt;
-
-	// TODO: Add client connection to Memory.
-	// La conexion del cliente
+	// Memory Connection
 	conexion_t conexion;
-
 	// CPU's Thread Launcher;
 	thread_manager_t tm;
-
 	// Current PCB in execution.
 	pcb_t *pcb;
-
-
 	// CPU's SEM
 	sem_t *sem_pcb;
-
-	// time in miliseconds
-	uint32_t time;
-
 	// Thread Synchronizer
 	cpu_sync_t sync;
-
-	// op code
-	opcode_t pcb_result;
-
+	// Wether the CPU received an interrupt signal
+	bool has_interruption;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
@@ -107,13 +94,13 @@ void execute_NO_OP(uint time);
  * @brief ejecuta instruccion IO
  *
  */
-void execute_IO(cpu_t *cpu);
+void execute_IO(instruction_t *instruction, cpu_t *cpu);
 
 /**
  * @brief ejecuta instruccion EXIT
  *
  */
-void execute_EXIT(cpu_t *cpu);
+void execute_EXIT(instruction_t *instruction, cpu_t *cpu);
 
 /*
  * @brief ejecuta instrucción READ
@@ -126,8 +113,7 @@ uint32_t execute_READ(uint32_t param1);
  * @brief ejecuta instruccion WRITE
  *
  */
-void
-execute_WRITE(uint32_t position,uint32_t value);
+void execute_WRITE(uint32_t position, uint32_t value);
 
 /**
  * @brief ejecuto la instruccion COPY

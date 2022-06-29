@@ -25,3 +25,5 @@
  * @return a new PCB instance
  */
 pcb_t *receive_pcb(int fd);
+
+ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time);

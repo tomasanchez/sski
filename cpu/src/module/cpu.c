@@ -10,6 +10,7 @@
  */
 
 #include "conexion_memoria.h"
+#include "pcb_controller.h"
 #include "request_handler.h"
 #include "lib.h"
 #include "cpu.h"
@@ -136,12 +137,12 @@ void cycle(cpu_t *cpu);
  *
  * @return instruction_t
  */
-instruction_t *instructionFetch();
+instruction_t *instruction_fetch();
 
 /**
- * @brief
+ * @brief Request instruction's operands value to memory
  *
- * @return operands_t
+ * @return operands values
  */
 operands_t fetch_operands(cpu_t *cpu);
 
@@ -215,23 +216,39 @@ int on_before_exit(cpu_t *cpu)
 	return exit_code;
 }
 
+// ------------------------------------------------------------
+//  Execute Cycle
+// ------------------------------------------------------------
+
 void cycle(cpu_t *cpu)
 {
-
-	instruction_t *instruction;
-
-	instruction = instructionFetch(cpu);
-
-	operands_t operandos;
-
-	if (decode(instruction))
+	// When no int then should execute instruction
+	if (!cpu->has_interruption)
 	{
-		operandos = fetch_operands(cpu);
-		instruction->param0 = operandos.op1;
-		instruction->param1 = operandos.op2;
-	}
+		// The instruction to be executed
+		instruction_t *instruction;
 
-	instruction_execute(instruction, NULL);
+		// Fetch
+		instruction = instruction_fetch(cpu);
+
+		// Operands to used
+		operands_t operandos = {0, 0};
+
+		if (decode(instruction))
+		{
+			operandos = fetch_operands(cpu);
+			instruction->param0 = operandos.op1;
+			instruction->param1 = operandos.op2;
+		}
+
+		instruction_execute(instruction, NULL);
+	}
+	// Otherwise must return the PCB as it is
+	else
+	{
+		cpu->pcb->status = PCB_READY;
+		return_pcb(cpu->server_dispatch.client, cpu->pcb, 0);
+	}
 }
 
 operands_t fetch_operands(cpu_t *cpu)
@@ -239,12 +256,16 @@ operands_t fetch_operands(cpu_t *cpu)
 
 	ssize_t bytes = -1;
 
+	// Sends a PCB
 	void *send_stream = pcb_to_stream(cpu->pcb);
 
+	// Request to Memory
 	conexion_enviar_stream(cpu->conexion, OP, send_stream, pcb_bytes_size(cpu->pcb));
 
+	// Receives an Operand stream
 	void *receive_stream = conexion_recibir_stream(cpu->conexion.socket, &bytes);
 
+	// Retrieves operands from stream
 	operands_t ret = operandos_from_stream(receive_stream);
 
 	free(send_stream);
@@ -253,7 +274,7 @@ operands_t fetch_operands(cpu_t *cpu)
 	return ret;
 }
 
-instruction_t *instructionFetch(cpu_t *cpu)
+instruction_t *instruction_fetch(cpu_t *cpu)
 {
 	instruction_t *instruction = list_get(cpu->pcb->instructions, cpu->pcb->pc);
 
@@ -265,10 +286,6 @@ bool decode(instruction_t *instruction)
 {
 	return instruction->icode == C_REQUEST_COPY;
 }
-
-// ------------------------------------------------------------
-//  Event Handlers
-// ------------------------------------------------------------
 
 // ============================================================================================================
 //                                   ***** Internal Methods  *****
@@ -320,8 +337,13 @@ on_run_server(servidor_t *server, const char *server_name)
 	return EXIT_SUCCESS;
 }
 
+// ============================================================================================================
+//                                   ***** Instructions  *****
+// ============================================================================================================
+
 uint32_t instruction_execute(instruction_t *instruction, void *data)
 {
+	// The result of an instruction executed
 	uint32_t return_value = 0;
 
 	switch (instruction->icode)
@@ -331,11 +353,11 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 		break;
 
 	case C_REQUEST_IO:
-		execute_IO(data);
+		execute_IO(instruction, data);
 		break;
 
 	case C_REQUEST_EXIT:
-		execute_EXIT(data);
+		execute_EXIT(instruction, data);
 		break;
 
 	case C_REQUEST_READ:;
@@ -366,16 +388,27 @@ void execute_NO_OP(uint time)
 	sleep(time);
 }
 
-void execute_IO(cpu_t *cpu)
+void execute_IO(instruction_t *instruction, cpu_t *cpu)
 {
-	cpu->pcb_result = INOUT;
-	SIGNAL(cpu->sem_pcb);
+	LOG_TRACE("[CPU] :=> Executing IO Instruction...");
+	cpu->pcb->status = PCB_BLOCKED;
+
+	ssize_t bytes_sent = return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
+
+	if (bytes_sent > 0)
+	{
+		LOG_DEBUG("[CPU] :=> PCB sent to Dispatch-Server.");
+	}
+	else
+	{
+		LOG_ERROR("[CPU] :=> PCB could not be sent to Dispatch-Server.");
+	}
 }
 
-void execute_EXIT(cpu_t *cpu)
+void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 {
-	cpu->pcb_result = PCB;
-	SIGNAL(cpu->sem_pcb);
+	cpu->pcb->status = PCB_TERMINATED;
+	return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
 }
 
 uint32_t execute_READ(uint32_t param1)

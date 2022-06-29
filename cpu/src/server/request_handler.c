@@ -16,42 +16,27 @@
 
 extern cpu_t g_cpu;
 
+/**
+ * @brief Handle Interrupt request
+ *
+ * @param socket of the client
+ */
+void request_handler_int(int socket);
 // ============================================================================================================
 //                                   ***** Funciones Privadas  *****
 // ============================================================================================================
 
-/**
- * @brief Realiza los tratamientos del mensaje recibido.
- *
- * @param cliente la posicion del cliente en la lista.
- * @return El mensaje leído.
- */
-static char *
-recibir_mensaje(int cliente)
+void request_handler_int(int fd)
 {
-	// Bytes recibidos
-	ssize_t size = ERROR;
-	// El mensaje (MSG) recibido
-	return servidor_recibir_mensaje(cliente, &size);
-}
-
-void return_pcb(int sender_fd)
-{
-	size_t pcb_size = pcb_bytes_size(g_cpu.pcb);
-	void *stream = malloc(pcb_size + sizeof(g_cpu.time));
-	void *pcb_stream = pcb_to_stream(g_cpu.pcb);
-
-	memcpy(stream, pcb_stream, pcb_size);
-	memcpy(stream + pcb_size, &g_cpu.time, sizeof(g_cpu.time));
-
-	servidor_enviar_stream(g_cpu.pcb_result, sender_fd, stream, pcb_size + sizeof(g_cpu.time));
+	g_cpu.has_interruption = true;
 }
 
 // ============================================================================================================
 //                                   ***** Funciones Publicas  *****
 // ============================================================================================================
 // TAKES SENDER FD AS INPUT
-void *request_handler(void *fd)
+void *
+request_handler(void *fd)
 {
 
 	int sender_fd = 0;
@@ -87,14 +72,13 @@ void *request_handler(void *fd)
 
 			switch (opcode)
 			{
-			case MSG:
-				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
+			case INT:
+				request_handler_int(sender_fd);
 				break;
+
 			case PCB:
 				receive_pcb(sender_fd);
 				SIGNAL(g_cpu.sync.pcb_received);
-				WAIT(g_cpu.sem_pcb);
-				return_pcb(sender_fd);
 				break;
 			default:
 				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
