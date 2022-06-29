@@ -66,7 +66,7 @@ ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time)
 
 	if (bytes_sent > 0)
 	{
-		LOG_DEBUG("[Server] :=> PCB<%d> returned [%ld bytes]", pcb->id, bytes_sent);
+		LOG_DEBUG("[Server] :=> PCB<%d> returned to Kernel [%ld bytes]", pcb->id, bytes_sent);
 	}
 	else
 	{
