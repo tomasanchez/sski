@@ -76,3 +76,11 @@ void *safe_queue_peek(safe_queue_t *queue);
  * @return true when no elements are equeued, false when there are elements
  */
 bool safe_queue_is_empty(safe_queue_t *queue);
+
+/**
+ * @brief Sorts a queue of elements
+ *
+ * @param queue  the queue itself
+ * @param comparator the method used to compare elements: this should return true if the first element goes before the second one
+ */
+void safe_queue_sort(safe_queue_t *queue, bool (*comparator)(void *, void *));

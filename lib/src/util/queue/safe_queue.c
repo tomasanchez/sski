@@ -61,3 +61,10 @@ void *safe_queue_peek(safe_queue_t *this)
 
 	return e;
 }
+
+void safe_queue_sort(safe_queue_t *this, bool (*comparator)(void *, void *))
+{
+	pthread_mutex_lock(&this->_mtx);
+	list_sort(this->_queue->elements, comparator);
+	pthread_mutex_unlock(&this->_mtx);
+}
