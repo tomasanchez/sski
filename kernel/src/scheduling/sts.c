@@ -20,21 +20,19 @@ void terminate(kernel_t *kernel, pcb_t *pcb);
 
 void *short_term_schedule(void *data)
 {
-	LOG_TRACE("[STS] :=> Initializing Short Term Scheduler");
+	LOG_TRACE("[STS] :=> Short Term Scheduling Running...");
 
 	kernel_t *kernel = (kernel_t *)data;
 	scheduler_t sched = kernel->scheduler;
 
 	for (;;)
 	{
-		LOG_INFO("[STS] :=> Entering Short Term Scheduler");
 		pcb_t *pcb = sched.get_next(&sched);
 
 		if (pcb)
 			execute(kernel, pcb);
 		else
 		{
-			LOG_ERROR("[STS] :=> No PCB to execute");
 			sleep(10);
 		}
 	}
@@ -69,13 +67,17 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 		break;
 
 	case PCB_TERMINATED:
-		LOG_INFO("[STS] :=> PCB<%d> has exited", pcb->id);
+		LOG_DEBUG("[STS] :=> PCB<%d> has exited", pcb->id);
 		terminate(kernel, pcb);
 		break;
 
-	default:
-		LOG_TRACE("[STS] :=> PCB<%d> has been interrupted", pcb->id);
+	case PCB_READY:
+		LOG_TRACE("[STS] :=> PCB<%d> is ready", pcb->id);
 		safe_queue_push(kernel->scheduler.ready, pcb);
+
+	default:
+		LOG_ERROR("[STS] :=> PCB<%d> has a corrupted status (%d). Terminating.", pcb->id, pcb->status);
+		terminate(kernel, pcb);
 		break;
 	}
 }
