@@ -49,27 +49,32 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 
 	if (bytes_sent > 0)
 	{
-		LOG_INFO("Executing PCB(id=%d)", pcb->id);
+		LOG_INFO("[STS] :=> Executing PCB<%d>", pcb->id);
 	}
 	else
 	{
-		LOG_ERROR("PCB could not be sent");
+		LOG_ERROR("[STS] :=> PCB could not be sent");
 	}
 
+	LOG_TRACE("[STS] :=> Awaiting for pcb to return...");
 	pcb_destroy(pcb);
 	pcb = NULL;
 	pcb = (pcb_t *)cpu_controller_receive_pcb(kernel->conexion_dispatch);
+	LOG_DEBUG("[STS] :=> PCB<%d> has returned", pcb->id);
 
 	switch (pcb->status)
 	{
 	case PCB_BLOCKED:
+		LOG_WARNING("[STS] :=> PCB<%d> is blocked", pcb->id);
 		break;
 
 	case PCB_TERMINATED:
+		LOG_INFO("[STS] :=> PCB<%d> has exited", pcb->id);
 		terminate(kernel, pcb);
 		break;
 
 	default:
+		LOG_INFO("[STS] :=> PCB<%d> has been interrupted", pcb->id);
 		safe_queue_push(kernel->scheduler.ready, pcb);
 		break;
 	}
