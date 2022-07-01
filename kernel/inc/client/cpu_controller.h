@@ -52,4 +52,4 @@ ssize_t cpu_controller_send_pcb(conexion_t connection_dispatch, opcode_t opcode,
 
 ssize_t cpu_controller_send_interrupt(conexion_t connection_interrupt);
 
-void *cpu_controller_receive_pcb(conexion_t connection_dispatch);
+void *cpu_controller_receive_pcb(conexion_t connection_dispatch, uint32_t *io_time);

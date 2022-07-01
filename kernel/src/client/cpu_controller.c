@@ -64,16 +64,21 @@ ssize_t cpu_controller_send_interrupt(conexion_t connection_interrupt)
 }
 
 void *
-cpu_controller_receive_pcb(conexion_t connection_dispatch)
+cpu_controller_receive_pcb(conexion_t connection_dispatch, uint32_t *io_time)
 {
+	// Recover Stream from Connection
 	ssize_t bytes_received = 0;
 	void *stream = NULL;
-
 	SAFE_STATEMENT(&this.cpu_dispatch, stream = conexion_recibir_stream(connection_dispatch.socket, &bytes_received));
 	LOG_WARNING("[Client-Dispatch] :=> Package received [%ld bytes] ", bytes_received);
 
+	// Recover data from Stream
 	pcb_t *recovered_pcb = pcb_from_stream(stream);
+	memcpy(io_time, stream + pcb_bytes_size(recovered_pcb), sizeof(uint32_t));
 	LOG_PCB(recovered_pcb);
+
+	// Deallocate Stream
 	free(stream);
+
 	return recovered_pcb;
 }
