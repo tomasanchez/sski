@@ -57,27 +57,33 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 	LOG_TRACE("[STS] :=> Awaiting for pcb to return...");
 	pcb_destroy(pcb);
 	pcb = NULL;
-	pcb = (pcb_t *)cpu_controller_receive_pcb(kernel->conexion_dispatch);
-	LOG_DEBUG("[STS] :=> PCB<%d> has returned", pcb->id);
+	uint32_t io_time = 0;
+	pcb = (pcb_t *)cpu_controller_receive_pcb(kernel->conexion_dispatch, &io_time);
+	LOG_INFO("[STS] :=> PCB #%d has returned", pcb->id);
+
+	if (io_time > 0)
+		LOG_WARNING("[STS] :=> IO (%d)", io_time);
 
 	switch (pcb->status)
 	{
 	case PCB_BLOCKED:
+		block(&kernel->scheduler, pcb, io_time);
 		LOG_WARNING("[STS] :=> PCB<%d> is blocked", pcb->id);
 		break;
 
 	case PCB_TERMINATED:
-		LOG_DEBUG("[STS] :=> PCB<%d> has exited", pcb->id);
 		terminate(kernel, pcb);
+		LOG_DEBUG("[STS] :=> PCB<%d> has exited", pcb->id);
 		break;
 
 	case PCB_READY:
-		LOG_TRACE("[STS] :=> PCB<%d> is ready", pcb->id);
 		safe_queue_push(kernel->scheduler.ready, pcb);
+		LOG_TRACE("[STS] :=> PCB<%d> is ready", pcb->id);
+		break;
 
 	default:
-		LOG_ERROR("[STS] :=> PCB<%d> has a corrupted status (%d). Terminating.", pcb->id, pcb->status);
 		terminate(kernel, pcb);
+		LOG_ERROR("[STS] :=> PCB<%d> has a corrupted status (%d). Terminated.", pcb->id, pcb->status);
 		break;
 	}
 }
@@ -87,4 +93,11 @@ void terminate(kernel_t *kernel, pcb_t *pcb)
 	SIGNAL(kernel->scheduler.dom);
 	pcb_destroy(pcb);
 	pcb = NULL;
+}
+
+void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
+{
+	pcb->io = io_time;
+	safe_queue_push(scheduler->blocked, pcb);
+	SIGNAL(scheduler->io_request);
 }

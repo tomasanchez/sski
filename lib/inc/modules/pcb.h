@@ -47,6 +47,8 @@ typedef struct PCB
 	uint32_t estimation;
 	// Program Counter.
 	uint32_t pc;
+	// IO Burst.
+	uint32_t io;
 } pcb_t;
 
 /**
@@ -100,3 +102,13 @@ pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid);
  * @return true if first pcb has less estimation than second one, false otherwise.
  */
 bool pcb_sort_by_estimation(void *e1, void *e2);
+
+/**
+ * @brief Obtains the value of a param for a PCB
+ *
+ * @param pcb the pcb to evaluate
+ * @param instruction the index of the instruction
+ * @param param the number of the param to be obtained
+ * @return uint32_t
+ */
+uint32_t pcb_get_param_for(pcb_t *pcb, int instruction, int param);

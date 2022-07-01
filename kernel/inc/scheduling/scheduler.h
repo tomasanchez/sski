@@ -21,10 +21,16 @@ typedef struct Scheduler
 	sem_t *dom;
 	// Request to admit
 	sem_t *req_admit;
+	// Request to admit
+	sem_t *io_request;
+
 	// NEW Queue
 	safe_queue_t *new;
 	// READY Queue
 	safe_queue_t *ready;
+	// BLOCKED Queue
+	safe_queue_t *blocked;
+
 	// Thread Tracker dependency.
 	thread_manager_t tm;
 	// Get scheduler next
@@ -44,3 +50,10 @@ scheduler_t new_scheduler(int dom);
  *
  */
 void scheduler_delete(scheduler_t scheduler);
+
+/**
+ * @brief Schedules the IO manager
+ *
+ * @param scheduler
+ */
+void scheduler_start(scheduler_t *scheduler);

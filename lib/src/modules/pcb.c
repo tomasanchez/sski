@@ -24,7 +24,7 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 	pcb->page_table = NULL;			   // Tabla de páginas del proceso en memoria, esta información la tendremos recién cuando el proceso pase a estado READY
 	pcb->estimation = estimation;	   // Estimación utilizada para planificar los procesos en el algoritmo SRT, la misma tendrá un valor inicial definido por archivo de configuración y será recalculada bajo la fórmula de promedio ponderado
 	pcb->pc = 0;					   // Número de la próxima instrucción a ejecutar
-
+	pcb->io = 0;					   // Tiempo de espera en el sistema de IO
 	return pcb;
 }
 
@@ -43,6 +43,12 @@ pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
 bool pcb_sort_by_estimation(void *e1, void *e2)
 {
 	return ((pcb_t *)e1)->estimation <= ((pcb_t *)e2)->estimation;
+}
+
+uint32_t pcb_get_param_for(pcb_t *pcb, int instruction, int param)
+{
+	instruction_t *i = list_get(pcb->instructions, instruction);
+	return param == 0 ? i->param0 : i->param1;
 }
 
 void pcb_destroy(void *pcb)

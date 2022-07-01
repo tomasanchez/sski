@@ -73,8 +73,9 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->multiprogramming_grade = grado_multiprogramacion();
 	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade);
 	on_init_sync(&kernel->sync);
-
+	scheduler_start(&kernel->scheduler);
 	init_cpu_controller();
+
 	return EXIT_SUCCESS;
 }
 
