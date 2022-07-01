@@ -46,7 +46,10 @@ void request_exit(void)
 
 void request_no_op(char *constant)
 {
-	_request_instruction(C_REQUEST_NO_OP, atoi(constant), NO_INSTRUCTION_PARAMETER);
+	int intConstant = atoi(constant);
+
+	for (int i = 0; i < intConstant; i++)
+		_request_instruction(C_REQUEST_NO_OP, NO_INSTRUCTION_PARAMETER, NO_INSTRUCTION_PARAMETER);
 
 	free(constant);
 }
