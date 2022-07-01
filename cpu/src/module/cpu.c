@@ -367,38 +367,39 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 	switch (instruction->icode)
 	{
 	case C_REQUEST_NO_OP:
-		LOG_WARNING("[CPU] :=> Executing instruction: NO_OP");
 		execute_NO_OP(retardo_noop());
-		LOG_DEBUG("[CPU] :=> Instruction executed.");
+		LOG_DEBUG("[CPU] :=> Executed instruction: NO_OP");
 		break;
 
 	case C_REQUEST_IO:
 		execute_IO(instruction, data);
+		LOG_WARNING("[CPU] :=> I/O");
 		break;
 
 	case C_REQUEST_EXIT:
-		LOG_WARNING("[CPU] :=> Executing instruction: EXIT");
 		execute_EXIT(instruction, data);
-		LOG_ERROR("[CPU] :=> Process terminated.");
+		LOG_ERROR("[CPU] :=> Process exited.");
 		break;
 
 	case C_REQUEST_READ:;
 		uint32_t memory_response_read = execute_READ(instruction->param0);
-		LOG_TRACE("Memory Value of %d : %d", instruction->param0, memory_response_read);
+		LOG_TRACE("[CPU] => Executed READ (%d, %d)", instruction->param0, memory_response_read);
 		return_value = memory_response_read;
 		break;
 
 	case C_REQUEST_WRITE:
 		execute_WRITE(instruction->param0, instruction->param1);
+		LOG_INFO("[CPU] :=> Executed WRITE (%d, %d)", instruction->param0, instruction->param1);
 		break;
 
 	case C_REQUEST_COPY:;
 		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
-		LOG_TRACE("Copy Memory Value from %d to %d with the value: %d", instruction->param1, instruction->param0, memory_response_write);
+		LOG_WARNING("[CPU] :=> Executed COPY <%d> ([%d] =>[%d])", memory_response_write, instruction->param1, instruction->param0);
 		return_value = memory_response_write;
 		break;
 
 	default:
+		LOG_ERROR("[CPU] :=> Unknown instruction code: %d", instruction->icode);
 		break;
 	}
 
