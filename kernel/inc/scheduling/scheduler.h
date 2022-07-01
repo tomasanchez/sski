@@ -13,6 +13,7 @@
 
 #include "sem.h"
 #include "safe_queue.h"
+#include "thread_manager.h"
 
 typedef struct Scheduler
 {
@@ -24,6 +25,8 @@ typedef struct Scheduler
 	safe_queue_t *new;
 	// READY Queue
 	safe_queue_t *ready;
+	// Thread Tracker dependency.
+	thread_manager_t tm;
 	// Get scheduler next
 	void *(*get_next)(void *);
 } scheduler_t;
