@@ -75,12 +75,12 @@ static int
 on_cpu_destroy(cpu_t *cpu)
 {
 	pcb_destroy(cpu->pcb);
-	thread_manager_destroy(&cpu->tm);
 	servidor_destroy(&(cpu->server_dispatch));
 	servidor_destroy(&(cpu->server_interrupt));
 	conexion_destroy(&(cpu->conexion));
 	sem_destroy((cpu->sem_pcb));
 	free(cpu->sem_pcb);
+	thread_manager_destroy(&cpu->tm);
 	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
 }
