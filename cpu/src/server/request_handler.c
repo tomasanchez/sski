@@ -61,8 +61,14 @@ request_handler(void *fd)
 
 			servidor_desconectar_cliente(sender_fd);
 
-			thread_manager_end_thread(&g_cpu.server_dispatch.tm);
-			thread_manager_end_thread(&g_cpu.server_interrupt.tm);
+			int result = 0;
+			result += thread_manager_end_thread(&g_cpu.server_dispatch.tm);
+			result += thread_manager_end_thread(&g_cpu.server_interrupt.tm);
+
+			if (result == 2)
+			{
+				LOG_ERROR("[Server] :=> NO THREAD WAS INTERRUPTED; THIS SHOULD NEVER HAPPEN");
+			}
 
 			return NULL;
 		}
