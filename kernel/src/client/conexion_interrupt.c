@@ -43,9 +43,6 @@ static int on_connect_interrupt(kernel_t *kernel)
 // ! Main of [Interrupt Thread]
 void *routine_conexion_interrupt(void *data)
 {
-	kernel_t *kernel = data;
-
-	on_connect_interrupt(kernel);
-
+	on_connect_interrupt(data);
 	return NULL;
 }

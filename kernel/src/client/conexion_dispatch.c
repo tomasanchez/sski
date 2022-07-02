@@ -42,6 +42,6 @@ static int on_connect_dispatch(kernel_t *kernel)
 // ! Main of [DISPATCH-THREAD]
 void *routine_conexion_dispatch(void *data)
 {
-	on_connect_dispatch((kernel_t *)data);
+	on_connect_dispatch(data);
 	return NULL;
 }
