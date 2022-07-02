@@ -160,3 +160,8 @@ uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica);
  * @return uint32_t
  */
 uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica);
+
+
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel,uint32_t desplazamiento);
+
+uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento);
