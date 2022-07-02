@@ -520,11 +520,11 @@ uint32_t physical_address(pcb_t* pcb, uint32_t logical_address){
 }
 
 uint32_t obtener_numero_pagina(uint32_t direccion_logica){
-	return direccion_logica/tam_pagina();
+	return direccion_logica/tamanio_pagina;
 }
 
 uint32_t obtener_offset(uint32_t direccion_logica){
-	return direccion_logica - tam_pagina() * obtener_numero_pagina(direccion_logica);
+	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica);
 }
 
 uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica){
