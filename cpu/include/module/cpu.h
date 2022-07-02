@@ -119,3 +119,44 @@ void execute_WRITE(uint32_t position, uint32_t value);
  */
 uint32_t
 execute_COPY(uint32_t param1, uint32_t param2);
+
+/**
+ * @brief (MMU) -> se obtiene la direccion fisica de un proceso, a través de la direccion lógica.
+ *
+ * @param pcb
+ * @param logical_address
+ * @return uint32_t
+ */
+uint32_t physical_address(pcb_t* pcb, uint32_t logical_address);
+
+/**
+ * @brief N°Pag = DL / Tam_de_Pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_numero_pagina(uint32_t direccion_logica);
+
+/**
+ * @brief off = (DL - tam_pag) * N°Pag
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_offset(uint32_t direccion_logica);
+
+/**
+ * @brief entrada P1 = N°Pag / cant_entradas_por_pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica);
+
+/**
+ * @brief entrada P2 = N°Pag % cant_entradas_por_pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica);

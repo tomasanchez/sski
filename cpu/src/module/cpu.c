@@ -492,3 +492,43 @@ execute_COPY(uint32_t param1, uint32_t param2)
 
 	return read_value;
 }
+
+
+// ==============================================
+//			   ***** MMU - TLB *****
+// ==============================================
+
+uint32_t physical_address(pcb_t* pcb, uint32_t logical_address){
+	uint32_t frame;
+	uint32_t numero_tabla_de_segundo_nivel;
+
+	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(pcb->page_table,obtener_entrada_primer_nivel(logical_address));
+	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address));
+
+	// Después tendríamos que actualizar la TLB, que podria ser algo asi
+	// updateTLB(page_number(logical_address),frame);
+
+	// TODO --> tam_pagina() no puede ser accedida desde CPU --> Hay que pedirselo a memoria.
+	int tamanio_pagina = tam_pagina();
+
+	return frame * tamanio_pagina + obtener_offset(logical_address);
+}
+
+uint32_t obtener_numero_pagina(uint32_t direccion_logica){
+	return direccion_logica/tam_pagina();
+}
+
+uint32_t obtener_offset(uint32_t direccion_logica){
+	return direccion_logica - tam_pagina() * obtener_numero_pagina(direccion_logica);
+}
+
+//TODO --> BORRAR URGENTE ESTO.
+static int cantidad_entradas_por_pagina = 0;
+
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica){
+	return obtener_numero_pagina(direccion_logica) / cantidad_entradas_por_pagina;
+}
+
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica){
+	return obtener_numero_pagina(direccion_logica) % cantidad_entradas_por_pagina;
+}
