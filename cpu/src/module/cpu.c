@@ -446,17 +446,17 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 	}
 }
 
-uint32_t execute_READ(uint32_t param1)
+uint32_t execute_READ(uint32_t logical_address)
 {
 	ssize_t bytes = -1;
 	uint32_t return_value = 0;
 
-	void *send_stream = malloc(sizeof(param1));
+	void *send_stream = malloc(sizeof(logical_address));
 
 	// Serializo
-	memcpy(send_stream, &param1, sizeof(param1));
+	memcpy(send_stream, &logical_address, sizeof(logical_address));
 
-	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(param1));
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(logical_address));
 
 	free(send_stream);
 
@@ -469,11 +469,11 @@ uint32_t execute_READ(uint32_t param1)
 	return return_value;
 }
 
-void execute_WRITE(uint32_t position, uint32_t value)
+void execute_WRITE(uint32_t logical_address, uint32_t value)
 {
 	operands_t *operands = malloc(sizeof(operands_t));
 
-	operands->op1 = position;
+	operands->op1 = logical_address;
 	operands->op2 = value;
 
 	void *send_stream = operandos_to_stream(operands);
