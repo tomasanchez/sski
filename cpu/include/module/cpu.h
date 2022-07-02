@@ -36,8 +36,6 @@ typedef struct CPU
 	thread_manager_t tm;
 	// Current PCB in execution.
 	pcb_t *pcb;
-	// CPU's SEM
-	sem_t *sem_pcb;
 	// Thread Synchronizer
 	cpu_sync_t sync;
 	// Wether the CPU received an interrupt signal

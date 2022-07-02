@@ -63,9 +63,6 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
 
-	cpu->sem_pcb = malloc(sizeof(sem_t));
-	sem_init((cpu->sem_pcb), SHARE_BETWEEN_THREADS, 0);
-
 	cpu->sync = init_sync();
 
 	return EXIT_SUCCESS;
@@ -75,12 +72,15 @@ static int
 on_cpu_destroy(cpu_t *cpu)
 {
 	pcb_destroy(cpu->pcb);
+	LOG_DEBUG("PCB destroyed.");
 	servidor_destroy(&(cpu->server_dispatch));
+	LOG_DEBUG("Server Dispatch destroyed.");
 	servidor_destroy(&(cpu->server_interrupt));
+	LOG_DEBUG("Server Interrupt destroyed.");
 	conexion_destroy(&(cpu->conexion));
-	sem_destroy((cpu->sem_pcb));
-	free(cpu->sem_pcb);
+	LOG_DEBUG("Server Interrupt destroyed.");
 	thread_manager_destroy(&cpu->tm);
+	LOG_DEBUG("CPU Thread Manager destroyed.");
 	sync_destroy(&(cpu->sync));
 	return EXIT_SUCCESS;
 }
@@ -349,8 +349,7 @@ on_run_server(servidor_t *server, const char *server_name)
 
 	LOG_DEBUG("[CPU:%s] :=> Server listening... Awaiting for connections.", server_name);
 
-	for (;;)
-		servidor_run(server, request_handler);
+	servidor_run(server, request_handler);
 
 	return EXIT_SUCCESS;
 }
