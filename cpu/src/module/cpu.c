@@ -62,7 +62,7 @@ static int on_cpu_init(cpu_t *cpu)
 	cpu->tm = new_thread_manager();
 	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
 	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
-
+	cpu->has_interruption = false;
 	cpu->sync = init_sync();
 
 	return EXIT_SUCCESS;
@@ -349,7 +349,8 @@ on_run_server(servidor_t *server, const char *server_name)
 
 	LOG_DEBUG("[CPU:%s] :=> Server listening... Awaiting for connections.", server_name);
 
-	servidor_run(server, request_handler);
+	for (;;)
+		servidor_run(server, request_handler);
 
 	return EXIT_SUCCESS;
 }

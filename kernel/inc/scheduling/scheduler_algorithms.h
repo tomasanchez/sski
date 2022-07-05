@@ -20,3 +20,11 @@
  * @return a PCB
  */
 void *get_next_fifo(void *scheduler);
+
+/**
+ * @brief Get the next srt object
+ *
+ * @param scheduler the Scheduler object
+ * @return a PCB
+ */
+void *get_next_srt(void *scheduler);

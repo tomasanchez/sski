@@ -25,6 +25,7 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 	pcb->estimation = estimation;	   // Estimación utilizada para planificar los procesos en el algoritmo SRT, la misma tendrá un valor inicial definido por archivo de configuración y será recalculada bajo la fórmula de promedio ponderado
 	pcb->pc = 0;					   // Número de la próxima instrucción a ejecutar
 	pcb->io = 0;					   // Tiempo de espera en el sistema de IO
+	pcb->real = 0;					   // Tiempo real de ejecución
 	return pcb;
 }
 

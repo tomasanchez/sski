@@ -49,6 +49,8 @@ typedef struct PCB
 	uint32_t pc;
 	// IO Burst.
 	uint32_t io;
+	// Real CPU usage
+	uint32_t real;
 } pcb_t;
 
 /**

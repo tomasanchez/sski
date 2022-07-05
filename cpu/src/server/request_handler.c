@@ -28,7 +28,8 @@ void request_handler_int(int socket);
 
 void request_handler_int(int fd)
 {
-	g_cpu.has_interruption = true;
+	if (g_cpu.pcb != NULL)
+		g_cpu.has_interruption = true;
 }
 
 // ============================================================================================================

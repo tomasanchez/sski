@@ -40,6 +40,8 @@ typedef struct CPU
 	cpu_sync_t sync;
 	// Wether the CPU received an interrupt signal
 	bool has_interruption;
+	// Whether the CPU is executin a PCB or not
+	bool is_executing;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
