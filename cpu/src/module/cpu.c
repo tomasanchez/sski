@@ -448,15 +448,17 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 
 uint32_t execute_READ(uint32_t logical_address)
 {
+	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
 	ssize_t bytes = -1;
 	uint32_t return_value = 0;
 
-	void *send_stream = malloc(sizeof(logical_address));
+	void *send_stream = malloc(sizeof(physical_address));
 
 	// Serializo
-	memcpy(send_stream, &logical_address, sizeof(logical_address));
+	memcpy(send_stream, &physical_address, sizeof(physical_address));
 
-	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(logical_address));
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(physical_address));
 
 	free(send_stream);
 
@@ -471,9 +473,11 @@ uint32_t execute_READ(uint32_t logical_address)
 
 void execute_WRITE(uint32_t logical_address, uint32_t value)
 {
+	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
 	operands_t *operands = malloc(sizeof(operands_t));
 
-	operands->op1 = logical_address;
+	operands->op1 = physical_address;
 	operands->op2 = value;
 
 	void *send_stream = operandos_to_stream(operands);
@@ -498,45 +502,51 @@ execute_COPY(uint32_t param1, uint32_t param2)
 //			   ***** MMU - TLB *****
 // ==============================================
 
-//TODO --> BORRAR URGENTE ESTO.
-//static int cantidad_entradas_por_pagina;
-//static int tamanio_pagina;
+/*
+Tam memoria: 4096Bytes = 4KB = 2¹²
+Tamaño de pag = Tamaño de frame = 64Bytes -> 2⁶ --> 6 bits de offset
+
+Direc Logica:  |001000|111111|-> offset
+			   | Pag  |  Off |
 
 
-uint32_t physical_address(pcb_t* pcb, uint32_t logical_address, conexion_t memory){
+Tabla de Paginas:
+
+|N° Pag | Frame |
+|	0	| 	5	|
+|	1	| 	7	|
+|   2   |   6   |
+|	8	| 	3	|
+
+3 -> 000011
+
+DF:  |000011|111111|
+
+
+PRoceso B --> Direc Logica: |000010|000011|
+							| Pag  | Off  |
+							|  2   |      |
+
+Direc Fisica: 6(Decimal) + 000011
+6 -> 0110
+=> 000110|000011
+
+*/
+
+uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	//int tamanio_pagina = tam_pagina();
-	LOG_TRACE("[MMU] :=> Request page table size...");
-	accion_t *req_page_size = accion_create(NEW_PROCESS, 0);
-	accion_enviar(req_page_size, memory.socket);
-	accion_t *recv_page_size = accion_recibir(memory.socket);
-	LOG_TRACE("[MMU] :=> Page table size is: %d", recv_page_size->param);
-
-	// int entradas_por_tabla(void);
-	LOG_TRACE("[MMU] :=> Request amount_entries_per_page...");
-	accion_t *req_amount_entries = accion_create(NEW_PROCESS, 0);
-	accion_enviar(req_amount_entries, memory.socket);
-	accion_t *recv_amount_entries = accion_recibir(memory.socket);
-	LOG_TRACE("[MMU] :=> Amount Entries per page: %d", recv_amount_entries->param);
-
-
-	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(pcb->page_table,obtener_entrada_primer_nivel(logical_address, recv_page_size->param, recv_amount_entries->param));
-	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address, recv_page_size->param, recv_amount_entries->param));
+	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 
 	// Después tendríamos que actualizar la TLB, que podria ser algo asi
 	// updateTLB(page_number(logical_address),frame);
 
-	accion_destroy(req_page_size);
-	accion_destroy(recv_page_size);
-	accion_destroy(req_amount_entries);
-	accion_destroy(recv_amount_entries);
-
-
-	return frame * (recv_page_size->param) + obtener_offset(logical_address, recv_page_size->param);
+	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
+
 
 uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina){
 	return direccion_logica/tamanio_pagina;
@@ -555,7 +565,7 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 }
 
 
-uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel,uint32_t desplazamiento){
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento){
 	return 0;
 }
 

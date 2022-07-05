@@ -40,6 +40,10 @@ typedef struct CPU
 	cpu_sync_t sync;
 	// Wether the CPU received an interrupt signal
 	bool has_interruption;
+	// Page Size
+	uint32_t page_size;
+	// Amount of entries per page
+	uint32_t page_amount_entries;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
@@ -127,7 +131,7 @@ execute_COPY(uint32_t param1, uint32_t param2);
  * @param logical_address
  * @return uint32_t
  */
-uint32_t physical_address(pcb_t* pcb, uint32_t logical_address, conexion_t memory);
+uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address);
 
 /**
  * @brief N°Pag = DL / Tam_de_Pagina
