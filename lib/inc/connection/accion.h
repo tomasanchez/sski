@@ -23,6 +23,8 @@
 typedef enum ActionCode
 {
 	NEW_PROCESS,
+	REQ_SIZE,
+	REQ_ENTRY,
 } actioncode_t;
 
 #define NO_ACTION_PARAMETER 0
