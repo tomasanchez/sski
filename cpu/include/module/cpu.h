@@ -127,7 +127,7 @@ execute_COPY(uint32_t param1, uint32_t param2);
  * @param logical_address
  * @return uint32_t
  */
-uint32_t physical_address(pcb_t* pcb, uint32_t logical_address);
+uint32_t physical_address(pcb_t* pcb, uint32_t logical_address, conexion_t memory);
 
 /**
  * @brief N°Pag = DL / Tam_de_Pagina
@@ -135,7 +135,7 @@ uint32_t physical_address(pcb_t* pcb, uint32_t logical_address);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_numero_pagina(uint32_t direccion_logica);
+uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina);
 
 /**
  * @brief off = (DL - tam_pag) * N°Pag
@@ -143,7 +143,7 @@ uint32_t obtener_numero_pagina(uint32_t direccion_logica);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_offset(uint32_t direccion_logica);
+uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina);
 
 /**
  * @brief entrada P1 = N°Pag / cant_entradas_por_pagina
@@ -151,7 +151,7 @@ uint32_t obtener_offset(uint32_t direccion_logica);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica);
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
 
 /**
  * @brief entrada P2 = N°Pag % cant_entradas_por_pagina
@@ -159,9 +159,8 @@ uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica);
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
 
-
-uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel,uint32_t desplazamiento);
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
 
 uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento);

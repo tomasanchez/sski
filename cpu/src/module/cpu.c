@@ -499,40 +499,59 @@ execute_COPY(uint32_t param1, uint32_t param2)
 // ==============================================
 
 //TODO --> BORRAR URGENTE ESTO.
-static int cantidad_entradas_por_pagina;
-static int tamanio_pagina;
+//static int cantidad_entradas_por_pagina;
+//static int tamanio_pagina;
 
 
-uint32_t physical_address(pcb_t* pcb, uint32_t logical_address){
+uint32_t physical_address(pcb_t* pcb, uint32_t logical_address, conexion_t memory){
+
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(pcb->page_table,obtener_entrada_primer_nivel(logical_address));
-	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address));
+	//int tamanio_pagina = tam_pagina();
+	LOG_TRACE("[MMU] :=> Request page table size...");
+	accion_t *req_page_size = accion_create(NEW_PROCESS, 0);
+	accion_enviar(req_page_size, memory.socket);
+	accion_t *recv_page_size = accion_recibir(memory.socket);
+	LOG_TRACE("[MMU] :=> Page table size is: %d", recv_page_size->param);
+
+	// int entradas_por_tabla(void);
+	LOG_TRACE("[MMU] :=> Request amount_entries_per_page...");
+	accion_t *req_amount_entries = accion_create(NEW_PROCESS, 0);
+	accion_enviar(req_amount_entries, memory.socket);
+	accion_t *recv_amount_entries = accion_recibir(memory.socket);
+	LOG_TRACE("[MMU] :=> Amount Entries per page: %d", recv_amount_entries->param);
+
+
+	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(pcb->page_table,obtener_entrada_primer_nivel(logical_address, recv_page_size->param, recv_amount_entries->param));
+	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address, recv_page_size->param, recv_amount_entries->param));
 
 	// Después tendríamos que actualizar la TLB, que podria ser algo asi
 	// updateTLB(page_number(logical_address),frame);
 
-	// TODO --> tam_pagina() no puede ser accedida desde CPU --> Hay que pedirselo a memoria.
-	//int tamanio_pagina = tam_pagina();
+	accion_destroy(req_page_size);
+	accion_destroy(recv_page_size);
+	accion_destroy(req_amount_entries);
+	accion_destroy(recv_amount_entries);
 
-	return frame * tamanio_pagina + obtener_offset(logical_address);
+
+	return frame * (recv_page_size->param) + obtener_offset(logical_address, recv_page_size->param);
 }
 
-uint32_t obtener_numero_pagina(uint32_t direccion_logica){
+uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina){
 	return direccion_logica/tamanio_pagina;
 }
 
-uint32_t obtener_offset(uint32_t direccion_logica){
-	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica);
+uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina){
+	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica, tamanio_pagina);
 }
 
-uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica){
-	return obtener_numero_pagina(direccion_logica) / cantidad_entradas_por_pagina;
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+	return obtener_numero_pagina(direccion_logica, tamanio_pagina) / cant_en_por_pag;
 }
 
-uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica){
-	return obtener_numero_pagina(direccion_logica) % cantidad_entradas_por_pagina;
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+	return obtener_numero_pagina(direccion_logica, tamanio_pagina) % cant_en_por_pag;
 }
 
 
