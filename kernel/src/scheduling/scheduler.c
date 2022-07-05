@@ -12,9 +12,11 @@
 #include "scheduler.h"
 #include "io_scheduler.h"
 #include "pcb_unit.h"
+#include "time.h"
+#include <string.h>
 #include "scheduler_algorithms.h"
 
-scheduler_t new_scheduler(int dom)
+scheduler_t new_scheduler(int dom, char *algorithm)
 {
 	scheduler_t s;
 
@@ -24,7 +26,10 @@ scheduler_t new_scheduler(int dom)
 	s.blocked = new_safe_queue();
 
 	// Init Algorithm
-	s.get_next = get_next_fifo;
+	s.get_next = strcmp(algorithm, "FIFO") == 0 ? get_next_fifo : get_next_srt;
+
+	// Time Stamps
+	s.current_estimation = 0;
 
 	// Init Thread Manager
 	s.tm = new_thread_manager();
@@ -69,4 +74,9 @@ void *schedule(void *data)
 {
 	scheduler_t *scheduler = (scheduler_t *)data;
 	return scheduler;
+}
+
+bool should_interrupt(scheduler_t *scheduler, pcb_t *pcb)
+{
+	return scheduler->current_estimation >= pcb->estimation;
 }

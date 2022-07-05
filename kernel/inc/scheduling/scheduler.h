@@ -13,6 +13,7 @@
 
 #include "sem.h"
 #include "safe_queue.h"
+#include "pcb.h"
 #include "thread_manager.h"
 
 typedef struct Scheduler
@@ -31,6 +32,9 @@ typedef struct Scheduler
 	// BLOCKED Queue
 	safe_queue_t *blocked;
 
+	// Current PCB estimation - Needed to preempt
+	uint32_t current_estimation;
+
 	// Thread Tracker dependency.
 	thread_manager_t tm;
 	// Get scheduler next
@@ -43,7 +47,7 @@ typedef struct Scheduler
  * @param dom the Degree Of Multiprogramming
  * @return a prepared struct
  */
-scheduler_t new_scheduler(int dom);
+scheduler_t new_scheduler(int dom, char *algorithm);
 
 /**
  * @brief Destroys the scheduler data.
@@ -57,3 +61,11 @@ void scheduler_delete(scheduler_t scheduler);
  * @param scheduler
  */
 void scheduler_start(scheduler_t *scheduler);
+
+/**
+ * @brief
+ *
+ * @param scheduler
+ * @param pcb
+ */
+bool should_interrupt(scheduler_t *scheduler, pcb_t *pcb);

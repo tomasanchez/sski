@@ -14,13 +14,14 @@
 #include "pcb_unit.h"
 #include "cpu_controller.h"
 #include "log.h"
+#include "cfg.h"
 
 void execute(kernel_t *kernel, pcb_t *pcb);
 void terminate(kernel_t *kernel, pcb_t *pcb);
 void pre_empt(scheduler_t *scheduler, pcb_t *pcb);
+void re_schedule(pcb_t *pcb);
 
-void *
-short_term_schedule(void *data)
+void *short_term_schedule(void *data)
 {
 	LOG_TRACE("[STS] :=> Short Term Scheduling Running...");
 
@@ -125,11 +126,24 @@ void terminate(kernel_t *kernel, pcb_t *pcb)
 void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
 {
 	pcb->io = io_time;
+	re_schedule(pcb);
 	safe_queue_push(scheduler->blocked, pcb);
 	SIGNAL(scheduler->io_request);
 }
 
 void pre_empt(scheduler_t *scheduler, pcb_t *pcb)
 {
+	if (pcb->real < pcb->estimation)
+		pcb->estimation -= pcb->real;
+	else
+		pcb->estimation = pcb->real - pcb->estimation;
+
 	safe_queue_push(scheduler->ready, pcb);
 };
+
+void re_schedule(pcb_t *pcb)
+{
+	double alpha = alfa();
+
+	pcb->estimation = (uint32_t)(pcb->real * alpha) + (uint32_t)((1 - alpha) * pcb->estimation);
+}

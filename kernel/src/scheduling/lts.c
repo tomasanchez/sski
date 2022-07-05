@@ -15,19 +15,13 @@
 #include "safe_queue.h"
 #include "log.h"
 #include "accion.h"
+#include "cpu_controller.h"
 
 // ============================================================================================================
 //                                   ***** Declarations *****
 // ============================================================================================================
 
-/**
- * @brief Admits a new process
- *
- * @param new
- * @param ready
- * @param memory
- */
-void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory);
+void admit(kernel_t *kernel);
 
 // ============================================================================================================
 //                                   ***** Definitions *****
@@ -53,14 +47,19 @@ long_term_schedule(void *kernel_ref)
 		sem_getvalue(sched.req_admit, &request);
 		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
 		WAIT(sched.req_admit);
-		admit(sched.new, sched.ready, kernel->conexion_memory);
+		admit(kernel);
 	}
 
 	return NULL;
 }
 
-void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
+void admit(kernel_t *kernel)
 {
+
+	safe_queue_t *new = kernel->scheduler.new;
+	safe_queue_t *ready = kernel->scheduler.ready;
+	conexion_t memory = kernel->conexion_memory;
+
 	if (new != NULL && ready != NULL)
 	{
 		LOG_TRACE("[LTS] :=> Admitting a new process...");
@@ -71,6 +70,22 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 		{
 			pcb->status = PCB_NEW;
 			LOG_INFO("[LTS] :=> Process <%d> changed status to NEW", pcb->id);
+
+			if (should_interrupt(&kernel->scheduler, pcb))
+			{
+
+				ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
+
+				if (bytes_sent > 0)
+				{
+					LOG_TRACE("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
+				}
+				else
+				{
+					LOG_ERROR("[LTS] :=> Couldn't sent interruption");
+				}
+			}
+
 			safe_queue_push(ready, pcb);
 
 			// Request page table.
@@ -98,11 +113,11 @@ void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
 		}
 		else
 		{
-			LOG_ERROR("[LTS] :=> No process to be admit");
+			LOG_ERROR("[LTS] :=> No process to be admit - PCB cannot be NULL");
 		}
 	}
 	else
 	{
-		LOG_ERROR("[LTS] :=> Error while admitting a new process");
+		LOG_ERROR("[LTS] :=> Error while admitting a new process: NULL Queues");
 	}
 }
