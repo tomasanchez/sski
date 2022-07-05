@@ -43,6 +43,33 @@ static int conexion_init(cpu_t *cpu)
 	return SUCCESS;
 }
 
+void handshake(cpu_t *cpu)
+{
+
+	//int tam_pagina();
+	LOG_TRACE("[MMU] :=> Request page table size...");
+	accion_t *req_page_size = accion_create(REQ_SIZE, 0); //modificar los parametros
+	accion_enviar(req_page_size, cpu->conexion.socket);
+	accion_t *recv_page_size = accion_recibir(cpu->conexion.socket);//modificar los parametros
+	LOG_DEBUG("[MMU] :=> Page table size is: %d", recv_page_size->param);
+
+	// int entradas_por_tabla(void);
+	LOG_TRACE("[MMU] :=> Request amount_entries_per_page...");
+	accion_t *req_amount_entries = accion_create(REQ_ENTRY, 0); //modificar los parametros
+	accion_enviar(req_amount_entries, cpu->conexion.socket);
+	accion_t *recv_amount_entries = accion_recibir(cpu->conexion.socket); //modificar los parametros
+	LOG_DEBUG("[MMU] :=> Amount Entries per page: %d", recv_amount_entries->param);
+
+	cpu->page_size = recv_page_size->param;
+	cpu->page_amount_entries = recv_amount_entries->param;
+
+	accion_destroy(req_page_size);
+	accion_destroy(recv_page_size);
+	accion_destroy(req_amount_entries);
+	accion_destroy(recv_amount_entries);
+
+}
+
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -53,7 +80,7 @@ void *routine_conexion_memoria(void *data)
 
 	conexion_init(cpu);
 
-	conexion_enviar_mensaje(cpu->conexion, "Hello from CPU");
+	handshake(cpu);
 
 	return NULL;
 }
