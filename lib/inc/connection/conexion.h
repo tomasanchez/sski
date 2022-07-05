@@ -158,3 +158,9 @@ ssize_t enviar_stream(opcode_t opcode, void *stream, size_t stream_size, int soc
 ssize_t conexion_enviar_stream(conexion_t is_conexion, opcode_t opcode, void *stream, size_t size);
 
 void *conexion_recibir_stream(int socket, ssize_t *bytes_size);
+
+ssize_t
+connection_send_value(conexion_t self, void * value, size_t size_of_value);
+
+void*
+connection_receive_value(conexion_t self, size_t size_of_value);

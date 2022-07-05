@@ -283,3 +283,26 @@ void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
 
 	return buffer_stream;
 }
+
+
+ssize_t
+connection_send_value(conexion_t self, void * value, size_t size_of_value){
+	return conexion_esta_conectada(self) ?
+		send(self.socket, value, size_of_value, 0) : -1;
+}
+
+void*
+connection_receive_value(conexion_t self, size_t size_of_value){
+
+	if(!conexion_esta_conectada(self))
+		return NULL;
+
+	void * value = malloc(size_of_value);
+
+	if(recv(self.socket, value, size_of_value, MSG_WAITALL) <= 0){
+		free(value);
+		return NULL;
+	}
+
+	return value;
+}
