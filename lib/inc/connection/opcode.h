@@ -44,7 +44,11 @@ typedef enum Opcode
 	// WRITE
 	WT,
 	// Interruption
-	INT
+	INT,
+	// Page Size
+	SZ,
+	// Amount of entries per page
+	ENTRIES
 } opcode_t;
 
 // ============================================================================================================

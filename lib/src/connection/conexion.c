@@ -284,18 +284,23 @@ void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
 	return buffer_stream;
 }
 
+ssize_t fd_send_value(int self, void* value, size_t size_of_value){
+	return send(self, value, size_of_value, 0);
+}
 
 ssize_t
 connection_send_value(conexion_t self, void * value, size_t size_of_value){
 	return conexion_esta_conectada(self) ?
-		send(self.socket, value, size_of_value, 0) : -1;
+		fd_send_value(self.socket, value, size_of_value) : -1;
 }
+
 
 void*
 connection_receive_value(conexion_t self, size_t size_of_value){
 
-	if(!conexion_esta_conectada(self))
+	if(!conexion_esta_conectada(self)){
 		return NULL;
+	}
 
 	void * value = malloc(size_of_value);
 

@@ -42,6 +42,10 @@ char *opcode_to_string(opcode_t opcode)
 		return "Memory Read";
 	case INT:
 		return "Interruption";
+	case SZ:
+		return "Page Size";
+	case ENTRIES:
+		return "Entries per Page";
 	default:
 		return "Unrecognized";
 	}

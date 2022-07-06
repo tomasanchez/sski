@@ -74,6 +74,14 @@ void *routine(void *fd)
 				kernel_controller_swap(sender_fd);
 				break;
 
+			case SZ:
+				cpu_controller_send_size(sender_fd);
+				break;
+
+			case ENTRIES:
+				cpu_controller_send_entries(sender_fd);
+				break;
+
 			default:
 				LOG_ERROR("Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
 				break;

@@ -182,7 +182,8 @@ int on_init(cpu_t *cpu)
 int on_run(cpu_t *cpu)
 {
 	serve_kernel(cpu);
-	// routine_conexion_memoria(cpu);
+	//TODO --> Descomentar cuando esté terminado el kernel.
+	//routine_conexion_memoria(cpu);
 
 	LOG_DEBUG("Module is OK.");
 

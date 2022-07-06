@@ -17,3 +17,21 @@
  * @param socket
  */
 void cpu_controller_read(int socket);
+
+/**
+ * @brief
+ *
+ * @param fd
+ * @return void
+ */
+void
+cpu_controller_send_entries(int fd);
+
+/**
+ * @brief
+ *
+ * @param fd
+ * @return void
+ */
+void
+cpu_controller_send_size(int fd);

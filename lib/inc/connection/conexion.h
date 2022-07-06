@@ -164,3 +164,6 @@ connection_send_value(conexion_t self, void * value, size_t size_of_value);
 
 void*
 connection_receive_value(conexion_t self, size_t size_of_value);
+
+ssize_t
+fd_send_value(int self, void* value, size_t size_of_value);
