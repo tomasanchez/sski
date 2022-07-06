@@ -48,7 +48,11 @@ typedef enum Opcode
 	// Page Size
 	SZ,
 	// Amount of entries per page
-	ENTRIES
+	ENTRIES,
+	// Value of the Frame
+	FRAME,
+	// Second Level Page
+	SND_PAGE,
 } opcode_t;
 
 // ============================================================================================================

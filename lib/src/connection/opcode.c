@@ -46,6 +46,10 @@ char *opcode_to_string(opcode_t opcode)
 		return "Page Size";
 	case ENTRIES:
 		return "Entries per Page";
+	case FRAME:
+		return "Frame";
+	case SND_PAGE:
+		return "Second Level Page";
 	default:
 		return "Unrecognized";
 	}
