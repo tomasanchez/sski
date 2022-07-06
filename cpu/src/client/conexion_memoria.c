@@ -72,8 +72,10 @@ void handshake(cpu_t *cpu)
 		LOG_DEBUG("[MMU] :=> Page Size is: %d", *pg_size);
 		cpu->page_size = *pg_size;
 	}
+
 	free(pg_size);
 	LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
+
 
 	LOG_TRACE("[MMU] :=> Request Entries per Pages...");
 	opcode_t req_am_entry = ENTRIES;

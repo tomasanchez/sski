@@ -34,6 +34,7 @@ obtain_memory_position(int socket);
 uint32_t
 obtain_memory_value(uint32_t position);
 
+
 void cpu_controller_read(int socket)
 {
 	uint32_t memory_position = obtain_memory_position(socket);
@@ -54,7 +55,6 @@ void cpu_controller_read(int socket)
 	}
 }
 
-
 void
 cpu_controller_send_entries(int fd){
 
@@ -72,7 +72,7 @@ cpu_controller_send_entries(int fd){
 void
 cpu_controller_send_size(int fd)
 {
-//TAM_PAGINA
+	//TAM_PAGINA
 	uint32_t size = tam_pagina();
 	LOG_TRACE("[CPU-CONTROLLER] :=> Page Size is : %dB", size);
 	ssize_t bytes_sent = fd_send_value(fd, &size, sizeof(size));
@@ -84,6 +84,40 @@ cpu_controller_send_size(int fd)
 	}
 
 }
+
+void
+cpu_controller_send_frame(int fd)
+{
+	//TODO --> Corregir
+	uint32_t frame = 0;
+
+	LOG_TRACE("[CPU-CONTROLLER] :=> Frame obtained is: %d", frame);
+	ssize_t bytes_sent = fd_send_value(fd, &frame, sizeof(frame));
+
+	if(bytes_sent > 0){
+		LOG_DEBUG("[CPU-CONTROLLER] :=> Frame sent size is [%ld bytes]", bytes_sent);
+	}else{
+		LOG_ERROR("[CPU-CONTROLLER] :=> Sent nothing - THIS SHOULD NEVER HAPPEN");
+	}
+}
+
+
+void
+cpu_controller_send_page_second_level(int fd)
+{
+	//TODO --> Corregir
+	uint32_t entry_second_level = 0;
+
+	LOG_TRACE("[CPU-CONTROLLER] :=> entry_second_level obtained is: %d", entry_second_level);
+	ssize_t bytes_sent = fd_send_value(fd, &entry_second_level, sizeof(entry_second_level));
+
+	if(bytes_sent > 0){
+		LOG_DEBUG("[CPU-CONTROLLER] :=> entry_second_level sent size is [%ld bytes]", bytes_sent);
+	}else{
+		LOG_ERROR("[CPU-CONTROLLER] :=> Sent nothing - THIS SHOULD NEVER HAPPEN");
+	}
+}
+
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****

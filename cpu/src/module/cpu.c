@@ -499,9 +499,9 @@ execute_COPY(uint32_t param1, uint32_t param2)
 }
 
 
-// ==============================================
-//			   ***** MMU - TLB *****
-// ==============================================
+// ============================================================================================================
+//			   							***** MMU - TLB *****
+// ============================================================================================================
 
 /*
 Tam memoria: 4096Bytes = 4KB = 2¹²
@@ -540,7 +540,7 @@ uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 	uint32_t numero_tabla_de_segundo_nivel;
 
 	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-	frame = obtener_frame(numero_tabla_de_segundo_nivel,obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 
 	// Después tendríamos que actualizar la TLB, que podria ser algo asi
 	// updateTLB(page_number(logical_address),frame);
@@ -567,9 +567,79 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 
 
 uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento){
-	return 0;
+
+	//TODO --> HAY QUE REPENSAR ESTO. NO ESTAMOS ENVIANDO NI LA PAGINA DEL 1ER NIVEL, NI EL DESPLAZAMIENTO
+
+	LOG_TRACE("[MMU] :=> Request Page of Second Table...");
+
+	opcode_t req_page_second_level = SND_PAGE;
+
+	ssize_t bytes_sent = -1;
+	bytes_sent = connection_send_value(g_cpu.conexion, &req_page_second_level, sizeof(req_page_second_level));
+
+	if (bytes_sent <= 0)
+	{
+		LOG_ERROR("[Memory-Client] :=> Nothing was sent - THIS SHOULD NEVER HAPPEN");
+		// Que podriamos devolver aca? Pq el page_second_level 0 es un valor posible -> no pareceria un error
+		return 0;
+	}
+	else
+	{
+		LOG_WARNING("[Memory-Client] :=> Requested Frame [%ld bytes]", bytes_sent);
+	}
+
+	uint32_t *page_second_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+
+	if (page_second_level == NULL){
+		LOG_ERROR("[Memory-Client] :=> page_second_level can't be NULL");
+		// Que podriamos devolver aca? Pq el page_second_level 0 es un valor posible -> no pareceria un error
+		return 0;
+	}else{
+		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *page_second_level);
+	}
+
+	//TODO -> cuando liberamos memoria ¿?
+	//free(pg_size);
+	//LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
+
+	return page_second_level;
 }
 
 uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
-	return 0;
+
+	//TODO --> HAY QUE REPENSAR ESTO. NO ESTAMOS ENVIANDO NI LA PAGINA DEL 2DO NIVEL, NI EL DESPLAZAMIENTO
+
+	LOG_TRACE("[MMU] :=> Request Frame value...");
+
+	opcode_t req_frame = FRAME;
+
+	ssize_t bytes_sent = -1;
+	bytes_sent = connection_send_value(g_cpu.conexion, &req_frame, sizeof(req_frame));
+
+	if (bytes_sent <= 0)
+	{
+		LOG_ERROR("[Memory-Client] :=> Nothing was sent - THIS SHOULD NEVER HAPPEN");
+		// Que podriamos devolver aca? Pq el Frame 0 es un valor posible -> no pareceria un error
+		return 0;
+	}
+	else
+	{
+		LOG_WARNING("[Memory-Client] :=> Requested Frame [%ld bytes]", bytes_sent);
+	}
+
+	uint32_t *frame = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+
+	if (frame == NULL){
+		LOG_ERROR("[Memory-Client] :=> Frame can't be NULL");
+		// Que podriamos devolver aca? Pq el Frame 0 es un valor posible -> no pareceria un error
+		return 0;
+	}else{
+		LOG_DEBUG("[MMU] :=> Frame is: %d", *frame);
+	}
+
+	//TODO -> cuando liberamos memoria ¿?
+	//free(pg_size);
+	//LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
+
+	return frame;
 }
