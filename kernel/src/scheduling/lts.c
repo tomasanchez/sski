@@ -109,16 +109,16 @@ void admit(kernel_t *kernel)
 
 				ssize_t bytes_received = -1;
 
-				uint32_t *page_ref = conexion_recibir_stream(memory.socket, &pcb->page_table);
+				uint32_t *page_ref = conexion_recibir_stream(kernel->conexion_memory.socket, &bytes_received);
 
-				if (bytes_received <= 0)
+				if (bytes_received <= 0 && page_ref == NULL)
 				{
 					LOG_ERROR("[LTS] :=> Couldn't receive page table");
 				}
 				else
 				{
-					LOG_DEBUG("[LTS] :=> Page table received");
 					pcb->page_table = page_ref;
+					LOG_DEBUG("[LTS] :=> Page table  <%d> received", *page_ref);
 				}
 			}
 			else
@@ -126,7 +126,7 @@ void admit(kernel_t *kernel)
 				LOG_WARNING("[LTS] :=> Memory is not connected");
 			}
 
-			LOG_TRACE("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
+			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
 		}
 		else
 		{
