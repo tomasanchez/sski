@@ -15,6 +15,7 @@
 #include "cpu_controller.h"
 #include "log.h"
 #include "cfg.h"
+#include "mts.h"
 
 void execute(kernel_t *kernel, pcb_t *pcb);
 void terminate(kernel_t *kernel, pcb_t *pcb);
@@ -25,12 +26,14 @@ void *short_term_schedule(void *data)
 {
 	LOG_TRACE("[STS] :=> Short Term Scheduling Running...");
 
-	kernel_t *kernel = (kernel_t *)data;
+	kernel_t *kernel = NULL;
+	kernel = (kernel_t *)data;
 	scheduler_t sched = kernel->scheduler;
 
 	for (;;)
 	{
-		pcb_t *pcb = sched.get_next(&sched);
+		pcb_t *pcb = NULL;
+		pcb = sched.get_next(&sched);
 
 		if (pcb)
 			execute(kernel, pcb);
@@ -50,8 +53,8 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 	// Time the CPU Usage
 	struct timeval start, stop;
 	uint32_t real_usage = 0;
-
 	gettimeofday(&start, NULL);
+	kernel->scheduler.current_estimation = pcb->estimation;
 
 	// Send PCB to CPU so it can execute it
 	ssize_t bytes_sent = -1;
@@ -81,6 +84,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 	real_usage = time_diff_ms(start, stop);
 	pcb->real = real_usage;
 	LOG_TRACE("[STS] :=> PCB #%d returned after %dms", pcb->id, pcb->real);
+	kernel->scheduler.current_estimation = 0;
 
 	if (io_time > 0)
 	{
@@ -128,7 +132,16 @@ void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
 	pcb->io = io_time;
 	re_schedule(pcb);
 	safe_queue_push(scheduler->blocked, pcb);
+	LOG_WARNING("[STS] :=> Notifying MTS >> [SHOULD TRACK] PCB #%d", pcb->id);
+	notify_mts(scheduler, pcb);
 	SIGNAL(scheduler->io_request);
+}
+
+void event(scheduler_t *scheduler, pcb_t *pcb)
+{
+	pcb->status = PCB_READY;
+	safe_queue_push(scheduler->ready, pcb);
+	LOG_TRACE("[STS] :=> PCB #%d has been unblocked", pcb->id);
 }
 
 void pre_empt(scheduler_t *scheduler, pcb_t *pcb)
