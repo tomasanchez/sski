@@ -76,8 +76,24 @@ void kernel_controller_memory_init(int socket)
 	uint32_t pid = *(uint32_t *)pid_ref;
 	free(pid_ref);
 
+	LOG_DEBUG("[Server] :=> Initializing PCB #%d", pid);
+
+	LOG_TRACE("[Server] :=> Obtaining available page table");
+
 	uint32_t page_table = get_page_table();
-	servidor_enviar_stream(MEMORY_INIT, socket, &page_table, sizeof(page_table));
+
+	LOG_INFO("[Server] :=> Page Table <%d> was obtained", page_table);
+
+	ssize_t bytes_sent = servidor_enviar_stream(MEMORY_INIT, socket, &page_table, sizeof(page_table));
+
+	if (bytes_sent <= 0)
+	{
+		LOG_ERROR("[Server] :=> Page table could not be sent");
+	}
+	else
+	{
+		LOG_DEBUG("[Server] :=> Page table <%d> was sent [%ld bytes]", page_table, bytes_sent);
+	}
 }
 
 // ============================================================================================================
