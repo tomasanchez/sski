@@ -28,8 +28,17 @@ void request_handler_int(int socket);
 
 void request_handler_int(int fd)
 {
+	LOG_ERROR("[INT] :=> Interruption received");
+
 	if (g_cpu.pcb != NULL)
+	{
 		g_cpu.has_interruption = true;
+		LOG_DEBUG("[INT] :=> Execution interrupted");
+	}
+	else
+	{
+		LOG_ERROR("[INT] :=> Ignoring interrupt request (No PCB)");
+	}
 }
 
 // ============================================================================================================
