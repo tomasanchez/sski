@@ -456,6 +456,8 @@ uint32_t execute_READ(uint32_t logical_address)
 
 	void *send_stream = malloc(sizeof(physical_address));
 
+	//TODO --> Agregar el big stream.
+
 	// Serializo
 	memcpy(send_stream, &physical_address, sizeof(physical_address));
 
@@ -481,12 +483,19 @@ void execute_WRITE(uint32_t logical_address, uint32_t value)
 	operands->op1 = physical_address;
 	operands->op2 = value;
 
+	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
+
+	memcpy(big_stream,&g_cpu.pcb->id, sizeof(uint32_t));
+
 	void *send_stream = operandos_to_stream(operands);
 
-	conexion_enviar_stream(g_cpu.conexion, WT, send_stream, sizeof(operands_t));
+	memcpy(big_stream+sizeof(uint32_t),send_stream,sizeof(operands_t));
+
+	conexion_enviar_stream(g_cpu.conexion, WT, big_stream, sizeof(operands_t));
 
 	free(send_stream);
 	free(operands);
+	free(big_stream);
 }
 
 uint32_t
