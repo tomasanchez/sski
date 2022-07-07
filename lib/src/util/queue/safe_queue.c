@@ -68,3 +68,44 @@ void safe_queue_sort(safe_queue_t *this, bool (*comparator)(void *, void *))
 	list_sort(this->_queue->elements, comparator);
 	pthread_mutex_unlock(&this->_mtx);
 }
+
+void *safe_queue_find_by(safe_queue_t *self, bool (*criteria)(void *))
+{
+	void *value = NULL;
+
+	if (self)
+	{
+		pthread_mutex_lock(&self->_mtx);
+		value = list_find(self->_queue->elements, criteria);
+		pthread_mutex_unlock(&self->_mtx);
+	}
+
+	return value;
+}
+
+bool safe_queue_any(safe_queue_t *self, bool (*matcher)(void *))
+{
+	bool any = false;
+	if (self)
+	{
+		pthread_mutex_lock(&self->_mtx);
+		any = list_any_satisfy(self->_queue->elements, matcher);
+		pthread_mutex_unlock(&self->_mtx);
+	}
+
+	return any;
+}
+
+void *safe_queue_remove_by(safe_queue_t *self, bool (*matcher)(void *))
+{
+	void *pcb = NULL;
+
+	if (self)
+	{
+		pthread_mutex_lock(&self->_mtx);
+		pcb = list_remove_by_condition(self->_queue->elements, matcher);
+		pthread_mutex_unlock(&self->_mtx);
+	}
+
+	return pcb;
+}
