@@ -568,78 +568,75 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 
 uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento){
 
-	//TODO --> HAY QUE REPENSAR ESTO. NO ESTAMOS ENVIANDO NI LA PAGINA DEL 1ER NIVEL, NI EL DESPLAZAMIENTO
+	// ENVIO DE STREAM
 
 	LOG_TRACE("[MMU] :=> Request Page of Second Table...");
 
-	opcode_t req_page_second_level = SND_PAGE;
+	operands_t *operands = malloc(sizeof(operands_t));
 
-	ssize_t bytes_sent = -1;
-	bytes_sent = connection_send_value(g_cpu.conexion, &req_page_second_level, sizeof(req_page_second_level));
+	operands->op1 = tabla_primer_nivel;
+	operands->op2 = desplazamiento;
 
-	if (bytes_sent <= 0)
-	{
-		LOG_ERROR("[Memory-Client] :=> Nothing was sent - THIS SHOULD NEVER HAPPEN");
-		// Que podriamos devolver aca? Pq el page_second_level 0 es un valor posible -> no pareceria un error
-		return 0;
-	}
-	else
-	{
-		LOG_WARNING("[Memory-Client] :=> Requested Frame [%ld bytes]", bytes_sent);
-	}
+	void *send_stream = operandos_to_stream(operands);
 
-	uint32_t *page_second_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+	conexion_enviar_stream(g_cpu.conexion, SND_PAGE, send_stream, sizeof(operands_t));
 
-	if (page_second_level == NULL){
+	// RECIBO DE UINT32_T
+
+	uint32_t *ret_page_snd_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+
+	if (ret_page_snd_level == NULL){
 		LOG_ERROR("[Memory-Client] :=> page_second_level can't be NULL");
 		// Que podriamos devolver aca? Pq el page_second_level 0 es un valor posible -> no pareceria un error
-		return 0;
+		return VALOR_INVALIDO;
 	}else{
-		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *page_second_level);
+		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *ret_page_snd_level);
 	}
 
-	//TODO -> cuando liberamos memoria ¿?
-	//free(pg_size);
-	//LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
+	uint32_t ret_page = *ret_page_snd_level;
 
-	return page_second_level;
+	free(ret_page_snd_level);
+	free(send_stream);
+	free(operands);
+
+	return ret_page;
+
 }
+
+
 
 uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
 
-	//TODO --> HAY QUE REPENSAR ESTO. NO ESTAMOS ENVIANDO NI LA PAGINA DEL 2DO NIVEL, NI EL DESPLAZAMIENTO
+
+	// ENVIO DE STREAM
 
 	LOG_TRACE("[MMU] :=> Request Frame value...");
 
-	opcode_t req_frame = FRAME;
+	operands_t *operands = malloc(sizeof(operands_t));
 
-	ssize_t bytes_sent = -1;
-	bytes_sent = connection_send_value(g_cpu.conexion, &req_frame, sizeof(req_frame));
+	operands->op1 = tabla_segundo_nivel;
+	operands->op2 = desplazamiento;
 
-	if (bytes_sent <= 0)
-	{
-		LOG_ERROR("[Memory-Client] :=> Nothing was sent - THIS SHOULD NEVER HAPPEN");
-		// Que podriamos devolver aca? Pq el Frame 0 es un valor posible -> no pareceria un error
-		return 0;
-	}
-	else
-	{
-		LOG_WARNING("[Memory-Client] :=> Requested Frame [%ld bytes]", bytes_sent);
-	}
+	void *send_stream = operandos_to_stream(operands);
+
+	conexion_enviar_stream(g_cpu.conexion, FRAME, send_stream, sizeof(operands_t));
+
+	// RECIBO DE UINT32_T
 
 	uint32_t *frame = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
 
 	if (frame == NULL){
 		LOG_ERROR("[Memory-Client] :=> Frame can't be NULL");
-		// Que podriamos devolver aca? Pq el Frame 0 es un valor posible -> no pareceria un error
-		return 0;
+		return VALOR_INVALIDO;
 	}else{
 		LOG_DEBUG("[MMU] :=> Frame is: %d", *frame);
 	}
 
-	//TODO -> cuando liberamos memoria ¿?
-	//free(pg_size);
-	//LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
+	uint32_t ret_frame = *frame;
 
-	return frame;
+	free(frame);
+	free(send_stream);
+	free(operands);
+
+	return ret_frame;
 }
