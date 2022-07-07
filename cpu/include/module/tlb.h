@@ -77,11 +77,11 @@ void update_TLB_FIFO( uint32_t pagina,uint32_t marco);
 void update_TLB_LRU(uint32_t pagina, uint32_t marco);
 
 /**
- * @brief
+ * @brief Revisa si el numero de pagina se encuentra en la TLB
  *
  * @param numero_pagina
  * @param marco
  * @return true
  * @return false
  */
-bool hit_TLB(uint32_t numero_pagina, uint32_t* marco);
+bool page_in_TLB(uint32_t numero_pagina, uint32_t* marco);

@@ -21,6 +21,7 @@
 #include "instruction.h"
 #include "operands.h"
 #include <signal.h>
+#include "tlb.h"
 
 // ============================================================================================================
 //                               ***** Private Functions *****
@@ -542,8 +543,8 @@ uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 
-	// Después tendríamos que actualizar la TLB, que podria ser algo asi
-	// updateTLB(page_number(logical_address),frame);
+	// Después actualizamos la TLB
+	update_TLB(page_number(logical_address),frame);
 
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
