@@ -90,7 +90,67 @@
       "request": "launch",
       "preLaunchTask": "make-console",
       "program": "${workspaceFolder}/build/console.out",
-      "args": ["./console/instructions_test.txt", "10"],
+      "args": ["./console/instructions_test.txt", "15"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Console-Long",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "make-console",
+      "program": "${workspaceFolder}/build/console.out",
+      "args": ["./console/long.txt", "15"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Console-Fast",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "make-console",
+      "program": "${workspaceFolder}/build/console.out",
+      "args": ["./console/cpu_burst.txt", "10"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Console-IO",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "make-console",
+      "program": "${workspaceFolder}/build/console.out",
+      "args": ["./console/io_burst.txt", "30"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
