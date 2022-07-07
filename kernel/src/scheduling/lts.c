@@ -104,24 +104,29 @@ void admit(kernel_t *kernel)
 			if (conexion_esta_conectada(memory))
 			{
 				LOG_TRACE("[LTS] :=> Request page table...");
-				accion_t *req_page = accion_create(NEW_PROCESS, 0);
-				accion_enviar(req_page, memory.socket);
-				accion_t *recv_page = accion_recibir(memory.socket);
 
-				uint32_t *page_ref = malloc(sizeof(uint32_t));
-				*page_ref = recv_page->param;
-				pcb->page_table = page_ref;
+				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
 
-				accion_destroy(req_page);
-				accion_destroy(recv_page);
-				LOG_DEBUG("[LTS] :=> Page table received");
+				ssize_t bytes_received = -1;
+
+				uint32_t *page_ref = conexion_recibir_stream(kernel->conexion_memory.socket, &bytes_received);
+
+				if (bytes_received <= 0 && page_ref == NULL)
+				{
+					LOG_ERROR("[LTS] :=> Couldn't receive page table");
+				}
+				else
+				{
+					pcb->page_table = page_ref;
+					LOG_DEBUG("[LTS] :=> Page table  <%d> received", *page_ref);
+				}
 			}
 			else
 			{
 				LOG_WARNING("[LTS] :=> Memory is not connected");
 			}
 
-			LOG_TRACE("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
+			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
 		}
 		else
 		{

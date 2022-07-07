@@ -44,7 +44,9 @@ typedef enum Opcode
 	// WRITE
 	WT,
 	// Interruption
-	INT
+	INT,
+	// Memory for new Process
+	MEMORY_INIT
 } opcode_t;
 
 // ============================================================================================================
