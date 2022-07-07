@@ -12,6 +12,7 @@
 #include "pcb.h"
 #include "instruction.h"
 #include <string.h>
+#include "safe_queue.h"
 #include "smartlist.h"
 
 pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
@@ -39,6 +40,27 @@ pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
 	bool clojure(void *pcb) { return _get_by_pid(pid, (pcb_t *)pcb); }
 
 	return list_find(pcbs, clojure);
+}
+
+pcb_t *pcb_by_id(safe_queue_t *queue, uint32_t id)
+{
+	bool id_criteria(void *pcb) { return _get_by_pid(id, (pcb_t *)pcb); }
+
+	return safe_queue_find_by(queue, id_criteria);
+}
+
+bool pcb_exists(safe_queue_t *queue, uint32_t id)
+{
+	bool id_criteria(void *pcb) { return _get_by_pid(id, (pcb_t *)pcb); }
+
+	return safe_queue_any(queue, id_criteria);
+}
+
+pcb_t *pcb_remove_by_id(safe_queue_t *queue, uint32_t id)
+{
+	bool id_criteria(void *pcb) { return _get_by_pid(id, (pcb_t *)pcb); }
+
+	return safe_queue_remove_by(queue, id_criteria);
 }
 
 bool pcb_sort_by_estimation(void *e1, void *e2)

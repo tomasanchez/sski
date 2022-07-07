@@ -84,3 +84,28 @@ bool safe_queue_is_empty(safe_queue_t *queue);
  * @param comparator the method used to compare elements: this should return true if the first element goes before the second one
  */
 void safe_queue_sort(safe_queue_t *queue, bool (*comparator)(void *, void *));
+
+/**
+ * @brief Finds an element in a queue by a given criteria
+ *
+ * @param queue the queue to be searched
+ * @param criteria the method used to find the element must return true
+ */
+void *safe_queue_find_by(safe_queue_t *queue, bool (*criteria)(void *));
+
+/**
+ * @brief Tells wether any elements in the queue match a given criteria
+ *
+ * @param queue the queue to be searched
+ * @param matcher the criteria to  satisfy
+ */
+bool safe_queue_any(safe_queue_t *queue, bool (*matcher)(void *));
+
+/**
+ * @brief Removes an element from a queue
+ *
+ * @param queue the queue to be searched
+ * @param matcher the criteria to  satisfy
+ * @return the element removed or null if not found
+ */
+void *safe_queue_remove_by(safe_queue_t *queue, bool (*matcher)(void *));

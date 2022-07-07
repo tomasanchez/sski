@@ -8,8 +8,9 @@
  * @copyright Copyright (c) 2022
  *
  */
-
-#include "scheduler.h"
+#include "io_scheduler.h"
+#include "mts.h"
+#include "sts.h"
 #include "pcb.h"
 
 /**
@@ -39,7 +40,7 @@ void *io_scheduler(void *scheduler)
 		LOG_WARNING("[IO] :=>  Waiting for an IO request");
 		// WAIT for a process to need IO
 		WAIT(s->io_request);
-		LOG_TRACE("[IO] :=>  PCB requested IO");
+		LOG_DEBUG("[IO] :=>  IO request received");
 		pcb_t *pcb = NULL;
 		pcb = retrieve_pcb(s);
 
@@ -52,10 +53,18 @@ void *io_scheduler(void *scheduler)
 			LOG_TRACE("[IO] :=> Using IO for: %ds", pcb->io);
 			sleep(pcb->io / 1000);
 
-			// Enqueue
 			LOG_DEBUG("[IO] :=> IO finished");
-			pcb->status = PCB_READY;
-			safe_queue_push(s->ready, pcb);
+
+			switch (pcb->status)
+			{
+			PCB_SUSPENDED_BLOCKED:
+				suspended_event(s, pcb);
+				break;
+
+			default:
+				event(s, pcb);
+				break;
+			}
 		}
 		else
 		{
@@ -69,11 +78,26 @@ void *io_scheduler(void *scheduler)
 static pcb_t *
 retrieve_pcb(scheduler_t *scheduler)
 {
-	if (scheduler->blocked == NULL)
+	pcb_t *pcb = NULL;
+
+	pcb = safe_queue_pop(scheduler->blocked_sus);
+
+	if (pcb == NULL)
 	{
-		LOG_ERROR("[IO] :=> No BLOCKED queue available");
-		return NULL;
+		pcb = safe_queue_pop(scheduler->blocked);
+
+		if (pcb == NULL)
+		{
+			LOG_ERROR("[IO] :=> No PCB available - THIS SHOULD NEVER HAPPEN");
+			return NULL;
+		}
+
+		LOG_DEBUG("[IO] :=> Handling IO request for PCB #%d, which was <BLOCKED>", pcb->id);
+	}
+	else
+	{
+		LOG_WARNING("[IO] :=> Handling IO request for PCB #%d, which was <SUSPENDED>", pcb->id);
 	}
 
-	return safe_queue_pop(scheduler->blocked);
+	return pcb;
 }

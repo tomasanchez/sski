@@ -34,10 +34,10 @@ static int on_connect_memory(kernel_t *kernel)
 
 	kernel->conexion_memory = conexion_cliente_create(ip, port);
 
-	if (on_module_connect(&kernel->conexion_memory, false) EQ SUCCESS)
-	{
-		LOG_DEBUG("[Memory Thread] :=> Connected as CLIENT at %s:%s", ip, port);
-	}
+	// if (on_module_connect(&kernel->conexion_memory, false) EQ SUCCESS)
+	// {
+	// 	LOG_DEBUG("[Memory Thread] :=> Connected as CLIENT at %s:%s", ip, port);
+	// }
 
 	return SUCCESS;
 }

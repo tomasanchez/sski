@@ -15,6 +15,7 @@
 #include "safe_queue.h"
 #include "log.h"
 #include "accion.h"
+#include "mts.h"
 #include "cpu_controller.h"
 
 // ============================================================================================================
@@ -56,20 +57,26 @@ long_term_schedule(void *kernel_ref)
 void admit(kernel_t *kernel)
 {
 
+	safe_queue_t *ready_sus = kernel->scheduler.ready_sus;
 	safe_queue_t *new = kernel->scheduler.new;
 	safe_queue_t *ready = kernel->scheduler.ready;
 	conexion_t memory = kernel->conexion_memory;
 
 	if (new != NULL && ready != NULL)
 	{
-		LOG_TRACE("[LTS] :=> Admitting a new process...");
+		LOG_TRACE("[LTS] :=> Admitting a process...");
 		// Sets to ready a new process and enqueues.
-		pcb_t *pcb = safe_queue_pop(new);
+		pcb_t *pcb = resume(&kernel->scheduler);
+
+		if (pcb == NULL)
+		{
+			pcb = safe_queue_pop(new);
+			LOG_TRACE("[LTS] :=> New process admitted");
+		}
 
 		if (pcb != NULL)
 		{
-			pcb->status = PCB_NEW;
-			LOG_INFO("[LTS] :=> Process <%d> changed status to NEW", pcb->id);
+			pcb->status = PCB_READY;
 
 			if (should_interrupt(&kernel->scheduler, pcb))
 			{
@@ -78,12 +85,17 @@ void admit(kernel_t *kernel)
 
 				if (bytes_sent > 0)
 				{
-					LOG_TRACE("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
+					LOG_ERROR("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
+					LOG_DEBUG("[LTS] :=> Current [%dms] - New [%dms]", kernel->scheduler.current_estimation, pcb->estimation);
 				}
 				else
 				{
 					LOG_ERROR("[LTS] :=> Couldn't sent interruption");
 				}
+			}
+			else
+			{
+				LOG_DEBUG("[LTS] :=> No interruption required");
 			}
 
 			safe_queue_push(ready, pcb);
