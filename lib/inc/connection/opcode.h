@@ -45,6 +45,14 @@ typedef enum Opcode
 	WT,
 	// Interruption
 	INT,
+	// Page Size
+	SZ,
+	// Amount of entries per page
+	ENTRIES,
+	// Value of the Frame
+	FRAME,
+	// Second Level Page
+	SND_PAGE,
 	// Memory for new Process
 	MEMORY_INIT
 } opcode_t;

@@ -123,18 +123,18 @@ int entradas_tlb(void);
 //  Memoria
 // -----------------------------------------------------------
 
-inline int tam_memoria(void);
+int tam_memoria(void);
 
-inline int tam_pagina(void);
+int tam_pagina(void);
 
-inline int entradas_por_tabla(void);
+int entradas_por_tabla(void);
 
-inline int retardo_memoria(void);
+int retardo_memoria(void);
 
-inline char *algoritmo_reemplazo(void);
+char *algoritmo_reemplazo(void);
 
-inline int marcos_por_proceso(void);
+int marcos_por_proceso(void);
 
-inline int retardo_swap(void);
+int retardo_swap(void);
 
-inline char *path_swap(void);
+char *path_swap(void);

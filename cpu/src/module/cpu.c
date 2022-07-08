@@ -182,7 +182,8 @@ int on_init(cpu_t *cpu)
 int on_run(cpu_t *cpu)
 {
 	serve_kernel(cpu);
-	// routine_conexion_memoria(cpu);
+	//TODO --> Descomentar cuando esté terminado el kernel.
+	//routine_conexion_memoria(cpu);
 
 	LOG_DEBUG("Module is OK.");
 
@@ -447,42 +448,75 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 	}
 }
 
-uint32_t execute_READ(uint32_t param1)
+uint32_t execute_READ(uint32_t logical_address)
 {
+	LOG_TRACE("[CPU - MMU - Read] Getting the physical address from the logical address: %d", logical_address);
+	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
+	LOG_INFO("[CPU - Read] Physical address calculated: %d", physical_address);
+
 	ssize_t bytes = -1;
 	uint32_t return_value = 0;
 
-	void *send_stream = malloc(sizeof(param1));
+	// Re-utilizo operands para aparte de enviar la direccion fisica, poder enviar el pcb-id
+	// (me evito usar el big-stream pq solo quiero leer)
+	operands_t *operands = malloc(sizeof(operands_t));
+
+	operands->op1 = physical_address;
+	operands->op2 = g_cpu.pcb->id;
+
+	void *send_stream = malloc(sizeof(operands_t));
 
 	// Serializo
-	memcpy(send_stream, &param1, sizeof(param1));
+	memcpy(send_stream, &operands, sizeof(operands_t));
 
-	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(param1));
+	// envio a memoria para leer, el operands que contiene la direc fisica y el id del pcb
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(operands_t));
 
 	free(send_stream);
 
 	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
 
+	LOG_TRACE("[CPU - Read] Bytes read: %ld", bytes);
+
 	return_value = *(uint32_t *)receive_stream;
+
+	LOG_INFO("[CPU - Read] Value Read: %d", return_value);
 
 	free(receive_stream);
 
 	return return_value;
 }
 
-void execute_WRITE(uint32_t position, uint32_t value)
+void execute_WRITE(uint32_t logical_address, uint32_t value)
 {
+	LOG_TRACE("[CPU - MMU - Write] Getting the physical address from the logical address: %d", logical_address);
+	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
+	LOG_INFO("[CPU - Write] Physical address calculated: %d", physical_address);
+
 	operands_t *operands = malloc(sizeof(operands_t));
 
-	operands->op1 = position;
+	operands->op1 = physical_address;
 	operands->op2 = value;
+
+	LOG_TRACE("[CPU - Write] Value to write: %d", operands->op2);
+
+	// Serializo un Stream mas grande, que ahora contendrá:
+	//operands (direc. fisica y valor) y uint32_t (pcb->id)
+	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
+
+	memcpy(big_stream,&g_cpu.pcb->id, sizeof(uint32_t));
 
 	void *send_stream = operandos_to_stream(operands);
 
-	conexion_enviar_stream(g_cpu.conexion, WT, send_stream, sizeof(operands_t));
+	memcpy(big_stream+sizeof(uint32_t),send_stream,sizeof(operands_t));
+
+	conexion_enviar_stream(g_cpu.conexion, WT, big_stream, sizeof(operands_t));
 
 	free(send_stream);
 	free(operands);
+	free(big_stream);
 }
 
 uint32_t
@@ -492,4 +526,145 @@ execute_COPY(uint32_t param1, uint32_t param2)
 	execute_WRITE(param1, read_value);
 
 	return read_value;
+}
+
+
+// ============================================================================================================
+//			   							***** MMU - TLB *****
+// ============================================================================================================
+
+/*
+Tam memoria: 4096Bytes = 4KB = 2¹²
+Tamaño de pag = Tamaño de frame = 64Bytes -> 2⁶ --> 6 bits de offset
+
+Direc Logica:  |001000|111111|-> offset
+			   | Pag  |  Off |
+
+
+Tabla de Paginas:
+
+|N° Pag | Frame |
+|	0	| 	5	|
+|	1	| 	7	|
+|   2   |   6   |
+|	8	| 	3	|
+
+3 -> 000011
+
+DF:  |000011|111111|
+
+
+PRoceso B --> Direc Logica: |000010|000011|
+							| Pag  | Off  |
+							|  2   |      |
+
+Direc Fisica: 6(Decimal) + 000011
+6 -> 0110
+=> 000110|000011
+
+*/
+
+uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
+
+	uint32_t frame;
+	uint32_t numero_tabla_de_segundo_nivel;
+
+	//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
+	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+
+	// Después tendríamos que actualizar la TLB, que podria ser algo asi
+	// updateTLB(page_number(logical_address),frame);
+
+	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
+}
+
+
+uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina){
+	return direccion_logica/tamanio_pagina;
+}
+
+uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina){
+	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica, tamanio_pagina);
+}
+
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+	return obtener_numero_pagina(direccion_logica, tamanio_pagina) / cant_en_por_pag;
+}
+
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+	return obtener_numero_pagina(direccion_logica, tamanio_pagina) % cant_en_por_pag;
+}
+
+
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento){
+
+	// ENVIO DE STREAM
+
+	LOG_TRACE("[MMU] :=> Request Page of Second Table...");
+
+	operands_t *operands = malloc(sizeof(operands_t));
+
+	operands->op1 = tabla_primer_nivel;
+	operands->op2 = desplazamiento;
+
+	void *send_stream = operandos_to_stream(operands);
+
+	conexion_enviar_stream(g_cpu.conexion, SND_PAGE, send_stream, sizeof(operands_t));
+
+	// RECIBO DE UINT32_T
+
+	uint32_t *ret_page_snd_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+
+	if (ret_page_snd_level == NULL){
+		LOG_ERROR("[Memory-Client] :=> page_second_level can't be NULL");
+		return VALOR_INVALIDO;
+	}else{
+		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *ret_page_snd_level);
+	}
+
+	uint32_t ret_page = *ret_page_snd_level;
+
+	free(ret_page_snd_level);
+	free(send_stream);
+	free(operands);
+
+	return ret_page;
+
+}
+
+
+uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
+
+	// ENVIO DE STREAM
+
+	LOG_TRACE("[MMU] :=> Request Frame value...");
+
+	operands_t *operands = malloc(sizeof(operands_t));
+
+	operands->op1 = tabla_segundo_nivel;
+	operands->op2 = desplazamiento;
+
+	void *send_stream = operandos_to_stream(operands);
+
+	conexion_enviar_stream(g_cpu.conexion, FRAME, send_stream, sizeof(operands_t));
+
+	// RECIBO DE UINT32_T
+
+	uint32_t *frame = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
+
+	if (frame == NULL){
+		LOG_ERROR("[Memory-Client] :=> Frame can't be NULL");
+		return VALOR_INVALIDO;
+	}else{
+		LOG_DEBUG("[MMU] :=> Frame is: %d", *frame);
+	}
+
+	uint32_t ret_frame = *frame;
+
+	free(frame);
+	free(send_stream);
+	free(operands);
+
+	return ret_frame;
 }

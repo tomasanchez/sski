@@ -42,6 +42,14 @@ char *opcode_to_string(opcode_t opcode)
 		return "Memory Read";
 	case INT:
 		return "Interruption";
+	case SZ:
+		return "Page Size";
+	case ENTRIES:
+		return "Entries per Page";
+	case FRAME:
+		return "Frame";
+	case SND_PAGE:
+		return "Second Level Page";
 	case WT:
 		return "Memory Write";
 	case MEMORY_INIT:

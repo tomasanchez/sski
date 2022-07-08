@@ -19,6 +19,7 @@
 #include "sync.h"
 
 #define MODULE_NAME "cpu"
+#define VALOR_INVALIDO UINT32_MAX
 
 /**
  * @brief CPU Module.
@@ -40,6 +41,10 @@ typedef struct CPU
 	cpu_sync_t sync;
 	// Wether the CPU received an interrupt signal
 	bool has_interruption;
+	// Page Size
+	uint32_t page_size;
+	// Amount of entries per page
+	uint32_t page_amount_entries;
 	// Whether the CPU is executin a PCB or not
 	bool is_executing;
 } cpu_t;
@@ -121,3 +126,48 @@ void execute_WRITE(uint32_t position, uint32_t value);
  */
 uint32_t
 execute_COPY(uint32_t param1, uint32_t param2);
+
+/**
+ * @brief (MMU) -> se obtiene la direccion fisica de un proceso, a través de la direccion lógica.
+ *
+ * @param pcb
+ * @param logical_address
+ * @return uint32_t
+ */
+uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address);
+
+/**
+ * @brief N°Pag = DL / Tam_de_Pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina);
+
+/**
+ * @brief off = (DL - tam_pag) * N°Pag
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina);
+
+/**
+ * @brief entrada P1 = N°Pag / cant_entradas_por_pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
+
+/**
+ * @brief entrada P2 = N°Pag % cant_entradas_por_pagina
+ *
+ * @param direccion_logica
+ * @return uint32_t
+ */
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
+
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
+
+uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento);
