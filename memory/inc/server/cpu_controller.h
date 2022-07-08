@@ -49,4 +49,5 @@ cpu_controller_send_frame(int fd);
  *
  * @param fd
  */
+void
 cpu_controller_send_page_second_level(int fd);
