@@ -19,6 +19,7 @@
 #include "sync.h"
 
 #define MODULE_NAME "cpu"
+#define VALOR_INVALIDO UINT32_MAX
 
 /**
  * @brief CPU Module.
