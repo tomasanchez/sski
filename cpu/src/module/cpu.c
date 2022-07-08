@@ -266,6 +266,7 @@ void cycle(cpu_t *cpu)
 	{
 		LOG_ERROR("[CPU] :=> Interruption received.");
 		cpu->pcb->status = PCB_READY;
+		reset_TLB();
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, 0);
 		cpu->has_interruption = false;
 	}
@@ -417,6 +418,8 @@ void execute_IO(instruction_t *instruction, cpu_t *cpu)
 	LOG_TRACE("[CPU] :=> Executing IO Instruction...");
 	cpu->pcb->status = PCB_BLOCKED;
 
+	reset_TLB();
+
 	ssize_t bytes_sent = return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
 
 	if (bytes_sent > 0)
@@ -439,6 +442,8 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 		{
 			LOG_WARNING("[CPU] :=> Instruction is NULL")
 		}
+
+		reset_TLB();
 
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction ? instruction->param0 : 0);
 	}
