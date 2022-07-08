@@ -21,6 +21,7 @@
 #include "instruction.h"
 #include "operands.h"
 #include <signal.h>
+#include "tlb.h"
 
 // ============================================================================================================
 //                               ***** Private Functions *****
@@ -265,6 +266,7 @@ void cycle(cpu_t *cpu)
 	{
 		LOG_ERROR("[CPU] :=> Interruption received.");
 		cpu->pcb->status = PCB_READY;
+		reset_TLB();
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, 0);
 		cpu->has_interruption = false;
 	}
@@ -417,6 +419,8 @@ void execute_IO(instruction_t *instruction, cpu_t *cpu)
 	LOG_TRACE("[CPU] :=> Executing IO Instruction...");
 	cpu->pcb->status = PCB_BLOCKED;
 
+	reset_TLB();
+
 	ssize_t bytes_sent = return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
 
 	if (bytes_sent > 0)
@@ -439,6 +443,8 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 		{
 			LOG_WARNING("[CPU] :=> Instruction is NULL")
 		}
+
+		reset_TLB();
 
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction ? instruction->param0 : 0);
 	}
@@ -569,13 +575,14 @@ uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
-	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+	if (! page_in_TLB(obtener_numero_pagina(logical_address, cpu->page_size),&frame)) {
 
-	// Después tendríamos que actualizar la TLB, que podria ser algo asi
-	// updateTLB(page_number(logical_address),frame);
-
+		//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
+		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		// Después actualizamos la TLB
+		update_TLB(obtener_numero_pagina(logical_address, cpu->page_size),frame);
+	}
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
 
@@ -630,7 +637,6 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 	free(operands);
 
 	return ret_page;
-
 }
 
 
