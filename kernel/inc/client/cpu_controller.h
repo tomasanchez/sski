@@ -48,8 +48,29 @@ cpu_controller_t *cpu_controller_on_init(cpu_controller_t *controller);
  */
 void cpu_controller_destroy(cpu_controller_t *cpu_controller);
 
+/**
+ * @brief Sends a PCB to a dispatch connection
+ *
+ * @param connection_dispatch to sent
+ * @param opcode the operation code
+ * @param pcb the process control block
+ * @return the number of bytes sent
+ */
 ssize_t cpu_controller_send_pcb(conexion_t connection_dispatch, opcode_t opcode, pcb_t *pcb);
 
+/**
+ * @brief Sends an INTERRUPT signal to a interrupt connection.
+ *
+ * @param connection_interrupt to sent
+ * @return the number of bytes sent
+ */
 ssize_t cpu_controller_send_interrupt(conexion_t connection_interrupt);
 
+/**
+ * @brief Receives a PCB stream
+ *
+ * @param connection_dispatch
+ * @param io_time
+ * @return void*
+ */
 void *cpu_controller_receive_pcb(conexion_t connection_dispatch, uint32_t *io_time);

@@ -16,3 +16,9 @@ void *get_next_fifo(void *scheduler)
 
 	return safe_queue_pop(s->ready);
 }
+
+void *get_next_srt(void *scheduler)
+{
+	safe_queue_sort(((scheduler_t *)scheduler)->ready, pcb_sort_by_estimation);
+	return get_next_fifo(scheduler);
+}

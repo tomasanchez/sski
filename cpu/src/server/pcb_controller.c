@@ -30,6 +30,7 @@ extern cpu_t g_cpu;
 
 pcb_t *receive_pcb(int fd)
 {
+	WAIT(g_cpu.sync.cpu_in_use);
 	ssize_t recv_bytes = -1;
 	pcb_t *pcb = NULL;
 	pcb = pcb_from_stream(servidor_recibir_stream(fd, &recv_bytes));
@@ -75,6 +76,8 @@ ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time)
 
 	pcb_destroy(pcb);
 	g_cpu.pcb = NULL;
+
+	SIGNAL(g_cpu.sync.cpu_in_use);
 
 	return bytes_sent;
 }

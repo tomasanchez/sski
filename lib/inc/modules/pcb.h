@@ -14,6 +14,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include "smartlist.h"
+#include "safe_queue.h"
 
 typedef enum Status
 {
@@ -49,6 +50,8 @@ typedef struct PCB
 	uint32_t pc;
 	// IO Burst.
 	uint32_t io;
+	// Real CPU usage
+	uint32_t real;
 } pcb_t;
 
 /**
@@ -112,3 +115,21 @@ bool pcb_sort_by_estimation(void *e1, void *e2);
  * @return uint32_t
  */
 uint32_t pcb_get_param_for(pcb_t *pcb, int instruction, int param);
+
+/**
+ * @brief Tells if a PCB exists in a queue
+ *
+ * @param queue a thread safe queue
+ * @param id a PID
+ * @return wether a PCB is present in the given queue or not
+ */
+bool pcb_exists(safe_queue_t *queue, uint32_t id);
+
+/**
+ * @brief Removes a PCB from a queue.
+ *
+ * @param queue a thread safe queue
+ * @param id the process id
+ * @return a PCB with the given ID or null if not found
+ */
+pcb_t *pcb_remove_by_id(safe_queue_t *queue, uint32_t id);

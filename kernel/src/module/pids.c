@@ -34,3 +34,13 @@ uint32_t get_pid_libre(pids_t *pids)
 
 	return free_pid;
 }
+
+void pids_free(pids_t *pids, uint32_t pid)
+{
+	if (pid < PIDS)
+	{
+		pthread_mutex_lock(&(pids->_mtx));
+		pids->pool[pid] = false;
+		pthread_mutex_unlock(&(pids->_mtx));
+	}
+}

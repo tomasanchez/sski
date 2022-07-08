@@ -62,6 +62,11 @@ void *routine(void *fd)
 
 			switch (opcode)
 			{
+
+			case MEMORY_INIT:
+				kernel_controller_memory_init(sender_fd);
+				break;
+
 			case MSG:
 				dispatch_imprimir_mensaje((void *)recibir_mensaje(sender_fd));
 				break;

@@ -71,7 +71,7 @@ static int on_init_kernel(kernel_t *kernel)
 	kernel->pcbs = new_safe_list();
 	kernel->pids = new_pids();
 	kernel->multiprogramming_grade = grado_multiprogramacion();
-	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade);
+	kernel->scheduler = new_scheduler(kernel->multiprogramming_grade, algoritmo_planificacion(), tiempo_maximo_bloqueado());
 	on_init_sync(&kernel->sync);
 	scheduler_start(&kernel->scheduler);
 	init_cpu_controller();

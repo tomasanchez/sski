@@ -45,6 +45,8 @@ typedef struct CPU
 	uint32_t page_size;
 	// Amount of entries per page
 	uint32_t page_amount_entries;
+	// Whether the CPU is executin a PCB or not
+	bool is_executing;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);

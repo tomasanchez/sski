@@ -16,6 +16,7 @@
 typedef struct CpuSync
 {
 	sem_t *pcb_received;
+	sem_t *cpu_in_use;
 } cpu_sync_t;
 
 /**
