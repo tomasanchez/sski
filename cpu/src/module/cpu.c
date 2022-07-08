@@ -449,25 +449,38 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 
 uint32_t execute_READ(uint32_t logical_address)
 {
+	LOG_TRACE("[CPU - MMU - Read] Getting the physical address from the logical address: %d", logical_address);
 	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
+	LOG_INFO("[CPU - Read] Physical address calculated: %d", physical_address);
 
 	ssize_t bytes = -1;
 	uint32_t return_value = 0;
 
-	void *send_stream = malloc(sizeof(physical_address));
+	// Re-utilizo operands para aparte de enviar la direccion fisica, poder enviar el pcb-id
+	// (me evito usar el big-stream pq solo quiero leer)
+	operands_t *operands = malloc(sizeof(operands_t));
 
-	//TODO --> Agregar el big stream.
+	operands->op1 = physical_address;
+	operands->op2 = g_cpu.pcb->id;
+
+	void *send_stream = malloc(sizeof(operands_t));
 
 	// Serializo
-	memcpy(send_stream, &physical_address, sizeof(physical_address));
+	memcpy(send_stream, &operands, sizeof(operands_t));
 
-	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(physical_address));
+	// envio a memoria para leer, el operands que contiene la direc fisica y el id del pcb
+	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(operands_t));
 
 	free(send_stream);
 
 	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
 
+	LOG_TRACE("[CPU - Read] Bytes read: %d", bytes);
+
 	return_value = *(uint32_t *)receive_stream;
+
+	LOG_INFO("[CPU - Read] Value Read: %d", return_value);
 
 	free(receive_stream);
 
@@ -476,13 +489,20 @@ uint32_t execute_READ(uint32_t logical_address)
 
 void execute_WRITE(uint32_t logical_address, uint32_t value)
 {
+	LOG_TRACE("[CPU - MMU - Write] Getting the physical address from the logical address: %d", logical_address);
 	uint32_t physical_address = req_physical_address(&g_cpu, logical_address);
+
+	LOG_INFO("[CPU - Write] Physical address calculated: %d", physical_address);
 
 	operands_t *operands = malloc(sizeof(operands_t));
 
 	operands->op1 = physical_address;
 	operands->op2 = value;
 
+	LOG_TRACE("[CPU - Write] Value to write: %d", operands->op2);
+
+	// Serializo un Stream mas grande, que ahora contendrá:
+	//operands (direc. fisica y valor) y uint32_t (pcb->id)
 	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
 
 	memcpy(big_stream,&g_cpu.pcb->id, sizeof(uint32_t));
@@ -596,7 +616,6 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 
 	if (ret_page_snd_level == NULL){
 		LOG_ERROR("[Memory-Client] :=> page_second_level can't be NULL");
-		// Que podriamos devolver aca? Pq el page_second_level 0 es un valor posible -> no pareceria un error
 		return VALOR_INVALIDO;
 	}else{
 		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *ret_page_snd_level);
@@ -613,9 +632,7 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 }
 
 
-
 uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
-
 
 	// ENVIO DE STREAM
 
