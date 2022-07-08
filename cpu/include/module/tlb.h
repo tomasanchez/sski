@@ -20,11 +20,11 @@
 
 typedef struct TLB
 {
-	char* pagina;
-	char* frame;
+	uint32_t pagina;
+	uint32_t frame;
 
-	char* bit_presencia;
-	char* tiempo_ult_acceso;
+	uint32_t bit_presencia;
+	uint32_t tiempo_ult_acceso;
 
 	// TODO --> validar mirando la consigna si se pueden tener estos valores en la estructura del TLB
 	uint32_t tamanio;
