@@ -476,7 +476,7 @@ uint32_t execute_READ(uint32_t logical_address)
 
 	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
 
-	LOG_TRACE("[CPU - Read] Bytes read: %d", bytes);
+	LOG_TRACE("[CPU - Read] Bytes read: %ld", bytes);
 
 	return_value = *(uint32_t *)receive_stream;
 
