@@ -62,10 +62,9 @@ void *dispatch_handle_instruction(void *args, uint32_t *pid)
 
 	pcb->instructions = instructions;
 
-	SIGNAL(g_kernel.scheduler.req_admit);
-
-	LOG_DEBUG("[Server] :=> The PCB <%d> was moved to NEW queue", *pid);
 	safe_queue_push(g_kernel.scheduler.new, pcb);
+	LOG_DEBUG("[Server] :=> The PCB <%d> was moved to NEW queue", *pid);
+	SIGNAL(g_kernel.scheduler.req_admit);
 
 	return NULL;
 }

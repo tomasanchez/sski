@@ -50,6 +50,10 @@ char *opcode_to_string(opcode_t opcode)
 		return "Frame";
 	case SND_PAGE:
 		return "Second Level Page";
+	case WT:
+		return "Memory Write";
+	case MEMORY_INIT:
+		return "Init Memory for PCB";
 	default:
 		return "Unrecognized";
 	}

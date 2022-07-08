@@ -17,3 +17,5 @@
  * @param socket
  */
 void kernel_controller_swap(int socket);
+
+void kernel_controller_memory_init(int socket);

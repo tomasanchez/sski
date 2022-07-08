@@ -53,6 +53,8 @@ typedef enum Opcode
 	FRAME,
 	// Second Level Page
 	SND_PAGE,
+	// Memory for new Process
+	MEMORY_INIT
 } opcode_t;
 
 // ============================================================================================================

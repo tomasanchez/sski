@@ -15,19 +15,14 @@
 #include "safe_queue.h"
 #include "log.h"
 #include "accion.h"
+#include "mts.h"
+#include "cpu_controller.h"
 
 // ============================================================================================================
 //                                   ***** Declarations *****
 // ============================================================================================================
 
-/**
- * @brief Admits a new process
- *
- * @param new
- * @param ready
- * @param memory
- */
-void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory);
+void admit(kernel_t *kernel);
 
 // ============================================================================================================
 //                                   ***** Definitions *****
@@ -53,56 +48,93 @@ long_term_schedule(void *kernel_ref)
 		sem_getvalue(sched.req_admit, &request);
 		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
 		WAIT(sched.req_admit);
-		admit(sched.new, sched.ready, kernel->conexion_memory);
+		admit(kernel);
 	}
 
 	return NULL;
 }
 
-void admit(safe_queue_t *new, safe_queue_t *ready, conexion_t memory)
+void admit(kernel_t *kernel)
 {
+
+	safe_queue_t *ready_sus = kernel->scheduler.ready_sus;
+	safe_queue_t *new = kernel->scheduler.new;
+	safe_queue_t *ready = kernel->scheduler.ready;
+	conexion_t memory = kernel->conexion_memory;
+
 	if (new != NULL && ready != NULL)
 	{
-		LOG_TRACE("[LTS] :=> Admitting a new process...");
+		LOG_TRACE("[LTS] :=> Admitting a process...");
 		// Sets to ready a new process and enqueues.
-		pcb_t *pcb = safe_queue_pop(new);
+		pcb_t *pcb = resume(&kernel->scheduler);
+
+		if (pcb == NULL)
+		{
+			pcb = safe_queue_pop(new);
+			LOG_TRACE("[LTS] :=> New process admitted");
+		}
 
 		if (pcb != NULL)
 		{
-			pcb->status = PCB_NEW;
-			LOG_INFO("[LTS] :=> Process <%d> changed status to NEW", pcb->id);
+			pcb->status = PCB_READY;
+
+			if (should_interrupt(&kernel->scheduler, pcb))
+			{
+
+				ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
+
+				if (bytes_sent > 0)
+				{
+					LOG_ERROR("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
+					LOG_DEBUG("[LTS] :=> Current [%dms] - New [%dms]", kernel->scheduler.current_estimation, pcb->estimation);
+				}
+				else
+				{
+					LOG_ERROR("[LTS] :=> Couldn't sent interruption");
+				}
+			}
+			else
+			{
+				LOG_DEBUG("[LTS] :=> No interruption required");
+			}
+
 			safe_queue_push(ready, pcb);
 
 			// Request page table.
 			if (conexion_esta_conectada(memory))
 			{
 				LOG_TRACE("[LTS] :=> Request page table...");
-				accion_t *req_page = accion_create(NEW_PROCESS, 0);
-				accion_enviar(req_page, memory.socket);
-				accion_t *recv_page = accion_recibir(memory.socket);
 
-				uint32_t *page_ref = malloc(sizeof(uint32_t));
-				*page_ref = recv_page->param;
-				pcb->page_table = page_ref;
+				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
 
-				accion_destroy(req_page);
-				accion_destroy(recv_page);
-				LOG_DEBUG("[LTS] :=> Page table received");
+				ssize_t bytes_received = -1;
+
+				uint32_t *page_ref = conexion_recibir_stream(kernel->conexion_memory.socket, &bytes_received);
+
+				if (bytes_received <= 0 && page_ref == NULL)
+				{
+					LOG_ERROR("[LTS] :=> Couldn't receive page table");
+				}
+				else
+				{
+					pcb->page_table = page_ref;
+					LOG_DEBUG("[LTS] :=> Page table  <%d> received", *page_ref);
+				}
 			}
 			else
 			{
 				LOG_WARNING("[LTS] :=> Memory is not connected");
 			}
 
-			LOG_TRACE("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
+			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
 		}
 		else
 		{
-			LOG_ERROR("[LTS] :=> No process to be admit");
+			LOG_ERROR("[LTS] :=> No process to be admit - PCB cannot be NULL");
 		}
 	}
 	else
 	{
-		LOG_ERROR("[LTS] :=> Error while admitting a new process");
+		LOG_ERROR("[LTS] :=> Error while admitting a new process: NULL Queues");
 	}
 }

@@ -12,19 +12,27 @@
 #include "scheduler.h"
 #include "io_scheduler.h"
 #include "pcb_unit.h"
+#include "time.h"
+#include <string.h>
 #include "scheduler_algorithms.h"
 
-scheduler_t new_scheduler(int dom)
+scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 {
 	scheduler_t s;
 
 	// Init queues
 	s.new = new_safe_queue();
 	s.ready = new_safe_queue();
+	s.ready_sus = new_safe_queue();
 	s.blocked = new_safe_queue();
+	s.blocked_sus = new_safe_queue();
 
 	// Init Algorithm
-	s.get_next = get_next_fifo;
+	s.get_next = strcmp(algorithm, "FIFO") == 0 ? get_next_fifo : get_next_srt;
+
+	// Time Stamps
+	s.current_estimation = 0;
+	s.max_blocked_time = max_blocked_time;
 
 	// Init Thread Manager
 	s.tm = new_thread_manager();
@@ -51,7 +59,9 @@ void scheduler_delete(scheduler_t scheduler)
 	// Destroy queues
 	safe_queue_destroy(scheduler.new, pcb_destroy);
 	safe_queue_destroy(scheduler.ready, pcb_destroy);
+	safe_queue_destroy(scheduler.ready_sus, pcb_destroy);
 	safe_queue_destroy(scheduler.blocked, pcb_destroy);
+	safe_queue_destroy(scheduler.blocked_sus, pcb_destroy);
 
 	// Destroy Thread Manager
 	thread_manager_destroy(&scheduler.tm);
@@ -69,4 +79,9 @@ void *schedule(void *data)
 {
 	scheduler_t *scheduler = (scheduler_t *)data;
 	return scheduler;
+}
+
+bool should_interrupt(scheduler_t *scheduler, pcb_t *pcb)
+{
+	return scheduler->current_estimation >= pcb->estimation;
 }
