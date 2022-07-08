@@ -477,7 +477,7 @@ uint32_t execute_READ(uint32_t logical_address)
 
 	void *receive_stream = conexion_recibir_stream(g_cpu.conexion.socket, &bytes);
 
-	LOG_TRACE("[CPU - Read] Bytes read: %d", bytes);
+	LOG_TRACE("[CPU - Read] Bytes read: %ld", bytes);
 
 	return_value = *(uint32_t *)receive_stream;
 
@@ -569,6 +569,7 @@ uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
+	//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
 	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 
