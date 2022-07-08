@@ -123,7 +123,7 @@ void update_TLB_LRU(uint32_t nueva_pagina, uint32_t nuevo_frame){
 	TLB[max_index].tiempo_ult_acceso = 0;
 }
 
-bool hit_TLB(uint32_t numero_pagina, uint32_t* marco)
+bool page_in_TLB(uint32_t numero_pagina, uint32_t* marco)
 {
 	for (uint32_t i = 0; i < TLB->tamanio; i++){
 		if (TLB[i].bit_presencia == true && TLB[i].pagina == numero_pagina){

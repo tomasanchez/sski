@@ -569,13 +569,14 @@ uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
-	numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-	frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+	if (! page_in_TLB(obtener_numero_pagina(logical_address, cpu->page_size),&frame)) {
 
-	// Después actualizamos la TLB
-	update_TLB(page_number(logical_address),frame);
-
+		//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
+		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		// Después actualizamos la TLB
+		update_TLB(obtener_numero_pagina(logical_address, cpu->page_size),frame);
+	}
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
 
@@ -630,7 +631,6 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 	free(operands);
 
 	return ret_page;
-
 }
 
 
