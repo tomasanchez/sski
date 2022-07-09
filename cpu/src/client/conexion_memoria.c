@@ -114,7 +114,9 @@ void *routine_conexion_memoria(void *data)
 
 	conexion_init(cpu);
 
-	tlb_init();
+	tlb_t *tlb = tlb_init();
+
+	cpu->tlb = tlb;
 
 	handshake(cpu);
 

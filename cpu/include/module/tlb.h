@@ -34,11 +34,20 @@ typedef struct g_tlb
 
 } tlb_t;
 
+
+/**
+ * @brief
+ *
+ * @param cant_entradas_TLB
+ * @return tlb_t*
+ */
+tlb_t *tlb_create(uint32_t cant_entradas_TLB);
+
 /**
  * @brief Iniciar el TLB
  *
  */
-void tlb_init();
+tlb_t *tlb_init();
 
 /**
  * @brief Revisa si el numero de pagina se encuentra en la TLB
@@ -48,9 +57,9 @@ void tlb_init();
  * @return true
  * @return false
  */
-bool page_in_TLB(uint32_t numero_pagina, uint32_t *marco);
+bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco);
 
-void replace_fifo(tlb_t *self, uint32_t nueva_pagina, uint32_t nuevo_frame);
-void replace_lru(tlb_t *self, uint32_t nueva_pagina, uint32_t nuevo_frame);
+void replace_fifo(void *self, uint32_t nueva_pagina, uint32_t nuevo_frame);
+void replace_lru(void *self, uint32_t nueva_pagina, uint32_t nuevo_frame);
 
-void tlb_reset(tlb_t *tlb);
+void tlb_reset(tlb_t **tlb);

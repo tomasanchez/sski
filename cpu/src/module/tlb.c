@@ -27,96 +27,111 @@
 // ============================================================================================================
 
 extern cpu_t g_cpu;
-tlb_t g_tlb;
+//tlb_t *g_tlb;
 
-void tlb_init()
+
+tlb_t *tlb_create(uint32_t cant_entradas_TLB)
 {
+	tlb_t *tlb = malloc(sizeof(tlb_t) * cant_entradas_TLB);
+
+	return tlb;
+}
+
+tlb_t *tlb_init()
+{
+	uint32_t cant_entradas_TLB = entradas_tlb();
+
+	tlb_t *tlb = tlb_create(cant_entradas_TLB);
+
 	char *algorithm = reemplazo_tlb();
 
-	g_tlb.replace = strcmp(algorithm, "LRU") == 0 ? replace_lru : replace_fifo;
+	tlb->replace = strcmp(algorithm, "LRU") == 0 ? replace_lru : replace_fifo;
 
-	uint32_t size = entradas_tlb();
-	g_tlb.size = size;
+	tlb->size = cant_entradas_TLB;
 
 	// limpio TLB para iniciarla vacia
-	for (uint32_t i = 0; i < size; i++)
+	for (uint32_t i = 0; i < cant_entradas_TLB; i++)
 	{
-		g_tlb.bit_presencia = 0;
-		g_tlb.tiempo_ult_acceso = 0;
+		tlb[i].bit_presencia = 0;
+		tlb[i].tiempo_ult_acceso = 0;
 	}
+
+	return tlb;
 }
 
-void tlb_reset(tlb_t *tlb)
+void tlb_reset(tlb_t **tlb)
 {
+	free(*tlb);
+
+	*tlb = tlb_init();
 }
 
-void replace_fifo(tlb_t *self, uint32_t nueva_pagina, uint32_t nuevo_frame)
+void replace_fifo(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 {
+	tlb_t *self = tlb;
 
-	// for (uint32_t i = 0; i < g_tlb->tamanio; i++)
-	// {
-	// 	if (g_tlb[i].bit_presencia == 0)
-	// 	{
-	// 		g_tlb[i].pagina = nueva_pagina;
-	// 		g_tlb[i].frame = nuevo_frame;
-	// 		g_tlb[i].bit_presencia = 1;
-	// 		return;
-	// 	}
-	// }
-
-	// g_tlb[g_tlb->ultima_pos_liberada].pagina = nueva_pagina;
-	// g_tlb[g_tlb->ultima_pos_liberada].frame = nuevo_frame;
-	// g_tlb->ultima_pos_liberada = (g_tlb->ultima_pos_liberada + 1) % g_tlb->tamanio;
+	for (uint32_t i = 0; i < self->size; i++)
+	{
+		if (self[i].bit_presencia == 0)
+		{
+			self[i].pagina = nueva_pagina;
+			self[i].frame = nuevo_frame;
+			self[i].bit_presencia = 1;
+			return;
+		}
+	}
+	self[self->ultima_pos_liberada].pagina = nueva_pagina;
+	self[self->ultima_pos_liberada].frame = nuevo_frame;
+	self->ultima_pos_liberada = (self->ultima_pos_liberada + 1) % self->size;
 }
 
-void replace_lru(tlb_t *self, uint32_t nueva_pagina, uint32_t nuevo_frame)
+void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 {
+	tlb_t *self = tlb;
 
-	// for (uint32_t i = 0; i < g_tlb->tamanio; i++)
-	// {
-	// 	g_tlb[i].tiempo_ult_acceso++;
-	// }
+	for (uint32_t i = 0; i < self->size; i++)
+	{
+		self[i].tiempo_ult_acceso++;
+	}
+	for (uint32_t i = 0; i < self->size; i++)
+	{
+		if (self[i].bit_presencia == 0)
+		{
+			self[i].pagina = nueva_pagina;
+			self[i].frame = nuevo_frame;
+			self[i].bit_presencia = 1;
+			self[i].tiempo_ult_acceso = 0;
+			return;
+		}
+	}
 
-	// for (uint32_t i = 0; i < g_tlb->tamanio; i++)
-	// {
-	// 	if (g_tlb[i].bit_presencia == 0)
-	// 	{
-	// 		g_tlb[i].pagina = nueva_pagina;
-	// 		g_tlb[i].frame = nuevo_frame;
-	// 		g_tlb[i].bit_presencia = 1;
-	// 		g_tlb[i].tiempo_ult_acceso = 0;
-	// 		return;
-	// 	}
-	// }
+	uint32_t max_index;
+	uint32_t mejor_tiempo = 0;
 
-	// uint32_t max_index;
-	// uint32_t mejor_tiempo = 0;
-
-	// for (uint32_t i = 0; i < g_tlb->tamanio; i++)
-	// {
-	// 	if (g_tlb[i].tiempo_ult_acceso > mejor_tiempo)
-	// 	{
-	// 		max_index = 1;
-	// 		mejor_tiempo = g_tlb[i].tiempo_ult_acceso;
-	// 	}
-	// }
-
-	// g_tlb[max_index].frame = nuevo_frame;
-	// g_tlb[max_index].pagina = nueva_pagina;
-	// g_tlb[max_index].bit_presencia = 1;
-	// g_tlb[max_index].tiempo_ult_acceso = 0;
+	for (uint32_t i = 0; i < self->size; i++)
+	{
+		if (self[i].tiempo_ult_acceso > mejor_tiempo)
+		{
+			max_index = 1;
+			mejor_tiempo = self[i].tiempo_ult_acceso;
+		}
+	}
+	self[max_index].frame = nuevo_frame;
+	self[max_index].pagina = nueva_pagina;
+	self[max_index].bit_presencia = 1;
+	self[max_index].tiempo_ult_acceso = 0;
 }
 
-bool page_in_TLB(uint32_t numero_pagina, uint32_t *marco)
+bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco)
 {
-	// for (uint32_t i = 0; i < g_tlb->tamanio; i++)
-	// {
-	// 	if (g_tlb[i].bit_presencia == true && g_tlb[i].pagina == numero_pagina)
-	// 	{
-	// 		*marco = g_tlb[i].frame;
-	// 		return true;
-	// 	}
-	// }
+	for (uint32_t i = 0; i < self->size; i++)
+	{
+		if (self[i].bit_presencia == true && self[i].pagina == numero_pagina)
+	 	{
+	 		*marco = self[i].frame;
+	 		return true;
+	 	}
+	}
 
 	return false;
 }

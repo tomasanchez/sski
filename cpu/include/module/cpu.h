@@ -17,6 +17,7 @@
 #include "server.h"
 #include "instruction.h"
 #include "sync.h"
+#include "tlb.h"
 
 #define MODULE_NAME "cpu"
 #define VALOR_INVALIDO UINT32_MAX
@@ -47,6 +48,8 @@ typedef struct CPU
 	uint32_t page_amount_entries;
 	// Whether the CPU is executin a PCB or not
 	bool is_executing;
+	//TLB
+	tlb_t *tlb;
 } cpu_t;
 
 int on_connect(void *conexion, bool offline_mode);
