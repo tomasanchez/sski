@@ -57,7 +57,7 @@ void *io_scheduler(void *scheduler)
 
 			switch (pcb->status)
 			{
-			PCB_SUSPENDED_BLOCKED:
+			case PCB_SUSPENDED_BLOCKED:
 				suspended_event(s, pcb);
 				break;
 

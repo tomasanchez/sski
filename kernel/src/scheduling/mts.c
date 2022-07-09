@@ -90,6 +90,7 @@ pcb_t *resume(scheduler_t *scheduler)
 void suspended_event(scheduler_t *scheduler, pcb_t *pcb)
 {
 	LOG_DEBUG("[MTS] :=> Event occured for suspended PCB #%d", pcb->id);
+	pcb->status = PCB_SUSPENDED_BLOCKED;
 	safe_queue_push(scheduler->ready_sus, pcb);
 	LOG_TRACE("[MTS] :=> PCB #%d moved to SUSPENDED Ready", pcb->id);
 	SIGNAL(scheduler->req_admit);

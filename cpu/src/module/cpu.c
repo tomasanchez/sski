@@ -29,6 +29,8 @@
 
 cpu_t g_cpu;
 
+extern tlb_t g_tlb;
+
 static void handle_sigint(int signal)
 {
 	if (signal == SIGINT)
@@ -183,8 +185,8 @@ int on_init(cpu_t *cpu)
 int on_run(cpu_t *cpu)
 {
 	serve_kernel(cpu);
-	//TODO --> Descomentar cuando esté terminado el kernel.
-	//routine_conexion_memoria(cpu);
+	// TODO --> Descomentar cuando esté terminado el kernel.
+	// routine_conexion_memoria(cpu);
 
 	LOG_DEBUG("Module is OK.");
 
@@ -266,7 +268,7 @@ void cycle(cpu_t *cpu)
 	{
 		LOG_ERROR("[CPU] :=> Interruption received.");
 		cpu->pcb->status = PCB_READY;
-		reset_TLB();
+		tlb_reset(&g_tlb);
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, 0);
 		cpu->has_interruption = false;
 	}
@@ -419,7 +421,7 @@ void execute_IO(instruction_t *instruction, cpu_t *cpu)
 	LOG_TRACE("[CPU] :=> Executing IO Instruction...");
 	cpu->pcb->status = PCB_BLOCKED;
 
-	reset_TLB();
+	tlb_reset(&g_tlb);
 
 	ssize_t bytes_sent = return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
 
@@ -444,7 +446,7 @@ void execute_EXIT(instruction_t *instruction, cpu_t *cpu)
 			LOG_WARNING("[CPU] :=> Instruction is NULL")
 		}
 
-		reset_TLB();
+		tlb_reset(&g_tlb);
 
 		return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction ? instruction->param0 : 0);
 	}
@@ -509,14 +511,14 @@ void execute_WRITE(uint32_t logical_address, uint32_t value)
 	LOG_TRACE("[CPU - Write] Value to write: %d", operands->op2);
 
 	// Serializo un Stream mas grande, que ahora contendrá:
-	//operands (direc. fisica y valor) y uint32_t (pcb->id)
+	// operands (direc. fisica y valor) y uint32_t (pcb->id)
 	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
 
-	memcpy(big_stream,&g_cpu.pcb->id, sizeof(uint32_t));
+	memcpy(big_stream, &g_cpu.pcb->id, sizeof(uint32_t));
 
 	void *send_stream = operandos_to_stream(operands);
 
-	memcpy(big_stream+sizeof(uint32_t),send_stream,sizeof(operands_t));
+	memcpy(big_stream + sizeof(uint32_t), send_stream, sizeof(operands_t));
 
 	conexion_enviar_stream(g_cpu.conexion, WT, big_stream, sizeof(operands_t));
 
@@ -533,7 +535,6 @@ execute_COPY(uint32_t param1, uint32_t param2)
 
 	return read_value;
 }
-
 
 // ============================================================================================================
 //			   							***** MMU - TLB *****
@@ -570,41 +571,46 @@ Direc Fisica: 6(Decimal) + 000011
 
 */
 
-uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address){
+uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
+{
 
 	uint32_t frame;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	if (! page_in_TLB(obtener_numero_pagina(logical_address, cpu->page_size),&frame)) {
+	if (!page_in_TLB(obtener_numero_pagina(logical_address, cpu->page_size), &frame))
+	{
 
-		//TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
-		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table,obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		// TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
+		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table, obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		// Después actualizamos la TLB
-		update_TLB(obtener_numero_pagina(logical_address, cpu->page_size),frame);
+		replace_lru(&g_tlb, obtener_numero_pagina(logical_address, cpu->page_size), frame);
 	}
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
 
-
-uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina){
-	return direccion_logica/tamanio_pagina;
+uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina)
+{
+	return direccion_logica / tamanio_pagina;
 }
 
-uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina){
+uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina)
+{
 	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica, tamanio_pagina);
 }
 
-uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag)
+{
 	return obtener_numero_pagina(direccion_logica, tamanio_pagina) / cant_en_por_pag;
 }
 
-uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag){
+uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag)
+{
 	return obtener_numero_pagina(direccion_logica, tamanio_pagina) % cant_en_por_pag;
 }
 
-
-uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento){
+uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento)
+{
 
 	// ENVIO DE STREAM
 
@@ -623,10 +629,13 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 
 	uint32_t *ret_page_snd_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
 
-	if (ret_page_snd_level == NULL){
+	if (ret_page_snd_level == NULL)
+	{
 		LOG_ERROR("[Memory-Client] :=> page_second_level can't be NULL");
 		return VALOR_INVALIDO;
-	}else{
+	}
+	else
+	{
 		LOG_DEBUG("[MMU] :=> page_second_level is: %d", *ret_page_snd_level);
 	}
 
@@ -639,8 +648,8 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 	return ret_page;
 }
 
-
-uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
+uint32_t obtener_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento)
+{
 
 	// ENVIO DE STREAM
 
@@ -659,10 +668,13 @@ uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento){
 
 	uint32_t *frame = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
 
-	if (frame == NULL){
+	if (frame == NULL)
+	{
 		LOG_ERROR("[Memory-Client] :=> Frame can't be NULL");
 		return VALOR_INVALIDO;
-	}else{
+	}
+	else
+	{
 		LOG_DEBUG("[MMU] :=> Frame is: %d", *frame);
 	}
 

@@ -57,7 +57,6 @@ long_term_schedule(void *kernel_ref)
 void admit(kernel_t *kernel)
 {
 
-	safe_queue_t *ready_sus = kernel->scheduler.ready_sus;
 	safe_queue_t *new = kernel->scheduler.new;
 	safe_queue_t *ready = kernel->scheduler.ready;
 	conexion_t memory = kernel->conexion_memory;

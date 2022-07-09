@@ -17,13 +17,12 @@
 #include "module.h"
 #include "tlb.h"
 
-
 // ============================================================================================================
 //                                   ***** Definiciones y Estructuras  *****
 // ============================================================================================================
 
 extern cpu_t g_cpu;
-extern TLB_t* TLB;
+extern tlb_t *TLB;
 
 // ============================================================================================================
 //                               ***** Private Functions *****
@@ -68,17 +67,19 @@ void handshake(cpu_t *cpu)
 
 	uint32_t *pg_size = connection_receive_value(cpu->conexion, sizeof(uint32_t));
 
-	if (pg_size == NULL){
+	if (pg_size == NULL)
+	{
 		LOG_ERROR("[Memory-Client] :=> Page Size can't be NULL");
 		return;
-	}else{
+	}
+	else
+	{
 		LOG_DEBUG("[MMU] :=> Page Size is: %d", *pg_size);
 		cpu->page_size = *pg_size;
 	}
 
 	free(pg_size);
 	LOG_WARNING("[MMU] :=> Page Size after free: %d", cpu->page_size);
-
 
 	LOG_TRACE("[MMU] :=> Request Entries per Pages...");
 	opcode_t req_am_entry = ENTRIES;
@@ -89,7 +90,9 @@ void handshake(cpu_t *cpu)
 	{
 		LOG_ERROR("[Memory-Client] :=> Nothing was sent - THIS SHOULD NEVER HAPPEN");
 		return;
-	}else{
+	}
+	else
+	{
 		LOG_DEBUG("[Memory-Client] :=> Requested Amount Entry [%ld bytes]", bytes_sent_for_am_entry);
 	}
 
@@ -101,7 +104,6 @@ void handshake(cpu_t *cpu)
 	LOG_DEBUG("[MMU] :=> Amount Entries per page: %d", cpu->page_amount_entries);
 }
 
-
 // ============================================================================================================
 //                               ***** Public Functions *****
 // ============================================================================================================
@@ -112,7 +114,7 @@ void *routine_conexion_memoria(void *data)
 
 	conexion_init(cpu);
 
-	init_TLB();
+	tlb_init();
 
 	handshake(cpu);
 
