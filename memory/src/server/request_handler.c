@@ -75,6 +75,10 @@ void *routine(void *fd)
 				cpu_controller_read(sender_fd);
 				break;
 
+			case PROCESS_TERMINATED:
+				kernel_controller_delete_swap_file(sender_fd);
+				break;
+
 			case SWAP:
 				kernel_controller_swap(sender_fd);
 				break;

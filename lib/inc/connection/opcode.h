@@ -54,7 +54,9 @@ typedef enum Opcode
 	// Second Level Page
 	SND_PAGE,
 	// Memory for new Process
-	MEMORY_INIT
+	MEMORY_INIT,
+	// Process ends signal
+	PROCESS_TERMINATED
 } opcode_t;
 
 // ============================================================================================================

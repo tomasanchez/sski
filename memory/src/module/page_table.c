@@ -12,10 +12,10 @@
 #include "page_table.h"
 #include <stdlib.h>
 
-page_table_t *new_page_table(size_t rows)
+page_table_lvl_1_t *new_page_table(size_t rows)
 {
-	page_table_t *table = NULL;
-	table = malloc(sizeof(page_table_t) * rows);
+	page_table_lvl_1_t *table = NULL;
+	table = malloc(sizeof(page_table_lvl_1_t) * rows);
 
 	// Set the second page ID to invalid
 	for (uint32_t i = 0; i < rows; i++)
