@@ -52,8 +52,8 @@ tlb_t *tlb_init()
 	// limpio TLB para iniciarla vacia
 	for (uint32_t i = 0; i < cant_entradas_TLB; i++)
 	{
-		tlb[i].bit_presencia = 0;
 		tlb[i].tiempo_ult_acceso = 0;
+		tlb[i].pagina = PAGINA_VACIA;
 	}
 
 	return tlb;
@@ -91,43 +91,42 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 
 	for (uint32_t i = 0; i < self->size; i++)
 	{
+		// Aumento el tiempo de acceso de cada entrada. Si llega a existir el caso en que
+		// no haya paginas vacias, aumentan todos y no va a generar ningun problema
 		self[i].tiempo_ult_acceso++;
-	}
-	for (uint32_t i = 0; i < self->size; i++)
-	{
-		if (self[i].bit_presencia == 0)
+
+		if(self[i].pagina == PAGINA_VACIA)
 		{
 			self[i].pagina = nueva_pagina;
 			self[i].frame = nuevo_frame;
-			self[i].bit_presencia = 1;
 			self[i].tiempo_ult_acceso = 0;
 			return;
 		}
 	}
 
-	uint32_t max_index;
-	uint32_t mejor_tiempo = 0;
+	uint32_t pag_index_max;
+	uint32_t acceso_mas_antiguo = 0;
 
 	for (uint32_t i = 0; i < self->size; i++)
 	{
-		if (self[i].tiempo_ult_acceso > mejor_tiempo)
+		if (self[i].tiempo_ult_acceso > acceso_mas_antiguo)
 		{
-			max_index = 1;
-			mejor_tiempo = self[i].tiempo_ult_acceso;
+			pag_index_max = i;
+			acceso_mas_antiguo = self[i].tiempo_ult_acceso;
 		}
 	}
-	self[max_index].frame = nuevo_frame;
-	self[max_index].pagina = nueva_pagina;
-	self[max_index].bit_presencia = 1;
-	self[max_index].tiempo_ult_acceso = 0;
+	self[pag_index_max].frame = nuevo_frame;
+	self[pag_index_max].pagina = nueva_pagina;
+	self[pag_index_max].tiempo_ult_acceso = 0;
 }
 
 bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco)
 {
 	for (uint32_t i = 0; i < self->size; i++)
 	{
-		if (self[i].bit_presencia == true && self[i].pagina == numero_pagina)
+		if (self[i].pagina == numero_pagina)
 	 	{
+			// Si la pagina esta en la TLB, devuelvo True y el Marco correspondiente
 	 		*marco = self[i].frame;
 	 		return true;
 	 	}

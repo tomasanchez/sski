@@ -21,6 +21,7 @@
 
 #define MODULE_NAME "cpu"
 #define VALOR_INVALIDO UINT32_MAX
+#define PAGINA_VACIA UINT32_MAX
 
 /**
  * @brief CPU Module.

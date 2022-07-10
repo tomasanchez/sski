@@ -75,6 +75,10 @@ ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time)
 	}
 
 	pcb_destroy(pcb);
+
+	// Reset the TLB
+	tlb_reset(&(g_cpu.tlb));
+
 	g_cpu.pcb = NULL;
 
 	SIGNAL(g_cpu.sync.cpu_in_use);
