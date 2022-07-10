@@ -48,7 +48,7 @@ typedef struct CPU
 	uint32_t page_amount_entries;
 	// Whether the CPU is executin a PCB or not
 	bool is_executing;
-	//TLB
+	// TLB
 	tlb_t *tlb;
 } cpu_t;
 
@@ -137,7 +137,7 @@ execute_COPY(uint32_t param1, uint32_t param2);
  * @param logical_address
  * @return uint32_t
  */
-uint32_t req_physical_address(cpu_t* cpu, uint32_t logical_address);
+uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address);
 
 /**
  * @brief N°Pag = DL / Tam_de_Pagina
@@ -173,4 +173,4 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 
 uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
 
-uint32_t obtener_frame(uint32_t tabla_segundo_nivel,uint32_t desplazamiento);
+uint32_t obtener_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento);
