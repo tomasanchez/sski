@@ -22,7 +22,7 @@ typedef struct PageTableLVL1
 {
 	// ID of the index of the second page table.
 	uint32_t second_page;
-} page_table_t;
+} page_table_lvl_1_t;
 
 /**
  * @brief A page table of Level II - References frames wich represent a portion of memory
