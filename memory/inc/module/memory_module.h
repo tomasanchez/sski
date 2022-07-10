@@ -3,6 +3,7 @@
 #include "server.h"
 #include "thread_manager.h"
 #include "cfg.h"
+#include "safe_list.h"
 #include "log.h"
 
 typedef struct Memory
@@ -10,7 +11,17 @@ typedef struct Memory
 	// The Memory Multi-thread Server dependency.
 	servidor_t server;
 
+	// The Memory thread manager
 	thread_manager_t tm;
+
+	// The module main memory.
+	void *main_memory;
+
+	// Tables of Level I
+	safe_list_t *tables_lvl_1;
+
+	// Tables of Level II
+	safe_list_t *tables_lvl_2;
 
 } memory_t;
 

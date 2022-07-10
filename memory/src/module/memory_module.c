@@ -53,6 +53,9 @@ static int on_init_memory(memory_t *memory)
 {
 	memory->server = servidor_create(IP, puerto_escucha());
 	memory->tm = new_thread_manager();
+	memory->main_memory = malloc(tam_memoria());
+	memory->tables_lvl_1 = new_safe_list();
+	memory->tables_lvl_2 = new_safe_list();
 
 	return EXIT_SUCCESS;
 }
@@ -61,6 +64,9 @@ static void on_delete_memory(memory_t *memory)
 {
 	servidor_destroy(&(memory->server));
 	thread_manager_destroy(&(memory->tm));
+	free(memory->main_memory);
+	safe_list_destroy(memory->tables_lvl_1);
+	safe_list_destroy(memory->tables_lvl_2);
 }
 
 // ============================================================================================================
