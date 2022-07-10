@@ -10,6 +10,7 @@
  */
 
 #include "page_table.h"
+#include <stdlib.h>
 
 page_table_t *new_page_table(size_t rows)
 {
@@ -25,7 +26,7 @@ page_table_t *new_page_table(size_t rows)
 	return table;
 }
 
-page_table_lvl_2_t *new_page_table(size_t rows)
+page_table_lvl_2_t *new_page_table_lvl2(size_t rows)
 {
 	page_table_lvl_2_t *table = NULL;
 	table = malloc(sizeof(page_table_lvl_2_t) * rows);
