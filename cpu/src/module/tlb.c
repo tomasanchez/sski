@@ -72,11 +72,10 @@ void replace_fifo(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 
 	for (uint32_t i = 0; i < self->size; i++)
 	{
-		if (self[i].bit_presencia == 0)
+		if (self[i].pagina == PAGINA_VACIA)
 		{
 			self[i].pagina = nueva_pagina;
 			self[i].frame = nuevo_frame;
-			self[i].bit_presencia = 1;
 			return;
 		}
 	}
