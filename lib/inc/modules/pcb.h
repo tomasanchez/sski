@@ -43,7 +43,7 @@ typedef struct PCB
 	// List of instructions to be executed.
 	t_list *instructions;
 	// Reference to the table of pages.
-	uint32_t *page_table;
+	uint32_t page_table;
 	// CPU Burst estimation.
 	uint32_t estimation;
 	// Program Counter.
