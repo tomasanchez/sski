@@ -591,7 +591,7 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 	{
 
 		// TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
-		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(*cpu->pcb->page_table, obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table, obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		// Después actualizamos la TLB
 		cpu->tlb->replace(cpu->tlb, obtener_numero_pagina(logical_address, cpu->page_size), frame);
