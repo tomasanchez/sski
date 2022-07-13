@@ -57,6 +57,9 @@ static int on_init_memory(memory_t *memory)
 	memory->tables_lvl_1 = new_safe_list();
 	memory->tables_lvl_2 = new_safe_list();
 
+	memory->max_frames = (uint32_t)marcos_por_proceso();
+	memory->max_rows = (uint32_t)entradas_por_tabla();
+
 	return EXIT_SUCCESS;
 }
 

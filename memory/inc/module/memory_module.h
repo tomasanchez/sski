@@ -17,6 +17,10 @@ typedef struct Memory
 	// The module main memory.
 	void *main_memory;
 
+	uint32_t max_frames;
+
+	uint32_t max_rows;
+
 	// Tables of Level I
 	safe_list_t *tables_lvl_1;
 

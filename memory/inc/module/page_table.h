@@ -33,9 +33,25 @@ typedef struct PageTableLVL2
 	// Position of frame
 	uint32_t frame;
 	// Wether the frame is absent or not
-	bool absent;
+	bool present;
 	// Wether it was used
 	bool use;
 	// Wether it was modified
 	bool modified;
 } page_table_lvl_2_t;
+
+/**
+ * @brief Creates a new Page Table of Level I
+ *
+ * @param rows the entries per table
+ * @return a page table reference
+ */
+page_table_lvl_1_t *new_page_table(size_t rows);
+
+/**
+ * @brief Creates a new Page Table of Level II
+ *
+ * @param rows the entries per table
+ * @return a page table reference
+ */
+page_table_lvl_2_t *new_page_table_lvl2(size_t rows);
