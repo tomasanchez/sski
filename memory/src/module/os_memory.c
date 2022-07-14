@@ -56,6 +56,20 @@ uint32_t create_new_process(memory_t *memory)
 	return create_table(memory, memory->max_rows, create_lvl2_tables(memory, memory->max_rows, memory->max_frames));
 }
 
+uint32_t find_free_frame(memory_t *memory)
+{
+	for (uint32_t i = 0; i < memory->no_of_frames; i++)
+	{
+		if (memory->frames[i] == false)
+		{
+			memory->frames[i] = true;
+			return i;
+		}
+	}
+
+	return UINT32_MAX;
+}
+
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
@@ -72,6 +86,13 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t frames)
 	{
 		id = find_id(memory->tables_lvl_2);
 		table = new_page_table_lvl2(rows);
+
+		for (uint32_t j = 0; j < rows && j < frames; j++)
+		{
+			uint32_t frame = find_free_frame(memory);
+			table[j].frame = frame;
+			table[j].present = frame != UINT32_MAX;
+		}
 
 		list_add_in_index(memory->tables_lvl_2->_list, id, table);
 

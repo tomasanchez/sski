@@ -20,3 +20,11 @@
  * @return a Level I Table ID
  */
 uint32_t create_new_process(memory_t *memory);
+
+/**
+ * @brief Finds the next free frame in Memory
+ *
+ * @param memory the Memory Module Instance
+ * @return An ID or UINT32_MAX if error.
+ */
+uint32_t find_free_frame(memory_t *memory);
