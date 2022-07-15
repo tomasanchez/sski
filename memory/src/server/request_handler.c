@@ -79,8 +79,12 @@ void *routine(void *fd)
 				kernel_controller_delete_swap_file(sender_fd);
 				break;
 
-			case SWAP:
+			case SWAP_PCB:
 				kernel_controller_swap(sender_fd);
+				break;
+
+			case RETRIEVE_SWAPPED_PCB:
+				kernel_controller_read_swap(sender_fd);
 				break;
 
 			case SZ:
