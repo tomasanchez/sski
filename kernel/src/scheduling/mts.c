@@ -13,6 +13,8 @@
 #include "pcb.h"
 #include "time.h"
 #include "log.h"
+#include "opcode.h"
+#include "swap_controller.h"
 
 void *track_time(void *scheduler_data);
 
@@ -69,6 +71,10 @@ void suspend(scheduler_t *scheduler, pcb_t *pcb)
 	pcb->status = PCB_SUSPENDED_BLOCKED;
 	pcb_remove_by_id(scheduler->blocked, pcb->id);
 	safe_queue_push(scheduler->blocked_sus, pcb);
+
+	// meter lo del swap
+	swap_controller_send_pcb(SWAP, pcb);
+
 	LOG_WARNING("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pcb->id);
 	SIGNAL(scheduler->dom);
 }
@@ -81,6 +87,11 @@ pcb_t *resume(scheduler_t *scheduler)
 
 	if (pcb != NULL)
 	{
+		swap_controller_request_pcb(pcb->id);
+		pcb_destroy(pcb);
+		pcb = NULL;
+		pcb = swap_controller_receive_pcb();
+
 		LOG_WARNING("[MTS] :=> Suspended PCB #%d has been RESUMED", pcb->id);
 	}
 
