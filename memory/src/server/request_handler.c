@@ -32,6 +32,7 @@ void *routine(void *fd)
 	int sender_fd = 0;
 
 	memcpy((void *)&sender_fd, fd, sizeof(int));
+
 	free(fd);
 
 	for (;;)

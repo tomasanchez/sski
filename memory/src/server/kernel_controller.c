@@ -173,8 +173,6 @@ pcb_t *
 retrieve_swapped_pcb(uint32_t pcb_id) {
 	char path[MAX_CHARS] = "";
 
-	uint32_t status = ERROR;
-
 	pcb_t * pcb = NULL;
 
 	sprintf(path,"%s%s%d%s", path_swap(), "/", pcb_id, ".swap");
@@ -186,24 +184,22 @@ retrieve_swapped_pcb(uint32_t pcb_id) {
 		if (fd != -1) {
 			struct stat sb;
 
-			if (fstat(fd, &sb) == -1) {
-				LOG_ERROR("No se pudo obtener el tamaño del archivo: %s", path);
-				return ERROR;
+			if (fstat(fd, &sb) != ERROR) {
+
+				void * file_address = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+				void *pcb_stream = malloc(sb.st_size);
+
+				memcpy(pcb_stream, file_address, sb.st_size);
+
+				pcb = pcb_from_stream(pcb_stream);
+
+				munmap(file_address, sb.st_size);
+
+				close(fd);
+
+				free(pcb_stream);
 			}
-
-			void * file_address = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-			void *pcb_stream = malloc(sb.st_size);
-
-			memcpy(pcb_stream, file_address, sb.st_size);
-
-			pcb = pcb_from_stream(pcb_stream);
-
-			munmap(file_address, sb.st_size);
-
-			close(fd);
-
-			free(pcb_stream);
 		}
 	}
 
