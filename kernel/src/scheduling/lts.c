@@ -93,6 +93,7 @@ void admit(kernel_t *kernel)
 					pcb->page_table = *page_ref;
 					LOG_DEBUG("[LTS] :=> Page table  <%d> received", pcb->page_table);
 				}
+				free(page_ref);
 			}
 			else
 			{

@@ -57,7 +57,7 @@ void safe_queue_push(safe_queue_t *queue, void *element);
  *
  * @param queue the safe queue itself
  *
- * @return void
+ * @return void* first element of the queue
  */
 void *safe_queue_pop(safe_queue_t *queue);
 
