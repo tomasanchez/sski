@@ -73,7 +73,7 @@ void suspend(scheduler_t *scheduler, pcb_t *pcb)
 	safe_queue_push(scheduler->blocked_sus, pcb);
 
 	// meter lo del swap
-	swap_controller_send_pcb(SWAP, pcb);
+	swap_controller_send_pcb(SWAP_PCB, pcb);
 
 	LOG_WARNING("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pcb->id);
 	SIGNAL(scheduler->dom);
