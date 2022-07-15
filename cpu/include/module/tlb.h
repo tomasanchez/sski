@@ -28,12 +28,10 @@ typedef struct g_tlb
 
 	// TODO --> validar mirando la consigna si se pueden tener estos valores en la estructura del TLB
 	uint32_t size;
-	uint32_t ultima_pos_liberada;
 
 	void (*replace)(void *self, uint32_t param1, uint32_t param2);
 
 } tlb_t;
-
 
 /**
  * @brief

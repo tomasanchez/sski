@@ -36,7 +36,7 @@ page_table_lvl_2_t *new_page_table_lvl2(size_t rows)
 	{
 		table[i].frame = UINT32_MAX;
 		table[i].modified = false;
-		table[i].absent = false;
+		table[i].present = true;
 		table[i].use = false;
 	}
 

@@ -27,8 +27,7 @@
 // ============================================================================================================
 
 extern cpu_t g_cpu;
-//tlb_t *g_tlb;
-
+// tlb_t *g_tlb;
 
 tlb_t *tlb_create(uint32_t cant_entradas_TLB)
 {
@@ -69,19 +68,16 @@ void tlb_reset(tlb_t **tlb)
 void replace_fifo(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 {
 	tlb_t *self = tlb;
+	static uint32_t i = 0;
 
-	for (uint32_t i = 0; i < self->size; i++)
-	{
-		if (self[i].pagina == PAGINA_VACIA)
-		{
-			self[i].pagina = nueva_pagina;
-			self[i].frame = nuevo_frame;
-			return;
-		}
-	}
-	self[self->ultima_pos_liberada].pagina = nueva_pagina;
-	self[self->ultima_pos_liberada].frame = nuevo_frame;
-	self->ultima_pos_liberada = (self->ultima_pos_liberada + 1) % self->size;
+	self[i].pagina = nueva_pagina;
+	self[i].frame = nuevo_frame;
+
+	if (i + 1 < self->size)
+		i++;
+	else
+		i = 0;
+
 }
 
 void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
@@ -123,6 +119,7 @@ bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco)
 {
 	for (uint32_t i = 0; i < self->size; i++)
 	{
+
 		if (self[i].pagina == numero_pagina)
 	 	{
 			// Si la pagina esta en la TLB, devuelvo True y el Marco correspondiente

@@ -67,10 +67,38 @@ void admit(kernel_t *kernel)
 		// Sets to ready a new process and enqueues.
 		pcb_t *pcb = resume(&kernel->scheduler);
 
+		// When cannot resume a process - A new one must be instead.
 		if (pcb == NULL)
 		{
 			pcb = safe_queue_pop(new);
 			LOG_TRACE("[LTS] :=> New process admitted");
+
+			// Request page table.
+			if (conexion_esta_conectada(memory))
+			{
+				LOG_TRACE("[LTS] :=> Request page table...");
+
+				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
+
+				ssize_t bytes_received = -1;
+
+				uint32_t *page_ref = conexion_recibir_stream(kernel->conexion_memory.socket, &bytes_received);
+
+				if (bytes_received <= 0 && page_ref == NULL)
+				{
+					LOG_ERROR("[LTS] :=> Couldn't receive page table");
+				}
+				else
+				{
+					pcb->page_table = *page_ref;
+					LOG_DEBUG("[LTS] :=> Page table  <%d> received", pcb->page_table);
+				}
+				free(page_ref);
+			}
+			else
+			{
+				LOG_WARNING("[LTS] :=> Memory is not connected");
+			}
 		}
 
 		if (pcb != NULL)
@@ -98,32 +126,6 @@ void admit(kernel_t *kernel)
 			}
 
 			safe_queue_push(ready, pcb);
-
-			// Request page table.
-			if (conexion_esta_conectada(memory))
-			{
-				LOG_TRACE("[LTS] :=> Request page table...");
-
-				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
-
-				ssize_t bytes_received = -1;
-
-				uint32_t *page_ref = conexion_recibir_stream(kernel->conexion_memory.socket, &bytes_received);
-
-				if (bytes_received <= 0 && page_ref == NULL)
-				{
-					LOG_ERROR("[LTS] :=> Couldn't receive page table");
-				}
-				else
-				{
-					pcb->page_table = page_ref;
-					LOG_DEBUG("[LTS] :=> Page table  <%d> received", *page_ref);
-				}
-			}
-			else
-			{
-				LOG_WARNING("[LTS] :=> Memory is not connected");
-			}
 
 			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
 		}
