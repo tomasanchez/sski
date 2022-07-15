@@ -40,7 +40,7 @@ ssize_t
 swap_controller_request_pcb(uint32_t pid)
 {
 	LOG_TRACE("[SWAP-Controller] :=> Requesting PCB #%d", pid);
-	return conexion_enviar_stream(g_kernel.conexion_memory, SWAP, &pid, sizeof(pid));
+	return conexion_enviar_stream(g_kernel.conexion_memory, RETRIEVE_SWAPPED_PCB, &pid, sizeof(pid));
 }
 
 void *
