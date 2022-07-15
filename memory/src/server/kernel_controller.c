@@ -80,16 +80,17 @@ void kernel_controller_swap(int socket)
 	free(pcb_stream);
 }
 
-void kernel_controller_read_swap(int socket) 
+void kernel_controller_read_swap(int socket)
 {
 	ssize_t bytes_received = -1;
 
-	uint32_t * pcb_id = (uint32_t *) servidor_recibir_stream(socket, &bytes_received);
+	uint32_t *pcb_id = (uint32_t *)servidor_recibir_stream(socket, &bytes_received);
 	LOG_TRACE("[Server] :=> A PCB ID #%d was received", *pcb_id);
 
 	pcb_t *swapped_pcb = retrieve_swapped_pcb(*pcb_id);
 
-	if(swapped_pcb != NULL) {
+	if (swapped_pcb != NULL)
+	{
 
 		LOG_INFO("[Server] :=> PCB <%d> retrieved", *pcb_id);
 
@@ -178,23 +179,27 @@ static void delete_file(char *fname)
 }
 
 pcb_t *
-retrieve_swapped_pcb(uint32_t pcb_id) {
+retrieve_swapped_pcb(uint32_t pcb_id)
+{
 	char path[MAX_CHARS] = "";
 
-	pcb_t * pcb = NULL;
+	pcb_t *pcb = NULL;
 
-	sprintf(path,"%s%s%d%s", path_swap(), "/", pcb_id, ".swap");
+	sprintf(path, "%s%s%d%s", path_swap(), "/", pcb_id, ".swap");
 
-	if(file_exists(path)) {
+	if (file_exists(path))
+	{
 
 		int fd = open(path, O_RDONLY, 0666);
 
-		if (fd != -1) {
+		if (fd != -1)
+		{
 			struct stat sb;
 
-			if (fstat(fd, &sb) != ERROR) {
+			if (fstat(fd, &sb) != ERROR)
+			{
 
-				void * file_address = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+				void *file_address = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 				void *pcb_stream = malloc(sb.st_size);
 
@@ -227,26 +232,35 @@ swap_pcb(void *pcb_stream)
 
 	delete_file(path);
 
-	int fd = open(path, O_WRONLY | O_CREAT, 0666);
+	int fd = open(path, O_RDWR | O_CREAT, 0666);
 
 	if (fd != -1)
 	{
+		LOG_TRACE("[SWAP] :=> Open SWAP file for PCB #%d at <%s>", pcb->id, path);
 		status = SUCCESS;
-
 		off_t pct_stream_size = (off_t)pcb_bytes_size(pcb);
 
 		ftruncate(fd, pct_stream_size);
 
 		void *file_address = mmap(NULL, pct_stream_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
+		if (file_address == MAP_FAILED)
+		{
+			LOG_ERROR("[SWAP] :=> %s", strerror(errno));
+			return ERROR;
+		}
+
+		LOG_INFO("[SWAP] :=> Mapping into <%p> %ld bytes", file_address, pct_stream_size);
+		LOG_WARNING("[SWAP] :=> Memcpying data related to PCB #%d", pcb->id);
 		memcpy(file_address, pcb_stream, pct_stream_size);
+
 		msync(file_address, pct_stream_size, MS_SYNC);
 		munmap(file_address, pct_stream_size);
+		LOG_DEBUG("[SWAP] :=> SWAP file was saved");
+		close(fd);
 	}
 
-	close(fd);
-
-	free(pcb);
+	pcb_destroy(pcb);
 
 	return status;
 }
