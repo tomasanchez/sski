@@ -42,6 +42,13 @@ void safe_list_destroy_with(safe_list_t *this, void (*destroyer)(void *))
 	free(this);
 }
 
+void safe_list_fast_destroy(safe_list_t *self)
+{
+	pthread_mutex_lock(&self->_mtx);
+	list_smart_fast_destroy(self->_list);
+	pthread_mutex_unlock(&self->_mtx);
+}
+
 // ============================================================================================================
 //                               ***** Elemnts *****
 // ============================================================================================================
