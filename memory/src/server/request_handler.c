@@ -77,7 +77,7 @@ void *routine(void *fd)
 				break;
 
 			case PROCESS_TERMINATED:
-				kernel_controller_delete_swap_file(sender_fd);
+				kernel_controller_destroy_process_file(sender_fd);
 				break;
 
 			case SWAP_PCB:

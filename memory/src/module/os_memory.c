@@ -15,6 +15,7 @@
 
 #include "os_memory.h"
 #include "page_table.h"
+#include "log.h"
 
 // ============================================================================================================
 //                                   ***** Declarations  *****
@@ -47,6 +48,30 @@ uint32_t create_table(memory_t *memory, uint32_t rows, uint32_t *ids);
  * @return an Id
  */
 uint32_t find_id(safe_list_t *list);
+
+/**
+ * @brief Deletes a Process Related Tables
+ *
+ * @param memory the Memory module containing the tables
+ * @param table_id the LVL 1 Table ID to delete
+ */
+void delete_related_tables(memory_t *memory, uint32_t table_id);
+
+/**
+ * @brief Deletes a LVL 2 Table of Pages
+ *
+ * @param memory the Memory module containing the tables
+ * @param table_id the LVL 2 Table ID to delete
+ */
+void delete_level_2_table(memory_t *memory, uint32_t table_id);
+
+/**
+ * @brief Deletes a Frame from Memory
+ *
+ * @param memory the Memory containing the frames
+ * @param id the frame ID to delete
+ */
+void delete_frame(memory_t *memory, uint32_t id);
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
@@ -54,6 +79,11 @@ uint32_t find_id(safe_list_t *list);
 uint32_t create_new_process(memory_t *memory)
 {
 	return create_table(memory, memory->max_rows, create_lvl2_tables(memory, memory->max_rows, memory->max_frames));
+}
+
+void delete_process(memory_t *memory, uint32_t table_id)
+{
+	delete_related_tables(memory, table_id);
 }
 
 uint32_t find_free_frame(memory_t *memory)
@@ -133,4 +163,41 @@ uint32_t find_id(safe_list_t *safe_list)
 	}
 
 	return list_size(safe_list->_list);
+}
+
+void delete_related_tables(memory_t *memory, uint32_t table_id)
+{
+	page_table_lvl_1_t *table = list_get(memory->tables_lvl_1->_list, table_id);
+
+	// Iterate over a LVL 1 Table
+	for (uint32_t i = 0; i < memory->max_rows; i++)
+	{
+		// Delete all LVL 2 Tables Associated with the LVL 1 Table
+		delete_level_2_table(memory, table[i].second_page);
+	}
+
+	// Replace with NULL in the list.
+	free(table);
+	list_replace(memory->tables_lvl_1->_list, table_id, NULL);
+}
+
+void delete_level_2_table(memory_t *memory, uint32_t table_id)
+{
+	// Destroy a Second page
+	page_table_lvl_2_t *lvl2_table = list_get(memory->tables_lvl_2->_list, table_id);
+
+	// Iterate over a LVL 2 Table
+	for (uint32_t j = 0; j < memory->max_rows && j < memory->max_frames; j++)
+	{
+		// Delete all Frames associated with the LVL 2 Table
+		delete_frame(memory, lvl2_table[j].frame);
+	}
+
+	free(lvl2_table);
+	list_replace(memory->tables_lvl_2->_list, table_id, NULL);
+}
+
+void delete_frame(memory_t *memory, uint32_t id)
+{
+	memory->frames[id] = false;
 }
