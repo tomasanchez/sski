@@ -78,8 +78,8 @@ static void on_delete_memory(memory_t *memory)
 	servidor_destroy(&(memory->server));
 	thread_manager_destroy(&(memory->tm));
 	free(memory->main_memory);
-	safe_list_destroy(memory->tables_lvl_1);
-	safe_list_destroy(memory->tables_lvl_2);
+	safe_list_fast_destroy(memory->tables_lvl_1);
+	safe_list_fast_destroy(memory->tables_lvl_2);
 }
 
 // ============================================================================================================
