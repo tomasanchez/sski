@@ -11,6 +11,8 @@
 
 #include <stdlib.h>
 
+void smart_free(void *e);
+
 // ============================================================================================================
 //                                   ***** 	Funciones Públicas  *****
 // ============================================================================================================
@@ -39,9 +41,15 @@ void list_smart_destroy(void *list, void (*destroyer)(void *))
 	}
 }
 
+void smart_free(void *e)
+{
+	if (e)
+		free(e);
+}
+
 void list_smart_fast_destroy(void *list)
 {
-	list_smart_destroy(list, free);
+	list_smart_destroy(list, smart_free);
 }
 
 // ------------------------------------------------------------

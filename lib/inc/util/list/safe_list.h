@@ -73,4 +73,17 @@ void safe_list_destroy();
  */
 void safe_list_destroy_with(safe_list_t *list, void (*destroyer)(void *));
 
+/**
+ * @brief Destroys the list and FREEs all the elements. If no elements are present, it only destroys the list.
+ *
+ * @param list  the safelist itself
+ */
+void safe_list_fast_destroy(safe_list_t *list);
+
+/**
+ * @brief Adds an element to the list.
+ *
+ * @param list a safe list instance
+ * @param element to be added
+ */
 void safe_list_add(safe_list_t *list, void *element);

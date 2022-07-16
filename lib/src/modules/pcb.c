@@ -22,7 +22,7 @@ pcb_t *new_pcb(uint32_t id, size_t size, uint32_t estimation)
 	pcb->status = NONE;				   // Estado del PCB.
 	pcb->size = size;				   // Tamaño en bytes del proceso, el mismo no cambiará a lo largo de la ejecución
 	pcb->instructions = list_create(); // Lista de instrucciones a ejecutar
-	pcb->page_table = NULL;			   // Tabla de páginas del proceso en memoria, esta información la tendremos recién cuando el proceso pase a estado READY
+	pcb->page_table = UINT32_MAX;	   // Tabla de páginas del proceso en memoria, esta información la tendremos recién cuando el proceso pase a estado READY
 	pcb->estimation = estimation;	   // Estimación utilizada para planificar los procesos en el algoritmo SRT, la misma tendrá un valor inicial definido por archivo de configuración y será recalculada bajo la fórmula de promedio ponderado
 	pcb->pc = 0;					   // Número de la próxima instrucción a ejecutar
 	pcb->io = 0;					   // Tiempo de espera en el sistema de IO
@@ -80,9 +80,6 @@ void pcb_destroy(void *pcb)
 	{
 		list_smart_destroy(((pcb_t *)pcb)->instructions, instruction_destroy);
 
-		if (((pcb_t *)pcb)->page_table)
-			free(((pcb_t *)pcb)->page_table);
-
 		free(pcb);
 	}
 
@@ -103,7 +100,7 @@ void *pcb_to_stream(pcb_t *pcb)
 	 * @brief The serialized stream will be:
 	 *
 	 * --------------------------------------------------------------
-	 * ID | STATUS | SIZE | ESTIMATION | PC | <List_Count> | Instructions...
+	 * ID | STATUS | SIZE | ESTIMATION | PC | LVL1 - Table | <List_Count> | Instructions...
 	 * --------------------------------------------------------------
 	 *
 	 */
@@ -116,6 +113,8 @@ void *pcb_to_stream(pcb_t *pcb)
 	memcpy(stream + offset, &pcb->estimation, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(stream + offset, &pcb->pc, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(stream + offset, &pcb->page_table, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	int list_count = list_size(pcb->instructions);
 	memcpy(stream + offset, &list_count, sizeof(uint32_t));
@@ -160,8 +159,9 @@ pcb_t *pcb_from_stream(void *stream)
 	offset += sizeof(uint32_t);
 	memcpy(&pcb->pc, stream + offset, sizeof(uint32_t));
 	offset += sizeof(uint32_t);
+	memcpy(&pcb->page_table, stream + offset, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
 	pcb->instructions = instruction_list_from(stream + offset);
-	pcb->page_table = NULL;
 
 	return pcb;
 }
@@ -170,8 +170,8 @@ size_t pcb_bytes_size(pcb_t *pcb)
 {
 	// The PCB final size.
 	size_t size = 0;
-	// The size of [ID, SIZE, ESTIMATION, PC]
-	size += sizeof(uint32_t) * 4;
+	// The size of [ID, SIZE, ESTIMATION, PC, LVL1 PT ID]
+	size += sizeof(uint32_t) * 5;
 	size += sizeof(pcb->status);
 	// Size of the List_SIZE value.
 	size += sizeof(uint32_t);

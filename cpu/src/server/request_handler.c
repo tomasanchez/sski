@@ -19,14 +19,13 @@ extern cpu_t g_cpu;
 /**
  * @brief Handle Interrupt request
  *
- * @param socket of the client
  */
-void request_handler_int(int socket);
+void request_handler_int();
 // ============================================================================================================
 //                                   ***** Funciones Privadas  *****
 // ============================================================================================================
 
-void request_handler_int(int fd)
+void request_handler_int()
 {
 	LOG_ERROR("[INT] :=> Interruption received");
 
@@ -89,7 +88,7 @@ request_handler(void *fd)
 			switch (opcode)
 			{
 			case INT:
-				request_handler_int(sender_fd);
+				request_handler_int();
 				break;
 
 			case PCB:

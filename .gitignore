@@ -3,6 +3,9 @@
 # Husky
 .husky/
 
+# Local SWAP
+/swap
+
 # dependencies
 /node_modules
 /.pnp

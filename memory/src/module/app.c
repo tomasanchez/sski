@@ -51,11 +51,24 @@ static int serve(memory_t *memory);
 
 static int on_init_memory(memory_t *memory)
 {
+	// Init App
 	memory->server = servidor_create(IP, puerto_escucha());
 	memory->tm = new_thread_manager();
+
+	// Init Memory
 	memory->main_memory = malloc(tam_memoria());
 	memory->tables_lvl_1 = new_safe_list();
 	memory->tables_lvl_2 = new_safe_list();
+
+	// Init Frames
+	memory->max_frames = (uint32_t)marcos_por_proceso();
+	memory->max_rows = (uint32_t)entradas_por_tabla();
+	memory->no_of_frames = (uint32_t)tam_memoria() / (uint32_t)tam_pagina();
+	memory->frames = malloc(sizeof(bool) * memory->no_of_frames);
+	for (uint32_t i = 0; i < memory->no_of_frames; i++)
+	{
+		memory->frames[i] = false;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -65,8 +78,8 @@ static void on_delete_memory(memory_t *memory)
 	servidor_destroy(&(memory->server));
 	thread_manager_destroy(&(memory->tm));
 	free(memory->main_memory);
-	safe_list_destroy(memory->tables_lvl_1);
-	safe_list_destroy(memory->tables_lvl_2);
+	safe_list_fast_destroy(memory->tables_lvl_1);
+	safe_list_fast_destroy(memory->tables_lvl_2);
 }
 
 // ============================================================================================================
