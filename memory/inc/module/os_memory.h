@@ -22,6 +22,14 @@
 uint32_t create_new_process(memory_t *memory);
 
 /**
+ * @brief Deletes a Process Memory
+ *
+ * @param memory the Memory Module Instance
+ * @param table_1  a Level I Table ID
+ */
+void delete_process(memory_t *memory, uint32_t table_1);
+
+/**
  * @brief Finds the next free frame in Memory
  *
  * @param memory the Memory Module Instance
