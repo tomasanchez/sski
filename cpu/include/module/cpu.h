@@ -141,12 +141,13 @@ execute_COPY(uint32_t param1, uint32_t param2);
 uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address);
 
 /**
- * @brief N°Pag = DL / Tam_de_Pagina
+ * @brief Calculates the Page Number
  *
- * @param direccion_logica
- * @return uint32_t
+ * @param logical_address the address to translate
+ * @param page_size The size of the pages
+ * @return floor(logical_address / page_size)
  */
-uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina);
+uint32_t get_page_number(uint32_t logical_address, uint32_t page_size);
 
 /**
  * @brief off = (DL - tam_pag) * N°Pag
@@ -157,12 +158,13 @@ uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagin
 uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina);
 
 /**
- * @brief entrada P1 = N°Pag / cant_entradas_por_pagina
+ * @brief Entry Table Lvl 1
  *
- * @param direccion_logica
- * @return uint32_t
+ * @param page_number the Number of the page
+ * @param entries_per_table the number of entries a table has
+ * @return floor(page_number/entries_per_table)
  */
-uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
+uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t entries_per_table);
 
 /**
  * @brief entrada P2 = N°Pag % cant_entradas_por_pagina
@@ -172,6 +174,6 @@ uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamani
  */
 uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
 
-uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
+uint32_t request_table_2_entry(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
 
-uint32_t obtener_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento);
+uint32_t request_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento);

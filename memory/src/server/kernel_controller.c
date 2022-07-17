@@ -115,16 +115,20 @@ void kernel_controller_read_swap(int socket)
 	free(pcb_id);
 }
 
-void kernel_controller_delete_swap_file(int socket)
+void kernel_controller_destroy_process_file(int socket)
 {
 	ssize_t bytes_received = -1;
 
-	uint32_t *pcb_id = (uint32_t *)servidor_recibir_stream(socket, &bytes_received);
-	LOG_TRACE("[Server] :=> A PCB ID #%d was received", *pcb_id);
+	void *stream = (uint32_t *)servidor_recibir_stream(socket, &bytes_received);
+	uint32_t pcb_id, table_id;
+	memcpy(&pcb_id, stream, sizeof(uint32_t));
+	memcpy(&table_id, stream + sizeof(uint32_t), sizeof(uint32_t));
 
-	delete_swapped_pcb(*pcb_id);
-
-	free(pcb_id);
+	LOG_TRACE("[Server] :=> PCB #%d requested termination. Deleting Table #%d", pcb_id, table_id);
+	delete_process(&g_memory, table_id);
+	delete_swapped_pcb(pcb_id);
+	free(stream);
+	LOG_INFO("[Server] :=> PCB #%d deleted", pcb_id);
 }
 
 void kernel_controller_memory_init(int socket)

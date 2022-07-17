@@ -22,4 +22,4 @@ void kernel_controller_read_swap(int socket);
 
 void kernel_controller_memory_init(int socket);
 
-void kernel_controller_delete_swap_file(int socket);
+void kernel_controller_destroy_process_file(int socket);
