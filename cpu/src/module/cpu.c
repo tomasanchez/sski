@@ -9,6 +9,7 @@
  *
  */
 
+#include <math.h>
 #include "conexion_memoria.h"
 #include "pcb_controller.h"
 #include "request_handler.h"
@@ -583,43 +584,46 @@ Direc Fisica: 6(Decimal) + 000011
 
 uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 {
+	LOG_WARNING("[MMU] :=> Translating Logical Address <%d>", logical_address);
 
+	// The Page Number of
+	uint32_t page_number = get_page_number(logical_address, cpu->page_size);
 	uint32_t frame = VALOR_INVALIDO;
 	uint32_t numero_tabla_de_segundo_nivel;
 
-	if (!page_in_TLB(cpu->tlb, obtener_numero_pagina(logical_address, cpu->page_size), &frame))
+	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
 
 		// TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
-		numero_tabla_de_segundo_nivel = obtener_tabla_segundo_nivel(cpu->pcb->page_table, obtener_entrada_primer_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-		frame = obtener_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		numero_tabla_de_segundo_nivel = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
+		frame = request_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		// Después actualizamos la TLB
-		cpu->tlb->replace(cpu->tlb, obtener_numero_pagina(logical_address, cpu->page_size), frame);
+		cpu->tlb->replace(cpu->tlb, page_number, frame);
 	}
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
 }
 
-uint32_t obtener_numero_pagina(uint32_t direccion_logica, uint32_t tamanio_pagina)
+uint32_t get_page_number(uint32_t logic_address, uint32_t page_size)
 {
-	return direccion_logica / tamanio_pagina;
+	return (uint32_t)floor(logic_address / page_size);
 }
 
 uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina)
 {
-	return direccion_logica - tamanio_pagina * obtener_numero_pagina(direccion_logica, tamanio_pagina);
+	return direccion_logica - tamanio_pagina * get_page_number(direccion_logica, tamanio_pagina);
 }
 
-uint32_t obtener_entrada_primer_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag)
+uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t cant_en_por_pag)
 {
-	return obtener_numero_pagina(direccion_logica, tamanio_pagina) / cant_en_por_pag;
+	return (uint32_t)floor(page_number / cant_en_por_pag);
 }
 
 uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag)
 {
-	return obtener_numero_pagina(direccion_logica, tamanio_pagina) % cant_en_por_pag;
+	return get_page_number(direccion_logica, tamanio_pagina) % cant_en_por_pag;
 }
 
-uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t desplazamiento)
+uint32_t request_table_2_entry(uint32_t tabla_primer_nivel, uint32_t desplazamiento)
 {
 
 	// ENVIO DE STREAM
@@ -658,7 +662,7 @@ uint32_t obtener_tabla_segundo_nivel(uint32_t tabla_primer_nivel, uint32_t despl
 	return ret_page;
 }
 
-uint32_t obtener_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento)
+uint32_t request_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento)
 {
 
 	// ENVIO DE STREAM
