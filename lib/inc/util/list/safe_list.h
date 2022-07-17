@@ -87,3 +87,36 @@ void safe_list_fast_destroy(safe_list_t *list);
  * @param element to be added
  */
 void safe_list_add(safe_list_t *list, void *element);
+
+/**
+ * @brief Coloca un elemento en una de la posiciones de la lista.
+ *
+ * @param index
+ * @param element
+ * @return EL valor anterior.
+ */
+void safe_list_replace(safe_list_t *, int index, void *element);
+
+/**
+ * @brief Remueve un elemento de la lista de una determinada posicion.
+ *
+ * @param index
+ * @return El elemento removido.
+ */
+void safe_list_remove(safe_list_t *, int index);
+
+/**
+ * @brief Coloca un elemento en una de la posiciones de la lista.
+ *
+ * @param index
+ * @param element
+ */
+void safe_list_add_in_index(safe_list_t *, int index, void *element);
+
+/**
+ * @brief list get
+ *
+ * @param index
+ * @return Retorna el contenido de una posicion determinada de la lista
+ */
+void safe_list_get(safe_list_t *, int index);
