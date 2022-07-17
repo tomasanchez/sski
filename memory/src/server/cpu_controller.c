@@ -45,6 +45,9 @@ obtain_memory_value(uint32_t position);
 
 uint32_t
 obtain_second_page(uint32_t id_table_1, uint32_t index);
+
+uint32_t
+obtain_frame(uint32_t id_table_2, uint32_t index);
 // ============================================================================================================
 //                                   ***** Endpoints  *****
 // ============================================================================================================
@@ -105,15 +108,27 @@ void cpu_controller_send_size(int fd)
 
 void cpu_controller_send_frame(int fd)
 {
-	// TODO --> Corregir
+	ssize_t bytes_read = -1;
+	void *stream = servidor_recibir_stream(fd, &bytes_read);
 	uint32_t frame = 0;
 
-	LOG_TRACE("[CPU-CONTROLLER] :=> Frame obtained is: %d", frame);
+	if (bytes_read <= 0)
+	{
+		LOG_ERROR("[CPU-CONTROLLER] :=> Could not read stream");
+		frame = UINT32_MAX;
+	}
+	else
+	{
+		operands_t values = operandos_from_stream(stream);
+		frame = obtain_frame(values.op1, values.op2);
+		LOG_TRACE("[CPU-CONTROLLER] :=> Frame obtained #%d", frame);
+	}
+
 	ssize_t bytes_sent = fd_send_value(fd, &frame, sizeof(frame));
 
 	if (bytes_sent > 0)
 	{
-		LOG_DEBUG("[CPU-CONTROLLER] :=> Frame sent size is [%ld bytes]", bytes_sent);
+		LOG_DEBUG("[CPU-CONTROLLER] :=> Frame sent [%ld bytes]", bytes_sent);
 	}
 	else
 	{
@@ -174,13 +189,29 @@ obtain_memory_value(uint32_t position)
 uint32_t
 obtain_second_page(uint32_t id_table_1, uint32_t index)
 {
+	// TODO: Fix LIST_GET
 	page_table_lvl_1_t *table_lvl1 = list_get(g_memory.tables_lvl_1->_list, id_table_1);
 
 	if (index > g_memory.max_rows)
 	{
-		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds");
+		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds for TABLE LVL 2");
 		return UINT32_MAX;
 	}
 
 	return table_lvl1[index].second_page;
+}
+
+uint32_t
+obtain_frame(uint32_t id_table_2, uint32_t index)
+{
+	// TODO: Fix LIST_GET
+	page_table_lvl_2_t *table_lvl2 = list_get(g_memory.tables_lvl_2->_list, id_table_2);
+
+	if (index > g_memory.max_rows)
+	{
+		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds for FRAMES");
+		return UINT32_MAX;
+	}
+
+	return table_lvl2[index].frame;
 }
