@@ -646,12 +646,19 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
 		LOG_ERROR("[TLB] :=> Page Not Found");
+		LOG_TRACE("[MMU] :=> Accessing Memory...");
 		second_page = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
 		frame = request_frame(second_page, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		LOG_WARNING("[TLB] :=> Obtained  %d|%d|%d ", page_number, second_page, frame);
 		cpu->tlb->replace(cpu->tlb, page_number, frame);
+		LOG_DEBUG("[TLB] :=> Page #%d| Frame #%d added to TLB", page_number, frame);
 	}
-	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
+
+	uint32_t physical_address = frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
+
+	LOG_INFO("[MMU] :=> Translated Logical Address <%d> -> Physical Address <%d>", logical_address, physical_address);
+
+	return physical_address;
 }
 
 uint32_t get_page_number(uint32_t logic_address, uint32_t page_size)
@@ -676,9 +683,6 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 
 uint32_t request_table_2_entry(uint32_t id_lvl_1_table, uint32_t row_index)
 {
-
-	// ENVIO DE STREAM
-
 	LOG_TRACE("[MMU] :=> Request Page of Second Table...");
 
 	operands_t *operands = malloc(sizeof(operands_t));
@@ -689,8 +693,6 @@ uint32_t request_table_2_entry(uint32_t id_lvl_1_table, uint32_t row_index)
 	void *send_stream = operandos_to_stream(operands);
 
 	conexion_enviar_stream(g_cpu.conexion, SND_PAGE, send_stream, sizeof(operands_t));
-
-	// RECIBO DE UINT32_T
 
 	uint32_t *ret_page_snd_level = connection_receive_value(g_cpu.conexion, sizeof(uint32_t));
 
