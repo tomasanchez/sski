@@ -593,8 +593,7 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 
 	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
-
-		// TODO --> Revisar el tipo de pcb-> page table: es void* por lo que me genera un warning al compilar
+		LOG_ERROR("[TLB] :=> Page Not Found");
 		numero_tabla_de_segundo_nivel = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
 		frame = request_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
 		// Después actualizamos la TLB
@@ -623,7 +622,7 @@ uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t taman
 	return get_page_number(direccion_logica, tamanio_pagina) % cant_en_por_pag;
 }
 
-uint32_t request_table_2_entry(uint32_t tabla_primer_nivel, uint32_t desplazamiento)
+uint32_t request_table_2_entry(uint32_t id_lvl_1_table, uint32_t row_index)
 {
 
 	// ENVIO DE STREAM
@@ -632,8 +631,8 @@ uint32_t request_table_2_entry(uint32_t tabla_primer_nivel, uint32_t desplazamie
 
 	operands_t *operands = malloc(sizeof(operands_t));
 
-	operands->op1 = tabla_primer_nivel;
-	operands->op2 = desplazamiento;
+	operands->op1 = id_lvl_1_table;
+	operands->op2 = row_index;
 
 	void *send_stream = operandos_to_stream(operands);
 
