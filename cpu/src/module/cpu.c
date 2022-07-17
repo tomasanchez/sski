@@ -589,14 +589,66 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 	// The Page Number of
 	uint32_t page_number = get_page_number(logical_address, cpu->page_size);
 	uint32_t frame = VALOR_INVALIDO;
-	uint32_t numero_tabla_de_segundo_nivel;
+	uint32_t second_page;
 
+	/**
+	 * @brief
+	 *
+	 * ----- Test -----------
+	 * LOGICAL ADDRES 132
+	 * PAGE SIZE 64
+	 * Entries in the TLB: 4
+	 * Entries per Table: 4
+	 *-----------------------
+	 *
+	 * [entrada_tabla_1er_nivel | entrada_tabla_2do_nivel | desplazamiento]
+	 * 0d = 000 | 000 | 0000000 b
+	 * Page Number: 0/64 = 0
+	 * Index_LVL1 = 0 Number / 4 = 0
+	 * Index_LVL2 = 0 Number % 4 = 0
+	 * Offset = 0 - 0 * 64 = 0
+	 *
+	 *
+	 * 132d = 10000100b
+	 * Page number = 132/64 = 2
+	 * Index_LVL1 = 2 / 4 = 0
+	 * Index_LVL2 = 2 % 4 = 2
+	 * Offset = 132 - 64 * 2 = 132 - 128 = 4
+	 *   000|010|000100
+	 *
+	 * TP - lvl - 1
+	 * 0 | 5
+	 * TP - lvl2- #5
+	 * 0 | 455
+	 * 1 | 5676
+	 * 2 | 6475
+	 * 3 | 657
+	 *
+	 *
+	 * | PAGINA | MARCO
+	 * | 0 | 2|
+	 *
+	 *
+	 * #PAGE 2
+	 *  - LVL2 = 99
+	 * 	- LVL2 = 102
+	 *  - LVL2 = 233
+	 *  - LVL2 = 344
+	 *
+	 * #LVL2 99
+	 * 	FRAME 20
+	 * 	FRAME 90
+	 * 	FRAME 100
+	 * 	FRAME 399
+	 *
+	 * 0 => FRAME 3
+	 */
 	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
 		LOG_ERROR("[TLB] :=> Page Not Found");
-		numero_tabla_de_segundo_nivel = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
-		frame = request_frame(numero_tabla_de_segundo_nivel, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-		// Después actualizamos la TLB
+		second_page = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
+		frame = request_frame(second_page, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
+		LOG_WARNING("[TLB] :=> Obtained  %d|%d|%d ", page_number, second_page, frame);
 		cpu->tlb->replace(cpu->tlb, page_number, frame);
 	}
 	return frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
