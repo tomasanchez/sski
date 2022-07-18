@@ -3,6 +3,7 @@
 #include "server.h"
 #include "thread_manager.h"
 #include "cfg.h"
+#include "operands.h"
 #include "safe_list.h"
 #include "log.h"
 
@@ -35,6 +36,8 @@ typedef struct Memory
 	// Tables of Level II
 	safe_list_t *tables_lvl_2;
 
+	// Algorithm to Select a Frame
+	operands_t (*frame_selector)(void*self, uint32_t table_id);
 } memory_t;
 
 /**
