@@ -96,8 +96,10 @@ void safe_list_add_in_index(safe_list_t *this, int index, void *element){
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void safe_list_get(safe_list_t *this, int index){
+void * safe_list_get(safe_list_t *this, int index){
+	void *e = NULL;
 	pthread_mutex_lock(&this->_mtx);
-	list_get(this->_list, index);
+	e = list_get(this->_list, index);
 	pthread_mutex_unlock(&this->_mtx);
+	return e;
 }
