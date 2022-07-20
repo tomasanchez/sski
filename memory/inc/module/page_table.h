@@ -14,6 +14,8 @@
 #include <inttypes.h>
 #include "lib.h"
 
+#define INVALID_FRAME UINT32_MAX
+
 /**
  * @brief A Page Table of Level I - References other Tables of Lvl II
  *

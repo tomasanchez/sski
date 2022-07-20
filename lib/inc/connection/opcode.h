@@ -39,6 +39,8 @@ typedef enum Opcode
 	PCB,
 	// Read
 	RD,
+	// Write
+	WR,
 	// SWAP PCB
 	SWAP_PCB,
 	// FETCH SWAPPED PCB
