@@ -13,4 +13,4 @@
 
 #include "operands.h"
 
-operands_t clock_selector(void *memory, uint32_t table_index);
+uint32_t clock_selector(void *memory, uint32_t table_index);

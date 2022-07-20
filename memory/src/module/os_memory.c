@@ -129,6 +129,27 @@ uint32_t read_from_memory(memory_t *memory, uint32_t physical_address)
 	return value;
 }
 
+uint32_t
+get_table_lvl2_number(memory_t *memory, uint32_t frame)
+{
+	uint32_t size = (uint32_t)list_size(memory->tables_lvl_2->_list);
+
+	for (uint32_t i = 0; i < size; i++)
+	{
+		page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, i);
+
+		for (uint32_t j = 0; j < memory->max_rows; j++)
+		{
+			if (table[j].frame == frame)
+			{
+				return i;
+			}
+		}
+	}
+
+	return INVALID_FRAME;
+}
+
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================

@@ -64,3 +64,6 @@ uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t 
  * @return the stored value
  */
 uint32_t read_from_memory(memory_t *memory, uint32_t physical_address);
+
+uint32_t
+get_table_lvl2_number(memory_t *memory, uint32_t frame);
