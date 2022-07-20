@@ -76,6 +76,10 @@ void *routine(void *fd)
 				cpu_controller_read(sender_fd);
 				break;
 
+			case WR:
+				cpu_controller_write(sender_fd);
+				break;
+
 			case PROCESS_TERMINATED:
 				kernel_controller_destroy_process_file(sender_fd);
 				break;
