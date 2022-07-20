@@ -44,7 +44,7 @@ receive_physical_address(int socket);
  * @return memory position
  */
 operands_t
-receive_operands(int socket);
+receive_operands(int socket, uint32_t *pid);
 
 /**
  * @brief Obtains the value of a position
@@ -86,7 +86,8 @@ replaze_frame(uint32_t frame_to_replace, uint32_t frame);
 
 void cpu_controller_read(int socket)
 {
-	operands_t operands = receive_operands(socket);
+	uint32_t pid = UINT32_MAX;
+	operands_t operands = receive_operands(socket, &pid);
 	uint32_t physical_address = operands.op1;
 	LOG_TRACE("[CPU-CONTROLLER] :=> Reading Physical Address <%d>.", physical_address);
 
@@ -137,7 +138,8 @@ void cpu_controller_read(int socket)
 void cpu_controller_write(int socket)
 {
 
-	operands_t operands = receive_operands(socket);
+	uint32_t pid = UINT32_MAX;
+	operands_t operands = receive_operands(socket, &pid);
 	uint32_t physical_address = operands.op1;
 	uint32_t value = operands.op2;
 	LOG_TRACE("[CPU-CONTROLLER] :=> Writting into the Physical Address <%d>, Value <%d>", physical_address, value);
@@ -375,11 +377,16 @@ receive_physical_address(int socket)
 }
 
 operands_t
-receive_operands(int socket)
+receive_operands(int socket, uint32_t *pid)
 {
 	ssize_t bytes_read = -1;
 	void *stream = servidor_recibir_stream(socket, &bytes_read);
-	operands_t operands = *(operands_t *)stream;
+	LOG_TRACE("[CPU-CONTROLLER] :=> Received Package [%ld bytes]", bytes_read);
+	memcpy(pid, stream, sizeof(uint32_t));
+	LOG_WARNING("Received PID: %d", *pid);
+	operands_t operands;
+	memcpy(&operands, stream + sizeof(uint32_t), sizeof(operands_t));
+	LOG_INFO("Received operands: %d %d", operands.op1, operands.op2);
 	free(stream);
 	return operands;
 }
