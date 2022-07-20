@@ -148,7 +148,7 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t max_frame
 
 		for (uint32_t j = 0; j < rows && j < max_frames_per_process; j++)
 		{
-			uint32_t frame = INVALID_FRAME;
+			uint32_t frame = find_free_frame(memory);
 			table[j].frame = frame;
 			table[j].present = false;
 		}
