@@ -184,8 +184,8 @@ int on_init(cpu_t *cpu)
 int on_run(cpu_t *cpu)
 {
 	serve_kernel(cpu);
-	// TODO --> Descomentar cuando esté terminado el kernel.
-	// routine_conexion_memoria(cpu);
+	// TODO --> Descomentar cuando esté terminado Memoria.
+	routine_conexion_memoria(cpu);
 
 	LOG_DEBUG("Module is OK.");
 
@@ -472,13 +472,17 @@ uint32_t execute_READ(uint32_t logical_address)
 	operands->op1 = physical_address;
 	operands->op2 = g_cpu.pcb->id;
 
-	void *send_stream = malloc(sizeof(operands_t));
+	void *send_stream = operandos_to_stream(operands);
 
-	// Serializo
-	memcpy(send_stream, &operands, sizeof(operands_t));
+	// Serializo un Stream mas grande, que ahora contendrá:
+	// operands (direc. fisica y valor) y uint32_t (pcb->id)
+	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
+
+	memcpy(big_stream, &g_cpu.pcb->id, sizeof(uint32_t));
+	memcpy(big_stream + sizeof(uint32_t), send_stream, sizeof(operands_t));
 
 	// envio a memoria para leer, el operands que contiene la direc fisica y el id del pcb
-	conexion_enviar_stream(g_cpu.conexion, RD, send_stream, sizeof(operands_t));
+	conexion_enviar_stream(g_cpu.conexion, RD, big_stream, sizeof(operands_t) + sizeof(uint32_t));
 
 	free(send_stream);
 
@@ -519,7 +523,7 @@ void execute_WRITE(uint32_t logical_address, uint32_t value)
 
 	memcpy(big_stream + sizeof(uint32_t), send_stream, sizeof(operands_t));
 
-	conexion_enviar_stream(g_cpu.conexion, WT, big_stream, sizeof(operands_t));
+	conexion_enviar_stream(g_cpu.conexion, WT, big_stream, sizeof(operands_t) + sizeof(uint32_t));
 
 	free(send_stream);
 	free(operands);
