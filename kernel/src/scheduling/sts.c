@@ -102,8 +102,8 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 
 		// PCB has executed operation EXIT
 	case PCB_TERMINATED:
-		terminate(kernel, pcb);
 		LOG_DEBUG("[STS] :=> PCB #%d has exited", pcb->id);
+		terminate(kernel, pcb);
 		break;
 
 		// PCB was preempted.
