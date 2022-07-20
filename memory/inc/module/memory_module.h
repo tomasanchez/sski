@@ -37,7 +37,7 @@ typedef struct Memory
 	safe_list_t *tables_lvl_2;
 
 	// Algorithm to Select a Frame
-	operands_t (*frame_selector)(void*self, uint32_t table_id);
+	uint32_t (*frame_selector)(void *self, uint32_t table_id);
 } memory_t;
 
 /**

@@ -65,9 +65,6 @@ uint32_t
 frame_exist(memory_t *memory, uint32_t frame);
 
 uint32_t
-get_table_lvl2_number(memory_t *memory, uint32_t frame);
-
-uint32_t
 get_frame(uint32_t physical_address);
 
 bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame);
@@ -430,27 +427,6 @@ obtain_frame(uint32_t id_table_2, uint32_t index)
 uint32_t frame_exist(memory_t *memory, uint32_t frame)
 {
 	return get_table_lvl2_number(memory, frame);
-}
-
-uint32_t
-get_table_lvl2_number(memory_t *memory, uint32_t frame)
-{
-	uint32_t size = (uint32_t)list_size(memory->tables_lvl_2->_list);
-
-	for (uint32_t i = 0; i < size; i++)
-	{
-		page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, i);
-
-		for (uint32_t j = 0; j < memory->max_rows; j++)
-		{
-			if (table[j].frame == frame)
-			{
-				return i;
-			}
-		}
-	}
-
-	return INVALID_FRAME;
 }
 
 uint32_t
