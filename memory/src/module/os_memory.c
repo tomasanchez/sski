@@ -92,10 +92,11 @@ uint32_t create_frame_for_table(memory_t *memory, uint32_t table_index, uint32_t
 
 	for (uint32_t i = 0; i < memory->max_rows; i++)
 	{
-		if (table[i].frame == frame)
+		if (table[i].frame == INVALID_FRAME)
 		{
 			table[i].present = true;
-			return table[i].frame;
+			table[i].frame = frame;
+			return i;
 		}
 	}
 
@@ -118,6 +119,8 @@ uint32_t find_free_frame(memory_t *memory)
 
 uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t value)
 {
+	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
+	sleep(wait_time);
 	memcpy(memory->main_memory + physical_address, &value, sizeof(value));
 	return (uint32_t *)memory->main_memory + physical_address;
 }
@@ -125,6 +128,8 @@ uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t 
 uint32_t read_from_memory(memory_t *memory, uint32_t physical_address)
 {
 	uint32_t value = 0;
+	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
+	sleep(wait_time);
 	memcpy(&value, memory->main_memory + physical_address, sizeof(value));
 	return value;
 }
@@ -166,16 +171,7 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t max_frame
 	{
 		id = find_id(memory->tables_lvl_2);
 		table = new_page_table_lvl2(rows);
-
-		for (uint32_t j = 0; j < rows && j < max_frames_per_process; j++)
-		{
-			uint32_t frame = find_free_frame(memory);
-			table[j].frame = frame;
-			table[j].present = false;
-		}
-
 		safe_list_add_in_index(memory->tables_lvl_2, id, table);
-
 		ids[i] = id;
 	}
 
