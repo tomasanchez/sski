@@ -75,7 +75,8 @@ void swap_escribirEnMemoria(swap_t* swap ,registro_t* registro);
  * @return swap
  *
  */
-swap_t* swap_crearSwap(uint32_t pid);
+swap_t
+*swap_crearSwap(uint32_t pid);
 
 /**
  * @brief Destruye el swap pasado por parametro
@@ -83,4 +84,5 @@ swap_t* swap_crearSwap(uint32_t pid);
  * @param swap
  *
  */
-void swap_destruirSwap(swap_t* swap);
+void
+swap_destruirSwap(swap_t* swap);
