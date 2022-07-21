@@ -207,6 +207,7 @@ obtain_frame(uint32_t id_table_2, uint32_t index)
 	// TODO: Fix LIST_GET
 	page_table_lvl_2_t *table_lvl2 = list_get(g_memory.tables_lvl_2->_list, id_table_2);
 
+	// TODO: VALIDAR QUE ESTO ESTA BIEN (Me huele mal)
 	if (index > g_memory.max_rows)
 	{
 		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds for FRAMES");
