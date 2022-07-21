@@ -24,8 +24,9 @@ void cpu_controller_read(int socket);
  * @param fd
  * @return void
  */
-void
-cpu_controller_send_entries(int fd);
+void cpu_controller_write(int socket);
+
+void cpu_controller_send_entries(int fd);
 
 /**
  * @brief Envia a cpu el tamaño de pagina
@@ -33,21 +34,18 @@ cpu_controller_send_entries(int fd);
  * @param fd
  * @return void
  */
-void
-cpu_controller_send_size(int fd);
+void cpu_controller_send_size(int fd);
 
 /**
  * @brief Envia a cpu el frame solicitado
  *
  * @param fd
  */
-void
-cpu_controller_send_frame(int fd);
+void cpu_controller_send_frame(int fd);
 
 /**
  * @briefEnvia la pagina de segundo nivel solicitada
  *
  * @param fd
  */
-void
-cpu_controller_send_page_second_level(int fd);
+void cpu_controller_send_page_second_level(int fd);

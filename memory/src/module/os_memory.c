@@ -86,6 +86,22 @@ void delete_process(memory_t *memory, uint32_t table_id)
 	delete_related_tables(memory, table_id);
 }
 
+uint32_t create_frame_for_table(memory_t *memory, uint32_t table_index, uint32_t frame)
+{
+	page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, table_index);
+
+	for (uint32_t i = 0; i < memory->max_rows; i++)
+	{
+		if (table[i].frame == frame)
+		{
+			table[i].present = true;
+			return table[i].frame;
+		}
+	}
+
+	return UINT32_MAX;
+}
+
 uint32_t find_free_frame(memory_t *memory)
 {
 	for (uint32_t i = 0; i < memory->no_of_frames; i++)
@@ -100,11 +116,45 @@ uint32_t find_free_frame(memory_t *memory)
 	return UINT32_MAX;
 }
 
+uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t value)
+{
+	memcpy(memory->main_memory + physical_address, &value, sizeof(value));
+	return (uint32_t *)memory->main_memory + physical_address;
+}
+
+uint32_t read_from_memory(memory_t *memory, uint32_t physical_address)
+{
+	uint32_t value = 0;
+	memcpy(&value, memory->main_memory + physical_address, sizeof(value));
+	return value;
+}
+
+uint32_t
+get_table_lvl2_number(memory_t *memory, uint32_t frame)
+{
+	uint32_t size = (uint32_t)list_size(memory->tables_lvl_2->_list);
+
+	for (uint32_t i = 0; i < size; i++)
+	{
+		page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, i);
+
+		for (uint32_t j = 0; j < memory->max_rows; j++)
+		{
+			if (table[j].frame == frame)
+			{
+				return i;
+			}
+		}
+	}
+
+	return INVALID_FRAME;
+}
+
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
 
-uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t frames)
+uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t max_frames_per_process)
 {
 	uint32_t *ids = NULL;
 	uint32_t id = 0;
@@ -117,14 +167,14 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t frames)
 		id = find_id(memory->tables_lvl_2);
 		table = new_page_table_lvl2(rows);
 
-		for (uint32_t j = 0; j < rows && j < frames; j++)
+		for (uint32_t j = 0; j < rows && j < max_frames_per_process; j++)
 		{
 			uint32_t frame = find_free_frame(memory);
 			table[j].frame = frame;
-			table[j].present = frame != UINT32_MAX;
+			table[j].present = false;
 		}
 
-		list_add_in_index(memory->tables_lvl_2->_list, id, table);
+		safe_list_add_in_index(memory->tables_lvl_2, id, table);
 
 		ids[i] = id;
 	}
