@@ -45,19 +45,17 @@ void *track_time(void *dto)
 		return NULL;
 	}
 
-	// Get current time
-	LOG_DEBUG("[MTS] :=> Tracking PCB #%d", pcb->id);
-	sleep(s->max_blocked_time / 1000);
-	LOG_TRACE("[MTS] :=> Suspension Tracker for PCB #%d finished", pcb->id);
+	uint32_t pid = pcb->id;
 
-	if (pcb_exists(s->blocked, pcb->id))
+	// Get current time
+	LOG_DEBUG("[MTS] :=> Tracking PCB #%d", pid);
+	sleep(s->max_blocked_time / 1000);
+	LOG_TRACE("[MTS] :=> Suspension Tracker for PCB #%d finished", pid);
+
+	if (pcb_exists(s->blocked, pid))
 	{
-		LOG_INFO("[MTS] :=> PCB has been blocked for %dms", s->max_blocked_time);
+		LOG_INFO("[MTS] :=> PCB #%d has been blocked for %dms", pid, s->max_blocked_time);
 		suspend(s, pcb);
-	}
-	else
-	{
-		LOG_WARNING("[MTS] :=> Nothing to be done for PCB #%d", pcb->id);
 	}
 
 	free(dto);

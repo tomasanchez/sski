@@ -24,6 +24,8 @@ typedef struct Scheduler
 	sem_t *req_admit;
 	// Request to admit
 	sem_t *io_request;
+	// Allows Execution
+	sem_t *execute;
 
 	// NEW Queue
 	safe_queue_t *new;
@@ -70,9 +72,17 @@ void scheduler_delete(scheduler_t scheduler);
 void scheduler_start(scheduler_t *scheduler);
 
 /**
- * @brief
+ * @brief Verifies wether an interruption should be risen
  *
- * @param scheduler
- * @param pcb
+ * @param scheduler the scheduler object
+ * @param pcb the process control block
  */
 bool should_interrupt(scheduler_t *scheduler, pcb_t *pcb);
+
+/**
+ * @brief interrupts if necessary
+ *
+ * @param kernel the module instance
+ * @param pcb the process control block
+ */
+void check_interruption(void *kernel, pcb_t *pcb);

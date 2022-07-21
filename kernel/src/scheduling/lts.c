@@ -105,25 +105,7 @@ void admit(kernel_t *kernel)
 		{
 			pcb->status = PCB_READY;
 
-			if (should_interrupt(&kernel->scheduler, pcb))
-			{
-
-				ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
-
-				if (bytes_sent > 0)
-				{
-					LOG_ERROR("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
-					LOG_DEBUG("[LTS] :=> Current [%dms] - New [%dms]", kernel->scheduler.current_estimation, pcb->estimation);
-				}
-				else
-				{
-					LOG_ERROR("[LTS] :=> Couldn't sent interruption");
-				}
-			}
-			else
-			{
-				LOG_DEBUG("[LTS] :=> No interruption required");
-			}
+			check_interruption(kernel, pcb);
 
 			safe_queue_push(ready, pcb);
 
@@ -133,6 +115,8 @@ void admit(kernel_t *kernel)
 		{
 			LOG_ERROR("[LTS] :=> No process to be admit - PCB cannot be NULL");
 		}
+
+		SIGNAL(kernel->scheduler.execute);
 	}
 	else
 	{

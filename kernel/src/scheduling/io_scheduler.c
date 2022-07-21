@@ -12,6 +12,10 @@
 #include "mts.h"
 #include "sts.h"
 #include "pcb.h"
+#include "scheduler.h"
+#include "kernel.h"
+
+extern kernel_t *g_kernel;
 
 /**
  * @brief Retrieves a Blocked PCB
@@ -47,13 +51,13 @@ void *io_scheduler(void *scheduler)
 		if (pcb)
 		{
 			// IO request received
-			LOG_DEBUG("[IO] :=> request received from Process #%d", pcb->id);
+			LOG_WARNING("[IO] :=> request received from Process #%d", pcb->id);
 
 			// Execute IO Burst
 			LOG_TRACE("[IO] :=> Using IO for: %ds", pcb->io);
 			sleep(pcb->io / 1000);
 
-			LOG_DEBUG("[IO] :=> IO finished");
+			LOG_INFO("[IO] :=> IO finished for PCB#%d", pcb->id);
 
 			switch (pcb->status)
 			{

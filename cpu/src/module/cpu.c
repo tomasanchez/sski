@@ -349,6 +349,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 {
 	// The result of an instruction executed
 	uint32_t return_value = 0;
+	uint32_t pid = g_cpu.pcb->id;
 
 	switch (instruction->icode)
 	{
@@ -364,7 +365,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 	case C_REQUEST_EXIT:
 		execute_EXIT(instruction, data);
-		LOG_ERROR("[CPU] :=> Process exited.");
+		LOG_ERROR("[CPU] :=> Process #%d exited.", pid);
 		break;
 
 	case C_REQUEST_READ:;

@@ -62,7 +62,7 @@ static int on_init_memory(memory_t *memory)
 	memory->tables_lvl_2 = new_safe_list();
 
 	// Init Frames
-	memory->frame_selector = clock_selector;
+	memory->frame_selector = strcmp(algoritmo_reemplazo(), "CLOCK") == 0 ? clock_selector : improved_clock_selector;
 	memory->max_frames = (uint32_t)marcos_por_proceso();
 	memory->max_rows = (uint32_t)entradas_por_tabla();
 	memory->no_of_frames = (uint32_t)tam_memoria() / (uint32_t)tam_pagina();
