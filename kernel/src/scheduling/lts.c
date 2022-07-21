@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2022
  *
  */
-
+#include <math.h>
 #include <stdlib.h>
 #include "kernel.h"
 #include "pcb_unit.h"
@@ -39,16 +39,28 @@ long_term_schedule(void *kernel_ref)
 
 	for (;;)
 	{
-		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade...");
-		sem_getvalue(sched.dom, &dom);
-		// Wait for programs to end...
-		WAIT(sched.dom);
-		LOG_DEBUG("[LTS] :=> There are <%d> available slots for processing", dom - 1);
 		// Wait for a process to be created.
 		sem_getvalue(sched.req_admit, &request);
-		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
+		LOG_WARNING("[LTS] :=> Waiting for a process...");
 		WAIT(sched.req_admit);
+		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
+		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade...");
+		sem_getvalue(sched.dom, &dom);
+
+		if (dom > 0)
+		{
+			LOG_INFO("[LTS] :=> Available Slots: [%d] -> Admitting...", dom);
+		}
+		else
+		{
+			LOG_ERROR("[LTS] :=> No available slots - Already Queued: %d", abs(dom));
+		}
+
+		// Wait for programs to end...
+		WAIT(sched.dom);
+		sem_getvalue(sched.dom, &dom);
 		admit(kernel);
+		LOG_WARNING("[LTS] :=> Updated available slots <%d>", dom);
 	}
 
 	return NULL;
@@ -109,7 +121,7 @@ void admit(kernel_t *kernel)
 
 			safe_queue_push(ready, pcb);
 
-			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
+			LOG_INFO("[LTS] :=> PCB #%d  moved to Ready Queue", pcb->id);
 		}
 		else
 		{

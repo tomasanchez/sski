@@ -133,7 +133,6 @@ void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
 	pcb->io = io_time;
 	re_schedule(pcb);
 	safe_queue_push(scheduler->blocked, pcb);
-	LOG_WARNING("[STS] :=> Notifying MTS >> [SHOULD TRACK] PCB #%d", pcb->id);
 	notify_mts(scheduler, pcb);
 	SIGNAL(scheduler->io_request);
 }

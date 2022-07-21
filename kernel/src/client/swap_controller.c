@@ -50,14 +50,14 @@ swap_controller_receive_pcb(void)
 	ssize_t bytes_received = 0;
 	void *stream = NULL;
 	stream = conexion_recibir_stream(g_kernel.conexion_memory.socket, &bytes_received);
-	LOG_WARNING("[SWAP-Controller] :=> Package received [%ld bytes] ", bytes_received);
+	LOG_WARNING("[SWAP-Controller] :=> SWAP metadata received [%ld bytes]", bytes_received);
 
 	// Recover data from Stream
-	pcb_t *recovered_pcb = pcb_from_stream(stream);
-	LOG_PCB(recovered_pcb);
+	// pcb_t *recovered_pcb = pcb_from_stream(stream);
+	// LOG_PCB(recovered_pcb);
 
 	// Deallocate Stream
 	free(stream);
 
-	return recovered_pcb;
+	return NULL;
 }

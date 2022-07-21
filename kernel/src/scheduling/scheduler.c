@@ -22,6 +22,8 @@ scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 {
 	scheduler_t s;
 
+	s.current_io = UINT32_MAX;
+
 	// Init queues
 	s.new = new_safe_queue();
 	s.ready = new_safe_queue();
@@ -30,7 +32,8 @@ scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 	s.blocked_sus = new_safe_queue();
 
 	// Init Algorithm
-	s.get_next = strcmp(algorithm, "FIFO") == 0 ? get_next_fifo : get_next_srt;
+	s.interrupt = !strcmp(algorithm, "FIFO") == 0;
+	s.get_next = s.interrupt ? get_next_fifo : get_next_srt;
 
 	// Time Stamps
 	s.current_estimation = 0;
@@ -96,23 +99,26 @@ void check_interruption(void *kernel_ref, pcb_t *pcb)
 {
 	kernel_t *kernel = (kernel_t *)kernel_ref;
 
-	if (should_interrupt(&kernel->scheduler, pcb))
+	if (kernel->scheduler.interrupt)
 	{
-		ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
-
-		if (bytes_sent > 0)
+		if (should_interrupt(&kernel->scheduler, pcb))
 		{
-			LOG_ERROR("[LTS] :=> Interruption occurred for PCB#%d [%ld bytes]", pcb->id, bytes_sent);
-			LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
+			ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
+
+			if (bytes_sent > 0)
+			{
+				LOG_ERROR("[LTS] :=> Interruption occurred for PCB#%d [%ld bytes]", pcb->id, bytes_sent);
+				LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
+			}
+			else
+			{
+				LOG_ERROR("[LTS] :=> Couldn't sent interruption");
+			}
 		}
 		else
 		{
-			LOG_ERROR("[LTS] :=> Couldn't sent interruption");
+			LOG_ERROR("[LTS] :=> No interruption required");
+			LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
 		}
-	}
-	else
-	{
-		LOG_ERROR("[LTS] :=> No interruption required");
-		LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
 	}
 }

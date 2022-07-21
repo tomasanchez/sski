@@ -26,7 +26,8 @@ typedef struct Scheduler
 	sem_t *io_request;
 	// Allows Execution
 	sem_t *execute;
-
+	// Allows interruptions
+	bool interrupt;
 	// NEW Queue
 	safe_queue_t *new;
 	// READY Queue
@@ -44,8 +45,12 @@ typedef struct Scheduler
 	// Max blocked time [ms]
 	uint32_t max_blocked_time;
 
+	// ID of the PCB executing IO
+	uint32_t current_io;
+
 	// Thread Tracker dependency.
 	thread_manager_t tm;
+
 	// Get scheduler next
 	void *(*get_next)(void *);
 } scheduler_t;
