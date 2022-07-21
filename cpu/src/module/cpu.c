@@ -144,9 +144,9 @@ instruction_t *instruction_fetch();
 /**
  * @brief Request instruction's operands value to memory
  *
- * @return operands values
+ * @return a value
  */
-operands_t fetch_operands(cpu_t *cpu);
+uint32_t fetch_operands(uint32_t logical_address);
 
 // ============================================================================================================
 //                               ***** Public Functions *****
@@ -245,16 +245,16 @@ void cycle(cpu_t *cpu)
 			if (decode(instruction))
 			{
 				LOG_INFO("[CPU] :=> Fetching operands...");
-				operandos = fetch_operands(cpu);
+				uint32_t value = fetch_operands(instruction->param1);
 				instruction->param0 = operandos.op1;
-				instruction->param1 = operandos.op2;
+				instruction->param1 = value;
 			}
 			else
 			{
-				LOG_INFO("[CPU] :=> No operands to fetch");
+				LOG_WARNING("[CPU] :=> No operands to fetch");
 			}
 
-			LOG_DEBUG("[CPU] :=> Executing instruction...");
+			LOG_TRACE("[CPU] :=> Executing instruction...");
 			instruction_execute(instruction, cpu);
 		}
 		else
@@ -273,27 +273,9 @@ void cycle(cpu_t *cpu)
 	}
 }
 
-operands_t fetch_operands(cpu_t *cpu)
+uint32_t fetch_operands(uint32_t logical_address)
 {
-
-	ssize_t bytes = -1;
-
-	// Sends a PCB
-	void *send_stream = pcb_to_stream(cpu->pcb);
-
-	// Request to Memory
-	conexion_enviar_stream(cpu->conexion, OP, send_stream, pcb_bytes_size(cpu->pcb));
-
-	// Receives an Operand stream
-	void *receive_stream = conexion_recibir_stream(cpu->conexion.socket, &bytes);
-
-	// Retrieves operands from stream
-	operands_t ret = operandos_from_stream(receive_stream);
-
-	free(send_stream);
-	free(receive_stream);
-
-	return ret;
+	return execute_READ(logical_address);
 }
 
 instruction_t *instruction_fetch(cpu_t *cpu)
@@ -387,7 +369,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 	case C_REQUEST_READ:;
 		uint32_t memory_response_read = execute_READ(instruction->param0);
-		LOG_TRACE("[CPU] => Executed READ (%d, %d)", instruction->param0, memory_response_read);
+		LOG_INFO("[CPU] => Executed READ (%d, %d)", instruction->param0, memory_response_read);
 		return_value = memory_response_read;
 		break;
 
@@ -398,7 +380,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 	case C_REQUEST_COPY:;
 		uint32_t memory_response_write = execute_COPY(instruction->param0, instruction->param1);
-		LOG_WARNING("[CPU] :=> Executed COPY <%d> ([%d] =>[%d])", memory_response_write, instruction->param1, instruction->param0);
+		LOG_INFO("[CPU] :=> Executed COPY (<<%d>>, %d)", memory_response_write, instruction->param1);
 		return_value = memory_response_write;
 		break;
 
@@ -533,10 +515,9 @@ void execute_WRITE(uint32_t logical_address, uint32_t value)
 uint32_t
 execute_COPY(uint32_t param1, uint32_t param2)
 {
-	uint32_t read_value = execute_READ(param2);
-	execute_WRITE(param1, read_value);
+	execute_WRITE(param1, param2);
 
-	return read_value;
+	return param2;
 }
 
 // ============================================================================================================
