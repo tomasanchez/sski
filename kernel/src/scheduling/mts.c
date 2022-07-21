@@ -45,19 +45,17 @@ void *track_time(void *dto)
 		return NULL;
 	}
 
-	// Get current time
-	LOG_DEBUG("[MTS] :=> Tracking PCB #%d", pcb->id);
-	sleep(s->max_blocked_time / 1000);
-	LOG_TRACE("[MTS] :=> Suspension Tracker for PCB #%d finished", pcb->id);
+	uint32_t pid = pcb->id;
 
-	if (pcb_exists(s->blocked, pcb->id))
+	// Get current time
+	LOG_DEBUG("[MTS] :=> Tracking PCB #%d", pid);
+	sleep(s->max_blocked_time / 1000);
+	LOG_TRACE("[MTS] :=> Suspension Tracker for PCB #%d finished", pid);
+
+	if (pcb_exists(s->blocked, pid) || s->current_io == pid)
 	{
-		LOG_INFO("[MTS] :=> PCB has been blocked for %dms", s->max_blocked_time);
+		LOG_INFO("[MTS] :=> PCB #%d has been blocked for %dms", pid, s->max_blocked_time);
 		suspend(s, pcb);
-	}
-	else
-	{
-		LOG_WARNING("[MTS] :=> Nothing to be done for PCB #%d", pcb->id);
 	}
 
 	free(dto);
@@ -68,15 +66,12 @@ void *track_time(void *dto)
 
 void suspend(scheduler_t *scheduler, pcb_t *pcb)
 {
+	SIGNAL(scheduler->dom);
+	LOG_ERROR("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pcb->id);
 	pcb->status = PCB_SUSPENDED_BLOCKED;
 	pcb_remove_by_id(scheduler->blocked, pcb->id);
 	safe_queue_push(scheduler->blocked_sus, pcb);
-
-	// meter lo del swap
 	swap_controller_send_pcb(SWAP_PCB, pcb);
-
-	LOG_WARNING("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pcb->id);
-	SIGNAL(scheduler->dom);
 }
 
 pcb_t *resume(scheduler_t *scheduler)
@@ -88,9 +83,9 @@ pcb_t *resume(scheduler_t *scheduler)
 	if (pcb != NULL)
 	{
 		swap_controller_request_pcb(pcb->id);
-		pcb_destroy(pcb);
-		pcb = NULL;
-		pcb = swap_controller_receive_pcb();
+
+		pcb_t *pcb_nuevo = swap_controller_receive_pcb();
+		pcb_destroy(pcb_nuevo);
 
 		LOG_WARNING("[MTS] :=> Suspended PCB #%d has been RESUMED", pcb->id);
 	}
@@ -101,8 +96,19 @@ pcb_t *resume(scheduler_t *scheduler)
 void suspended_event(scheduler_t *scheduler, pcb_t *pcb)
 {
 	LOG_DEBUG("[MTS] :=> Event occured for suspended PCB #%d", pcb->id);
+
+	if (pcb_exists(scheduler->blocked_sus, pcb->id))
+	{
+
+		pcb = pcb_remove_by_id(scheduler->blocked_sus, pcb->id);
+	}
+	else
+	{
+		LOG_WARNING("[MTS] :=> PCB #%d not found in BLOCKED SUS Queue (Probably Already removed)", pcb->id);
+	}
+
 	pcb->status = PCB_SUSPENDED_READY;
 	safe_queue_push(scheduler->ready_sus, pcb);
-	LOG_TRACE("[MTS] :=> PCB #%d moved to SUSPENDED Ready", pcb->id);
 	SIGNAL(scheduler->req_admit);
+	LOG_INFO("[MTS] :=> PCB #%d moved to SUSPENDED Ready", pcb->id);
 }

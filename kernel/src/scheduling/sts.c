@@ -17,6 +17,8 @@
 #include "cfg.h"
 #include "mts.h"
 
+extern kernel_t g_kernel;
+
 void execute(kernel_t *kernel, pcb_t *pcb);
 void terminate(kernel_t *kernel, pcb_t *pcb);
 void pre_empt(scheduler_t *scheduler, pcb_t *pcb);
@@ -32,15 +34,12 @@ void *short_term_schedule(void *data)
 
 	for (;;)
 	{
+		WAIT(sched.execute);
 		pcb_t *pcb = NULL;
 		pcb = sched.get_next(&sched);
 
 		if (pcb)
 			execute(kernel, pcb);
-		else
-		{
-			sleep(10);
-		}
 	}
 
 	return NULL;
@@ -83,7 +82,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 	gettimeofday(&stop, NULL);
 	real_usage = time_diff_ms(start, stop);
 	pcb->real = real_usage;
-	LOG_TRACE("[STS] :=> PCB #%d returned after %dms", pcb->id, pcb->real);
+	LOG_TRACE("[STS] :=> PCB #%d returned from CPU %dms", pcb->id, pcb->real);
 	kernel->scheduler.current_estimation = 0;
 
 	if (io_time > 0)
@@ -102,22 +101,24 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 
 		// PCB has executed operation EXIT
 	case PCB_TERMINATED:
-		LOG_DEBUG("[STS] :=> PCB #%d has exited", pcb->id);
+		LOG_ERROR("[STS] :=> PCB #%d terminated", pcb->id);
 		terminate(kernel, pcb);
 		break;
 
 		// PCB was preempted.
 	case PCB_READY:
 		pre_empt(&kernel->scheduler, pcb);
-		LOG_TRACE("[STS] :=> PCB #%d was preempted", pcb->id);
+		LOG_TRACE("[STS] :=> PCB #%d was preempted, Remaining %dms", pcb->id, pcb->estimation);
 		break;
 
 		// Invalid status - terminate program immediately.
 	default:
-		terminate(kernel, pcb);
 		LOG_ERROR("[STS] :=> PCB #%d has a corrupted status (%d). Terminated.", pcb->id, pcb->status);
+		terminate(kernel, pcb);
 		break;
 	}
+
+	SIGNAL(kernel->scheduler.execute);
 }
 
 void terminate(kernel_t *kernel, pcb_t *pcb)
@@ -132,16 +133,17 @@ void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
 	pcb->io = io_time;
 	re_schedule(pcb);
 	safe_queue_push(scheduler->blocked, pcb);
-	LOG_WARNING("[STS] :=> Notifying MTS >> [SHOULD TRACK] PCB #%d", pcb->id);
 	notify_mts(scheduler, pcb);
 	SIGNAL(scheduler->io_request);
 }
 
 void event(scheduler_t *scheduler, pcb_t *pcb)
 {
+	LOG_TRACE("[STS] :=> PCB #%d has been unblocked", pcb->id);
 	pcb->status = PCB_READY;
 	safe_queue_push(scheduler->ready, pcb);
-	LOG_TRACE("[STS] :=> PCB #%d has been unblocked", pcb->id);
+	check_interruption(&g_kernel, pcb);
+	SIGNAL(scheduler->execute);
 }
 
 void pre_empt(scheduler_t *scheduler, pcb_t *pcb)

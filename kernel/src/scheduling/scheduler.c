@@ -14,11 +14,15 @@
 #include "pcb_unit.h"
 #include "time.h"
 #include <string.h>
+#include "kernel.h"
+#include "cpu_controller.h"
 #include "scheduler_algorithms.h"
 
 scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 {
 	scheduler_t s;
+
+	s.current_io = UINT32_MAX;
 
 	// Init queues
 	s.new = new_safe_queue();
@@ -28,7 +32,8 @@ scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 	s.blocked_sus = new_safe_queue();
 
 	// Init Algorithm
-	s.get_next = strcmp(algorithm, "FIFO") == 0 ? get_next_fifo : get_next_srt;
+	s.interrupt = !strcmp(algorithm, "FIFO") == 0;
+	s.get_next = s.interrupt ? get_next_fifo : get_next_srt;
 
 	// Time Stamps
 	s.current_estimation = 0;
@@ -41,9 +46,11 @@ scheduler_t new_scheduler(int dom, char *algorithm, uint32_t max_blocked_time)
 	s.dom = malloc(sizeof(sem_t));
 	s.io_request = malloc(sizeof(sem_t));
 	s.req_admit = malloc(sizeof(sem_t));
+	s.execute = malloc(sizeof(sem_t));
 	sem_init(s.dom, SHARE_BETWEEN_THREADS, dom);
-	sem_init(s.req_admit, SHARE_BETWEEN_THREADS, 0);
 	sem_init(s.io_request, SHARE_BETWEEN_THREADS, 0);
+	sem_init(s.req_admit, SHARE_BETWEEN_THREADS, 0);
+	sem_init(s.execute, SHARE_BETWEEN_THREADS, 0);
 
 	return s;
 }
@@ -73,6 +80,8 @@ void scheduler_delete(scheduler_t scheduler)
 	free(scheduler.req_admit);
 	sem_destroy(scheduler.io_request);
 	free(scheduler.io_request);
+	sem_destroy(scheduler.execute);
+	free(scheduler.execute);
 }
 
 void *schedule(void *data)
@@ -83,5 +92,33 @@ void *schedule(void *data)
 
 bool should_interrupt(scheduler_t *scheduler, pcb_t *pcb)
 {
-	return scheduler->current_estimation >= pcb->estimation;
+	return scheduler->current_estimation > pcb->estimation;
+}
+
+void check_interruption(void *kernel_ref, pcb_t *pcb)
+{
+	kernel_t *kernel = (kernel_t *)kernel_ref;
+
+	if (kernel->scheduler.interrupt)
+	{
+		if (should_interrupt(&kernel->scheduler, pcb))
+		{
+			ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
+
+			if (bytes_sent > 0)
+			{
+				LOG_ERROR("[LTS] :=> Interruption occurred for PCB#%d [%ld bytes]", pcb->id, bytes_sent);
+				LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
+			}
+			else
+			{
+				LOG_ERROR("[LTS] :=> Couldn't sent interruption");
+			}
+		}
+		else
+		{
+			LOG_ERROR("[LTS] :=> No interruption required");
+			LOG_INFO("[LTS] :=> Estimations{Current: %dms, New: %dms}", kernel->scheduler.current_estimation, pcb->estimation);
+		}
+	}
 }

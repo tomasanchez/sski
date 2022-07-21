@@ -155,7 +155,7 @@ uint32_t get_page_number(uint32_t logical_address, uint32_t page_size);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina);
+uint32_t get_offset(uint32_t direccion_logica, uint32_t tamanio_pagina);
 
 /**
  * @brief Entry Table Lvl 1
@@ -172,7 +172,7 @@ uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t entries_per_table);
  * @param direccion_logica
  * @return uint32_t
  */
-uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
+uint32_t get_entry_lvl_2(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag);
 
 uint32_t request_table_2_entry(uint32_t tabla_primer_nivel, uint32_t desplazamiento);
 
