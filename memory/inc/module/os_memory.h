@@ -41,8 +41,9 @@ uint32_t find_free_frame(memory_t *memory);
  * @brief Create a frame for table object
  *
  * @param memory the Memory Module Instance
- * @param index
- * @return uint32_t
+ * @param index	the index of the table
+ * @param frame the frame to create
+ * @return the index at wich was created
  */
 uint32_t create_frame_for_table(memory_t *memory, uint32_t index, uint32_t frame);
 
