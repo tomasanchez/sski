@@ -36,7 +36,11 @@ typedef struct Memory
 	// Tables of Level II
 	safe_list_t *tables_lvl_2;
 
-	// Algorithm to Select a Frame
+	/**
+	 * @brief Selects a frame to be replaced according to the algorithm
+	 *
+	 * @return the Frame number.
+	 */
 	uint32_t (*frame_selector)(void *self, uint32_t table_id);
 } memory_t;
 
