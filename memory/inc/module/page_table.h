@@ -87,3 +87,5 @@ create_big_table(void *memory, uint32_t table_index);
 		for (uint32_t i = 0; i < rows; i++) \
 			LOG_ENTRY(table, i);            \
 	}
+
+void print_table(void *memory_ref, uint32_t table_index);

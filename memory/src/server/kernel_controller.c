@@ -274,7 +274,7 @@ void delete_swapped_pcb(uint32_t pcb_id)
 	char path[MAX_CHARS] = "";
 
 	sprintf(path, "%s%s%d%s", path_swap(), "/", pcb_id, ".swap");
-
+	LOG_WARNING("[SWAP] :=> Deleting SWAP file for PCB #%d at <%s>", pcb_id, path);
 	delete_file(path);
 }
 

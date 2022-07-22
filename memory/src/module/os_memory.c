@@ -232,11 +232,16 @@ void delete_related_tables(memory_t *memory, uint32_t table_id)
 {
 	page_table_lvl_1_t *table = list_get(memory->tables_lvl_1->_list, table_id);
 
+	LOG_WARNING("\t-\tDeleting\tTable\t#%d\t-\t", table_id);
+	print_table(memory, table_id);
+
 	// Iterate over a LVL 1 Table
 	for (uint32_t i = 0; i < memory->max_rows; i++)
 	{
 		// Delete all LVL 2 Tables Associated with the LVL 1 Table
+		LOG_WARNING("[Memory] :=> Deleting Table#%d[%d]", table_id, table[i].second_page);
 		delete_level_2_table(memory, table[i].second_page);
+		LOG_TRACE("[Memory] :=> Table#%d[%d] Deleted", table_id, table[i].second_page);
 	}
 
 	// Replace with NULL in the list.
@@ -253,7 +258,11 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 	for (uint32_t j = 0; j < memory->max_rows && j < memory->max_frames; j++)
 	{
 		// Delete all Frames associated with the LVL 2 Table
-		delete_frame(memory, lvl2_table[j].frame);
+		if (lvl2_table[j].frame != INVALID_FRAME)
+		{
+			delete_frame(memory, lvl2_table[j].frame);
+			LOG_TRACE("[Memory] :=> Deleted Row[%d]= Frame#%d", j, lvl2_table[j].frame);
+		}
 	}
 
 	free(lvl2_table);
@@ -262,5 +271,6 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 
 void delete_frame(memory_t *memory, uint32_t id)
 {
-	memory->frames[id] = false;
+	if (id <= memory->max_frames)
+		memory->frames[id] = false;
 }
