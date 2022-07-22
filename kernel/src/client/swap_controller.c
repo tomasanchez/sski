@@ -61,3 +61,22 @@ swap_controller_receive_pcb(void)
 
 	return recovered_pcb;
 }
+
+void *
+swap_controller_exit(opcode_t opcode, pcb_t *pcb)
+{
+	void *stream = NULL;
+	void *conexion = NULL;
+
+	opcode_t pcb_terminated = PROCESS_TERMINATED;
+	uint32_t pid = pcb->id;
+	uint32_t page_table = pcb->page_table;
+
+	stream = malloc(sizeof(pid + page_table));
+	memcpy(stream, &pid, sizeof(stream));
+	memcpy(stream, &page_table, sizeof(stream));
+
+	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, sizeof(stream));
+	free(stream);
+	return ret;
+}
