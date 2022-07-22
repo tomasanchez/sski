@@ -46,6 +46,7 @@ tlb_t *tlb_init()
 	{
 		tlb[i].tiempo_ult_acceso = 0;
 		tlb[i].pagina = PAGINA_VACIA;
+		tlb[i].frame = PAGINA_VACIA;
 	}
 
 	return tlb;
@@ -64,11 +65,11 @@ void replace_fifo(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 
 	if (self[i].pagina == PAGINA_VACIA)
 	{
-		LOG_WARNING("[TLB] :=> New entry added");
+		LOG_DEBUG("[TLB] :=> New entry added");
 	}
 	else
 	{
-		LOG_INFO("[TLB] :=> TLB[%d]= {Page: %d, Frame: %d} replaced to {Page: %d, Frame: %d} ", i, self[i].pagina, self[i].frame, nueva_pagina, nuevo_frame);
+		LOG_INFO("[TLB] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", i, self[i].pagina, self[i].frame, nueva_pagina, nuevo_frame);
 	}
 
 	self[i].pagina = nueva_pagina;
@@ -96,7 +97,7 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 			self[i].pagina = nueva_pagina;
 			self[i].frame = nuevo_frame;
 			self[i].tiempo_ult_acceso = 0;
-			LOG_INFO("[TLB] :=> Page #%d | Frame %d added at TLB[%d]", nueva_pagina, nuevo_frame, i);
+			LOG_INFO("[TLB] :=> ADDED TLB[%d]= [Page: %d| Frame: %d]", nueva_pagina, nuevo_frame, i);
 			return;
 		}
 	}
@@ -117,7 +118,7 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 	self[pag_index_max].frame = nuevo_frame;
 	self[pag_index_max].pagina = nueva_pagina;
 	self[pag_index_max].tiempo_ult_acceso = 0;
-	LOG_INFO("[TLB] :=> TLB[%d]= {Page: %d, Frame: %d} replaced to {Page: %d, Frame: %d} ", pag_index_max, self[pag_index_max].pagina, self[pag_index_max].frame, nueva_pagina, nuevo_frame);
+	LOG_INFO("[TLB] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", pag_index_max, self[pag_index_max].pagina, self[pag_index_max].frame, nueva_pagina, nuevo_frame);
 }
 
 bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco)

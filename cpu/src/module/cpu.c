@@ -632,12 +632,15 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
 		LOG_ERROR("[TLB] :=> Page Not Found");
-		LOG_TRACE("[MMU] :=> Accessing Memory...");
+		LOG_WARNING("[MMU] :=> Accessing Memory...");
 		second_page = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
 		frame = request_frame(second_page, get_entry_lvl_2(logical_address, cpu->page_size, cpu->page_amount_entries));
-		LOG_INFO("[TLB] :=> Obtained  %d|%d|%d ", page_number, second_page, frame);
 		cpu->tlb->replace(cpu->tlb, page_number, frame);
-		LOG_DEBUG("[TLB] :=> Page: %d| Frame :%d added", page_number, frame);
+		LOG_INFO("[TLB] :=> ADDED: [Page: %d| Frame: %d]", page_number, frame);
+	}
+	else
+	{
+		LOG_INFO("[TLB] :=> MATCH: [Page: %d| Frame: %d]", page_number, frame);
 	}
 
 	uint32_t physical_address = frame * (cpu->page_size) + get_offset(logical_address, cpu->page_size);
