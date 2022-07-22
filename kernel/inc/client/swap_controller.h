@@ -42,5 +42,5 @@ void *swap_controller_receive_pcb(void);
  * @brief Sends PID and page_table to memory
  *
  */
-ssize_t swap_controller_exit(pcb_t *pcb)
+ssize_t swap_controller_exit(pcb_t *pcb);
 
