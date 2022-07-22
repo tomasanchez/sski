@@ -98,23 +98,10 @@ void cpu_controller_read(int socket)
 	}
 	else
 	{
-		// Frame is Present?
-		if (!frame_is_present(&g_memory, table_number_2, frame))
-		{
-			LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame <%d> is not present", frame);
+		page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
 
-			if (should_replace_frame(&g_memory, table_number_2))
-			{
-				LOG_WARNING("[CPU-CONTROLLER] :=> Page replacement is required");
-
-				// uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, table_number_2);
-				// replaze_frame(frame_to_replace, frame);
-				// SWAP(frame_to_replace)
-			}
-			// UNSWAP(new_frame)
-			create_frame_for_table(&g_memory, table_number_2, frame);
-			LOG_DEBUG("[CPU-CONTROLLER] :=> Frame<%d> has been added", frame);
-		}
+		if (frame_ref)
+			frame_ref->modified = false;
 
 		value = read_from_memory(&g_memory, physical_address);
 	}
@@ -151,9 +138,13 @@ void cpu_controller_write(int socket)
 		LOG_ERROR("[CPU-CONTROLLER] :=> Invalid Frame <%d> not found in any table", frame);
 		return;
 	}
+	page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
+
+	if (frame_ref)
+		frame_ref->modified = true;
 
 	write_in_memory(&g_memory, physical_address, value);
-	LOG_INFO("[Memory] :=> Value <%d> was written into the Physical Address <%d> (Frame #%d)", value, physical_address, frame);
+	LOG_INFO("[Memory] :=> Value <%d> written into Physical Address <%d> (Frame #%d)", value, physical_address, frame);
 
 	/*
 	Frame_size = 256
@@ -359,10 +350,8 @@ receive_operands(int socket, uint32_t *pid)
 	void *stream = servidor_recibir_stream(socket, &bytes_read);
 	LOG_TRACE("[CPU-CONTROLLER] :=> Received Package [%ld bytes]", bytes_read);
 	memcpy(pid, stream, sizeof(uint32_t));
-	LOG_WARNING("Received PID: %d", *pid);
 	operands_t operands;
 	memcpy(&operands, stream + sizeof(uint32_t), sizeof(operands_t));
-	LOG_INFO("Received operands: %d %d", operands.op1, operands.op2);
 	free(stream);
 	return operands;
 }
@@ -376,8 +365,7 @@ obtain_memory_value(uint32_t position)
 uint32_t
 obtain_second_page(uint32_t id_table_1, uint32_t index)
 {
-	// TODO: Fix LIST_GET
-	page_table_lvl_1_t *table_lvl1 = list_get(g_memory.tables_lvl_1->_list, id_table_1);
+	page_table_lvl_1_t *table_lvl1 = safe_list_get(g_memory.tables_lvl_1, id_table_1);
 
 	if (index > g_memory.max_rows)
 	{
@@ -407,29 +395,31 @@ obtain_frame(uint32_t id_table_2, uint32_t index)
 
 		if (should_replace_frame(&g_memory, index))
 		{
-			LOG_WARNING("[CPU-CONTROLLER] :=> Page replacement is required");
-			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_2);
+			LOG_WARNING("[MEMORY] :=> Page replacement is required");
+			uint32_t id_table_1 = get_table_lvl1_number(&g_memory, id_table_2);
+			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_1);
 			replaze_frame(frame_to_replace);
-			LOG_INFO("[CPU-CONTROLLER] :=> Replacing frame #%d with #%d", frame_to_replace, new_frame);
+			LOG_INFO("[ALGORITHM] :=> Replaced Frame: #%d -> #%d", frame_to_replace, new_frame);
 		}
 
 		if (table_lvl2[index].frame == INVALID_FRAME)
 		{
 			table_lvl2[index].frame = new_frame;
 			table_lvl2[index].present = true;
-			LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, index, new_frame);
+			table_lvl2[index].use = true;
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, index, new_frame);
 		}
 		else
 		{
 			uint32_t created_at = create_frame_for_table(&g_memory, index, id_table_2);
-			LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
 		}
 
 		return new_frame;
 	}
 	else
 	{
-		LOG_WARNING("[CPU-CONTROLLER] :=> Frame <%d> modified", table_lvl2[index].frame);
+		LOG_WARNING("[Memory] :=> Frame <%d> modified", table_lvl2[index].frame);
 	}
 
 	return table_lvl2[index].frame;
@@ -513,6 +503,7 @@ void replaze_frame(uint32_t frame_to_replace)
 		if (table[i].frame == frame_to_replace)
 		{
 			table[i].present = false;
+			table[i].use = false;
 		}
 	}
 }
