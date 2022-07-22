@@ -12,6 +12,7 @@
 #pragma once
 
 #include "memory_module.h"
+#include "page_table.h"
 
 /**
  * @brief Create a new process object
@@ -68,3 +69,6 @@ uint32_t read_from_memory(memory_t *memory, uint32_t physical_address);
 
 uint32_t
 get_table_lvl2_number(memory_t *memory, uint32_t frame);
+
+page_table_lvl_2_t *
+get_frame_ref(memory_t *memory, uint32_t frame);

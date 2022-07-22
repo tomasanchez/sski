@@ -96,6 +96,7 @@ uint32_t create_frame_for_table(memory_t *memory, uint32_t table_index, uint32_t
 		{
 			table[i].present = true;
 			table[i].frame = frame;
+			table[i].use = true;
 			return i;
 		}
 	}
@@ -155,6 +156,22 @@ get_table_lvl2_number(memory_t *memory, uint32_t frame)
 	return INVALID_FRAME;
 }
 
+page_table_lvl_2_t *
+get_frame_ref(memory_t *memory, uint32_t frame)
+{
+	uint32_t id = get_table_lvl2_number(memory, frame);
+	page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, id);
+
+	for (uint32_t i = 0; i < memory->max_rows; i++)
+	{
+		if (table[i].frame == frame)
+		{
+			return &table[i];
+		}
+	}
+
+	return NULL;
+}
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
