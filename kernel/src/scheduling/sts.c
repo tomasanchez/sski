@@ -16,6 +16,7 @@
 #include "log.h"
 #include "cfg.h"
 #include "mts.h"
+#include "swap_controller.h"
 
 void execute(kernel_t *kernel, pcb_t *pcb);
 void terminate(kernel_t *kernel, pcb_t *pcb);
@@ -123,12 +124,9 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 void terminate(kernel_t *kernel, pcb_t *pcb)
 {
 	SIGNAL(kernel->scheduler.dom);
+	swap_controller_exit(pcb);
 	pcb_destroy(pcb);
 	pcb = NULL;
-
-	opcode_t pcb_terminated = PROCESS_TERMINATED;
-	ssize_t bytes_sent = -1;
-	bytes_sent = connection_send_value(kernel->conexion_memory, &pcb_terminated, sizeof(pcb_terminated));
 }
 
 void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)
