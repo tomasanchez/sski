@@ -61,3 +61,23 @@ swap_controller_receive_pcb(void)
 
 	return NULL;
 }
+
+ssize_t swap_controller_exit(pcb_t *pcb)
+{
+	void *stream = NULL;
+
+	opcode_t pcb_terminated = PROCESS_TERMINATED;
+	uint32_t pid = pcb->id;
+	uint32_t page_table = pcb->page_table;
+	uint32_t size = sizeof(pid) + sizeof(page_table);
+
+	stream = malloc(size);
+	uint32_t offset = 0;
+	memcpy(stream, &pid, sizeof(pid));
+	offset += sizeof(pid);
+	memcpy(stream + offset, &page_table, sizeof(page_table));
+
+	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, sizeof(stream));
+	free(stream);
+	return ret;
+}

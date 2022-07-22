@@ -16,6 +16,7 @@
 #include "log.h"
 #include "cfg.h"
 #include "mts.h"
+#include "swap_controller.h"
 
 extern kernel_t g_kernel;
 
@@ -124,6 +125,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 void terminate(kernel_t *kernel, pcb_t *pcb)
 {
 	SIGNAL(kernel->scheduler.dom);
+	swap_controller_exit(pcb);
 	pcb_destroy(pcb);
 	pcb = NULL;
 }
