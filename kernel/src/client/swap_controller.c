@@ -77,7 +77,7 @@ ssize_t swap_controller_exit(pcb_t *pcb)
 	offset += sizeof(pid);
 	memcpy(stream + offset, &page_table, sizeof(page_table));
 
-	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, sizeof(stream));
+	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, size);
 	free(stream);
 	return ret;
 }
