@@ -653,7 +653,7 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 
 uint32_t get_page_number(uint32_t logic_address, uint32_t page_size)
 {
-	return (uint32_t)floor(logic_address / page_size);
+	return (uint32_t)logic_address / (uint32_t)page_size;
 }
 
 uint32_t get_offset(uint32_t direccion_logica, uint32_t page_size)
