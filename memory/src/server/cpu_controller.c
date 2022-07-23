@@ -131,6 +131,7 @@ void cpu_controller_write(int socket)
 	LOG_TRACE("[CPU-CONTROLLER] :=> Writting into the Physical Address <%d>, Value <%d>", physical_address, value);
 
 	uint32_t frame = get_frame(physical_address);
+	LOG_DEBUG("[CPU-CONTROLLER] :=> Frame <%d>", frame);
 	uint32_t table_number_2 = get_table_lvl2_number(&g_memory, frame);
 
 	// Frame DOES NOT EXIST
@@ -385,7 +386,6 @@ obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid)
 {
 	page_table_lvl_2_t *table_lvl2 = safe_list_get(g_memory.tables_lvl_2, id_table_2);
 
-	// TODO: VALIDAR QUE ESTO ESTA BIEN (Me huele mal)
 	if (index > g_memory.max_rows)
 	{
 		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds for FRAMES");
@@ -394,31 +394,45 @@ obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid)
 
 	if (!table_lvl2[index].present)
 	{
-		LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame  not allocated");
+		LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame not allocated [Index=%d]", index);
 		uint32_t new_frame = find_free_frame(&g_memory);
+		LOG_TRACE("[CPU-CONTROLLER] :=> FRAME FOUND: %d", new_frame);
 
-		if (should_replace_frame(&g_memory, index))
+		if (new_frame == UINT32_MAX)
+		{
+			LOG_ERROR("[CPU-CONTROLLER] :=> No free frames available (MAX=%d)", g_memory.no_of_frames);
+		}
+
+		if (should_replace_frame(&g_memory, id_table_2))
 		{
 			LOG_WARNING("[MEMORY] :=> Page replacement is required");
 			uint32_t id_table_1 = get_table_lvl1_number(&g_memory, id_table_2);
+			LOG_TRACE("[MEMORY] :=> Table#%d has Table_2 #%d", id_table_1, id_table_2);
 			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_1);
+			LOG_TRACE("[MEMORY] :=> Frame #%d should be replaced.", frame_to_replace);
 			replace_frame(pid, frame_to_replace);
 			LOG_INFO("[ALGORITHM] :=> Replaced Frame: #%d -> #%d", frame_to_replace, new_frame);
+		}
+		else
+		{
+			LOG_INFO("[MEMORY] :=> Page replacement is >NOT< required");
 		}
 
 		if (table_lvl2[index].frame == INVALID_FRAME)
 		{
-			table_lvl2[index].frame = new_frame;
-			table_lvl2[index].present = true;
-			table_lvl2[index].use = true;
-			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, index, new_frame);
+			LOG_TRACE("[MEMORY] :=> Frame #%d is free. Assigning", new_frame);
+			uint32_t created_at = create_frame_for_table(&g_memory, id_table_2, new_frame);
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
 		}
 		else
 		{
-			uint32_t created_at = create_frame_for_table(&g_memory, index, id_table_2);
-			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
+			LOG_WARNING("[MEMORY] :=> Frame already allocated, should unswap.");
+			delete_frame(&g_memory, new_frame);
+			unswap_frame_for_pcb(pid, table_lvl2[index].frame);
+			table_lvl2[index].use = true;
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...} [UNSWAPPED]", id_table_2, index, table_lvl2[index].frame);
 		}
-
+		LOG_TRACE("[CPU-CONTROLLER] :=> RETURNING THE NEW FRAME: %d", new_frame);
 		return new_frame;
 	}
 	else
@@ -457,21 +471,29 @@ bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame)
 
 bool should_replace_frame(memory_t *memory, uint32_t table_number_2)
 {
+	LOG_TRACE("[Memory] :=> WE SHOULD REPLACE A FRAME ¡!");
 	uint32_t table_number = get_table_lvl1_number(memory, table_number_2);
+	LOG_DEBUG("[Memory] :=> TABLE NUMBER FOUND: %d", table_number);
 	page_table_lvl_1_t *table = safe_list_get(memory->tables_lvl_1, table_number);
+	print_table(memory, table_number);
 	uint32_t count = 0;
 
+	LOG_WARNING("[Memory] :=> Should a frame be replaced at Table#%d?", table_number);
 	for (uint32_t i = 0; i < memory->max_rows; i++)
 	{
 		page_table_lvl_2_t *table_2 = safe_list_get(memory->tables_lvl_2, table[i].second_page);
-		for (uint32_t j = 0; j < memory->max_rows; j++)
-		{
-			if (table_2[j].present == true)
+		if (table_2)
+			for (uint32_t j = 0; j < memory->max_rows; j++)
 			{
-				count++;
+				if (table_2[j].present == true)
+				{
+					LOG_TRACE("[Memory] :=> Table#%d[%d][%d] = { Frame: %d } is present", table_number, i, j, table_2[j].frame);
+					count++;
+				}
 			}
-		}
 	}
+
+	LOG_DEBUG("[Memory] :=> Frames in use: %d", count);
 
 	return count >= (uint32_t)marcos_por_proceso();
 }
@@ -479,19 +501,20 @@ bool should_replace_frame(memory_t *memory, uint32_t table_number_2)
 uint32_t
 get_table_lvl1_number(memory_t *memory, uint32_t table_number_2)
 {
-	uint32_t size = (uint32_t)list_size(memory->tables_lvl_2->_list);
-
+	uint32_t size = (uint32_t)safe_list_size(memory->tables_lvl_1);
+	LOG_DEBUG("MEMORY :=> THE SIZE IS: %d", size);
 	for (uint32_t i = 0; i < size; i++)
 	{
 		page_table_lvl_1_t *table = safe_list_get(memory->tables_lvl_1, i);
 
-		for (uint32_t j = 0; j < memory->max_rows; j++)
-		{
-			if (table[j].second_page == table_number_2)
+		if (table)
+			for (uint32_t j = 0; j < memory->max_rows; j++)
 			{
-				return i;
+				if (table[j].second_page == table_number_2)
+				{
+					return i;
+				}
 			}
-		}
 	}
 
 	return UINT32_MAX;
@@ -511,5 +534,7 @@ void replace_frame(uint32_t pid, uint32_t frame_to_replace)
 		}
 	}
 
+	LOG_DEBUG("[Memory] :=> Frame #%d is being swapped for PCB#%d...", frame_to_replace, pid);
 	swap_frame_for_pcb(pid, frame_to_replace);
+	LOG_WARNING("[Memory] :=> Frame #%d was SWAPPED", frame_to_replace);
 }

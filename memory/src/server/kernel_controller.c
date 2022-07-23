@@ -88,30 +88,7 @@ void kernel_controller_read_swap(int socket)
 	uint32_t *pcb_id = (uint32_t *)servidor_recibir_stream(socket, &bytes_received);
 	LOG_TRACE("[Server] :=> A PCB ID #%d was received", *pcb_id);
 
-	pcb_t *swapped_pcb = retrieve_swapped_pcb(*pcb_id);
-
-	if (swapped_pcb != NULL)
-	{
-
-		LOG_INFO("[Server] :=> PCB <%d> retrieved", *pcb_id);
-
-		void *swapped_pcb_stream = pcb_to_stream(swapped_pcb);
-
-		ssize_t bytes_sent = servidor_enviar_stream(RETRIEVED_PCB, socket, &swapped_pcb_stream, pcb_bytes_size(swapped_pcb));
-
-		if (bytes_sent <= 0)
-		{
-			LOG_ERROR("[Server] :=> PCB could not be sent");
-		}
-		else
-		{
-			LOG_DEBUG("[Server] :=> PCB <%d> was sent [%ld bytes]", *pcb_id, bytes_sent);
-		}
-
-		free(swapped_pcb);
-
-		free(swapped_pcb_stream);
-	}
+	unswap_pcb(*pcb_id);
 
 	free(pcb_id);
 }
@@ -124,12 +101,26 @@ void kernel_controller_destroy_process_file(int socket)
 	uint32_t pcb_id, table_id;
 	memcpy(&pcb_id, stream, sizeof(uint32_t));
 	memcpy(&table_id, stream + sizeof(uint32_t), sizeof(uint32_t));
-
 	LOG_TRACE("[Server] :=> PCB #%d requested termination. Deleting Table #%d", pcb_id, table_id);
 	delete_process(&g_memory, table_id);
 	delete_swapped_pcb(pcb_id);
 	free(stream);
 	LOG_INFO("[Server] :=> PCB #%d deleted", pcb_id);
+
+	LOG_DEBUG("[Server] :=> \tCurrent\tTables(%d)", safe_list_size(g_memory.tables_lvl_1));
+	for (uint32_t i = 0; i < (uint32_t)safe_list_size(g_memory.tables_lvl_1); i++)
+	{
+		page_table_lvl_1_t *table = safe_list_get(g_memory.tables_lvl_1, i);
+		LOG_WARNING("\tTable\t#%d", i);
+		if (table == NULL)
+		{
+			LOG_ERROR("Table #%d was recently deleted", i);
+		}
+		else
+		{
+			print_table(&g_memory, i);
+		}
+	}
 }
 
 void kernel_controller_memory_init(int socket)
@@ -168,6 +159,20 @@ void kernel_controller_memory_init(int socket)
 	else
 	{
 		LOG_DEBUG("[Server] :=> Page table <%d> was sent [%ld bytes]", page_table, bytes_sent);
+		LOG_DEBUG("[Server] :=> \tCurrent\tTables(%d)", safe_list_size(g_memory.tables_lvl_1));
+		for (uint32_t i = 0; i < (uint32_t)safe_list_size(g_memory.tables_lvl_1); i++)
+		{
+			page_table_lvl_1_t *table = safe_list_get(g_memory.tables_lvl_1, i);
+			LOG_WARNING("\tTable\t#%d", i);
+			if (table == NULL)
+			{
+				LOG_ERROR("Table #%d was recently deleted", i);
+			}
+			else
+			{
+				print_table(&g_memory, i);
+			}
+		}
 	}
 }
 

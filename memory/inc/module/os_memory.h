@@ -83,6 +83,14 @@ get_frame_ref(memory_t *memory, uint32_t frame);
 uint32_t
 get_frames_used_size(memory_t *memory, uint32_t table_lvl_1);
 
+/**
+ * @brief Deletes a Frame from Memory
+ *
+ * @param memory the Memory containing the frames
+ * @param id the frame ID to delete
+ */
+void delete_frame(memory_t *memory, uint32_t id);
+
 void *get_frame_address(memory_t *memory, uint32_t frame);
 
 uint32_t get_offset_for_pcb(memory_t *memory, uint32_t pid);

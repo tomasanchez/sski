@@ -36,7 +36,7 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 	// Wether a FRAME was matched or not
 	bool completed = false;
 
-	LOG_WARNING("\t---\tTABLE\tBEFORE\tALGORITHM\t---");
+	LOG_WARNING("\t---\tTABLE#%d\tBEFORE\tALGORITHM\t---", table_index);
 	LOG_TABLE(total_rows, big_table);
 
 	LOG_ERROR("{CLOCK}> %d", clock);
@@ -92,6 +92,10 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 		// Reset clock when cycles
 		clock = clock + 1 <= total_rows ? 0 : clock + 1;
 	}
+	else
+	{
+		LOG_WARNING("[CLOCK] :=> No reset was needed.");
+	}
 
 	free(big_table);
 
@@ -117,7 +121,7 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 	// Wether a FRAME was matched or not
 	bool completed = false;
 
-	LOG_WARNING("\t---\tTABLE\tBEFORE\tALGORITHM\t---");
+	LOG_WARNING("\t---\tTABLE#%d\tBEFORE\tALGORITHM\t---", table_index);
 	LOG_TABLE(total_rows, big_table);
 	LOG_ERROR("{CLOCK-I}> %d", clock);
 
