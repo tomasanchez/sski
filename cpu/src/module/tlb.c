@@ -65,11 +65,11 @@ void replace_fifo(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 
 	if (self[i].pagina == PAGINA_VACIA)
 	{
-		LOG_DEBUG("[TLB] :=> New entry added");
+		LOG_DEBUG("[TLB-FIFO] :=> New entry added");
 	}
 	else
 	{
-		LOG_INFO("[TLB] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", i, self[i].pagina, self[i].frame, nueva_pagina, nuevo_frame);
+		LOG_INFO("[TLB-FIFO] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", i, self[i].pagina, self[i].frame, nueva_pagina, nuevo_frame);
 	}
 
 	self[i].pagina = nueva_pagina;
@@ -93,11 +93,11 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 
 		if (self[i].pagina == PAGINA_VACIA)
 		{
-			LOG_WARNING("[TLB] :=> Empty Page");
+			LOG_WARNING("[TLB-LRU] :=> Empty Page");
 			self[i].pagina = nueva_pagina;
 			self[i].frame = nuevo_frame;
 			self[i].tiempo_ult_acceso = 0;
-			LOG_INFO("[TLB] :=> ADDED TLB[%d]= [Page: %d| Frame: %d]", i, nueva_pagina, nuevo_frame);
+			LOG_INFO("[TLB-LRU] :=> ADDED TLB[%d]= [Page: %d| Frame: %d]", i, nueva_pagina, nuevo_frame);
 			return;
 		}
 	}
@@ -109,28 +109,33 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 	{
 		if (self[i].tiempo_ult_acceso > acceso_mas_antiguo)
 		{
+			LOG_TRACE("[TLB-LRU]: TLB[%d]=[Page: %d, Frame: %d] is last recently used", i, self[i].pagina, self[i].frame);
 			pag_index_max = i;
 			acceso_mas_antiguo = self[i].tiempo_ult_acceso;
 		}
 	}
 
-	LOG_WARNING("[TLB] :=> Replacing TLB[%d]", pag_index_max);
+	LOG_WARNING("[TLB-LRU] :=> Replacing TLB[%d]", pag_index_max);
+	LOG_INFO("[TLB-LRU] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", pag_index_max, self[pag_index_max].pagina, self[pag_index_max].frame, nueva_pagina, nuevo_frame);
 	self[pag_index_max].frame = nuevo_frame;
 	self[pag_index_max].pagina = nueva_pagina;
 	self[pag_index_max].tiempo_ult_acceso = 0;
-	LOG_INFO("[TLB] :=> TLB[%d] Changed: [Page: %d, Frame: %d] -> [Page: %d, Frame: %d]", pag_index_max, self[pag_index_max].pagina, self[pag_index_max].frame, nueva_pagina, nuevo_frame);
 }
 
 bool page_in_TLB(tlb_t *self, uint32_t numero_pagina, uint32_t *marco)
 {
 	for (uint32_t i = 0; i < self->size; i++)
 	{
-
 		if (self[i].pagina == numero_pagina)
 		{
 			// Si la pagina esta en la TLB, devuelvo True y el Marco correspondiente
 			*marco = self[i].frame;
+			self[i].tiempo_ult_acceso = 0;
 			return true;
+		}
+		else
+		{
+			self[i].tiempo_ult_acceso++;
 		}
 	}
 

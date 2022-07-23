@@ -48,7 +48,7 @@ uint32_t create_table(memory_t *memory, uint32_t rows, uint32_t *ids);
  * @param list the list of tables
  * @return an Id
  */
-uint32_t find_id(safe_list_t *list);
+uint32_t find_id(safe_list_t *safe_list, bool should_replace);
 
 /**
  * @brief Deletes a Process Related Tables
@@ -138,13 +138,10 @@ get_table_lvl2_number(memory_t *memory, uint32_t frame)
 	{
 		page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, i);
 
-		for (uint32_t j = 0; j < memory->max_rows; j++)
-		{
-			if (table[j].frame == frame)
-			{
-				return i;
-			}
-		}
+		if (table)
+			for (uint32_t j = 0; j < memory->max_rows; j++)
+				if (table[j].frame == frame)
+					return i;
 	}
 
 	return INVALID_FRAME;
@@ -246,9 +243,18 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows)
 	// Number of rows of the Level I Table (Equal to rows of Second Level Table)
 	for (uint32_t i = 0; i < rows; i++)
 	{
-		id = find_id(memory->tables_lvl_2);
+		id = find_id(memory->tables_lvl_2, false);
 		table = new_page_table_lvl2(rows);
-		safe_list_add_in_index(memory->tables_lvl_2, id, table);
+
+		if ((uint32_t)safe_list_size(memory->tables_lvl_2) > id)
+		{
+			safe_list_replace(memory->tables_lvl_2, id, table);
+		}
+		else
+		{
+			safe_list_add_in_index(memory->tables_lvl_2, id, table);
+		}
+
 		ids[i] = id;
 	}
 
@@ -257,7 +263,7 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows)
 
 uint32_t create_table(memory_t *memory, uint32_t rows, uint32_t *ids)
 {
-	uint32_t id = find_id(memory->tables_lvl_1);
+	uint32_t id = find_id(memory->tables_lvl_1, true);
 	page_table_lvl_1_t *table = new_page_table(rows);
 
 	for (uint32_t i = 0; i < rows; i++)
@@ -279,18 +285,19 @@ uint32_t create_table(memory_t *memory, uint32_t rows, uint32_t *ids)
 	return id;
 }
 
-uint32_t find_id(safe_list_t *safe_list)
+uint32_t find_id(safe_list_t *safe_list, bool should_replace)
 {
 	if (list_is_empty(safe_list->_list))
 		return 0;
 
-	for (uint32_t i = 0; i < (uint32_t)list_size(safe_list->_list); i++)
-	{
-		page_table_lvl_1_t *table = safe_list_get(safe_list, i);
+	if (should_replace)
+		for (uint32_t i = 0; i < (uint32_t)list_size(safe_list->_list); i++)
+		{
+			page_table_lvl_1_t *table = safe_list_get(safe_list, i);
 
-		if (table == NULL)
-			return i;
-	}
+			if (table == NULL)
+				return i;
+		}
 
 	return list_size(safe_list->_list);
 }
@@ -327,6 +334,8 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 	// Destroy a Second page
 	page_table_lvl_2_t *lvl2_table = list_get(memory->tables_lvl_2->_list, table_id);
 
+	LOG_TRACE("[Memory] :=> Deleting Table#%d (LVL2)", table_id);
+
 	// Iterate over a LVL 2 Table
 	for (uint32_t j = 0; j < memory->max_rows && j < memory->max_frames; j++)
 	{
@@ -339,10 +348,11 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 	}
 
 	free(lvl2_table);
+	list_replace(memory->tables_lvl_2->_list, table_id, NULL);
 }
 
 void delete_frame(memory_t *memory, uint32_t id)
 {
-	if (id <= memory->max_frames)
+	if (id <= memory->no_of_frames)
 		memory->frames[id] = false;
 }
