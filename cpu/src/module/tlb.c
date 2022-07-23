@@ -97,7 +97,7 @@ void replace_lru(void *tlb, uint32_t nueva_pagina, uint32_t nuevo_frame)
 			self[i].pagina = nueva_pagina;
 			self[i].frame = nuevo_frame;
 			self[i].tiempo_ult_acceso = 0;
-			LOG_INFO("[TLB] :=> ADDED TLB[%d]= [Page: %d| Frame: %d]", nueva_pagina, nuevo_frame, i);
+			LOG_INFO("[TLB] :=> ADDED TLB[%d]= [Page: %d| Frame: %d]", i, nueva_pagina, nuevo_frame);
 			return;
 		}
 	}

@@ -17,6 +17,7 @@
 #include "accion.h"
 #include "mts.h"
 #include "cpu_controller.h"
+#include "operands.h"
 
 // ============================================================================================================
 //                                   ***** Declarations *****
@@ -72,6 +73,7 @@ void admit(kernel_t *kernel)
 	safe_queue_t *new = kernel->scheduler.new;
 	safe_queue_t *ready = kernel->scheduler.ready;
 	conexion_t memory = kernel->conexion_memory;
+	operands_t operands;
 
 	if (new != NULL && ready != NULL)
 	{
@@ -90,7 +92,16 @@ void admit(kernel_t *kernel)
 			{
 				LOG_TRACE("[LTS] :=> Request page table...");
 
-				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
+				uint32_t pcb_id = pcb->id;
+				uint32_t pcb_size = pcb->size;
+
+				operands.op1 = pcb_id;
+				operands.op2 = pcb_size;
+
+				void *stream = operandos_to_stream(&operands);
+
+				conexion_enviar_stream(memory, MEMORY_INIT, stream, sizeof(operands_t));
+				free(stream);
 
 				ssize_t bytes_received = -1;
 
