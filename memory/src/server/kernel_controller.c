@@ -97,7 +97,8 @@ void kernel_controller_destroy_process_file(int socket)
 {
 	ssize_t bytes_received = -1;
 
-	void *stream = (uint32_t *)servidor_recibir_stream(socket, &bytes_received);
+	void *stream = servidor_recibir_stream(socket, &bytes_received);
+	LOG_TRACE("[Server] :=> Received %ld bytes", bytes_received);
 	uint32_t pcb_id = 0, table_id = 0;
 	memcpy(&pcb_id, stream, sizeof(uint32_t));
 	memcpy(&table_id, stream + sizeof(uint32_t), sizeof(uint32_t));
