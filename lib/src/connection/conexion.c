@@ -47,9 +47,8 @@ int _address(char *ip, char *port, conexion_t *this)
 
 	// Seteos de memoria a las hints -- No importa como funciona
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
 
 	if ((rv = getaddrinfo(ip, port, &hints, &this->info_server)) != 0)
 	{
@@ -284,27 +283,30 @@ void *conexion_recibir_stream(int socket, ssize_t *bytes_size)
 	return buffer_stream;
 }
 
-ssize_t fd_send_value(int self, void* value, size_t size_of_value){
+ssize_t fd_send_value(int self, void *value, size_t size_of_value)
+{
 	return send(self, value, size_of_value, 0);
 }
 
 ssize_t
-connection_send_value(conexion_t self, void * value, size_t size_of_value){
-	return conexion_esta_conectada(self) ?
-		fd_send_value(self.socket, value, size_of_value) : -1;
+connection_send_value(conexion_t self, void *value, size_t size_of_value)
+{
+	return conexion_esta_conectada(self) ? fd_send_value(self.socket, value, size_of_value) : -1;
 }
 
+void *
+connection_receive_value(conexion_t self, size_t size_of_value)
+{
 
-void*
-connection_receive_value(conexion_t self, size_t size_of_value){
-
-	if(!conexion_esta_conectada(self)){
+	if (!conexion_esta_conectada(self))
+	{
 		return NULL;
 	}
 
-	void * value = malloc(size_of_value);
+	void *value = malloc(size_of_value);
 
-	if(recv(self.socket, value, size_of_value, MSG_WAITALL) <= 0){
+	if (recv(self.socket, value, size_of_value, MSG_WAITALL) <= 0)
+	{
 		free(value);
 		return NULL;
 	}
