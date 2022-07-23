@@ -13,7 +13,7 @@
 
 #include "lib.h"
 
-void create_file(uint32_t pid);
+void create_file(uint32_t pid, uint32_t size);
 
 /**
  * @brief Opens a File descriptor for a process swap.
@@ -22,3 +22,7 @@ void create_file(uint32_t pid);
  * @return the file descriptor number
  */
 int open_file(uint32_t pid);
+
+void delete_swap_file(uint32_t pid);
+
+bool file_exists(char *fname);
