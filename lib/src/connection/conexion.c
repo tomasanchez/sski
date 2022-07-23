@@ -7,7 +7,6 @@
  */
 #include <signal.h>
 #include <netdb.h>
-#include <fcntl.h>
 
 #include "lib.h"
 #include "conexion.h"
