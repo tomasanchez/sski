@@ -125,6 +125,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 void terminate(kernel_t *kernel, pcb_t *pcb)
 {
 	SIGNAL(kernel->scheduler.dom);
+    LOG_TRACE(":: PCB #%d, Table #%d", pcb->id, pcb->page_table);
 	swap_controller_exit(pcb);
 	pcb_destroy(pcb);
 	pcb = NULL;
