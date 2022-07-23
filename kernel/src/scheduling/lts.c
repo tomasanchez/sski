@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2022
  *
  */
-
+#include <math.h>
 #include <stdlib.h>
 #include "kernel.h"
 #include "pcb_unit.h"
@@ -17,6 +17,7 @@
 #include "accion.h"
 #include "mts.h"
 #include "cpu_controller.h"
+#include "operands.h"
 
 // ============================================================================================================
 //                                   ***** Declarations *****
@@ -39,16 +40,28 @@ long_term_schedule(void *kernel_ref)
 
 	for (;;)
 	{
-		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade...");
-		sem_getvalue(sched.dom, &dom);
-		// Wait for programs to end...
-		WAIT(sched.dom);
-		LOG_DEBUG("[LTS] :=> There are <%d> available slots for processing", dom - 1);
 		// Wait for a process to be created.
 		sem_getvalue(sched.req_admit, &request);
-		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
+		LOG_WARNING("[LTS] :=> Waiting for a process...");
 		WAIT(sched.req_admit);
+		LOG_WARNING("[LTS] :=> There are <%d> previous requests", request);
+		LOG_TRACE("[LTS] :=> Verifying Multiprogramming grade...");
+		sem_getvalue(sched.dom, &dom);
+
+		if (dom > 0)
+		{
+			LOG_INFO("[LTS] :=> Available Slots: [%d] -> Admitting...", dom);
+		}
+		else
+		{
+			LOG_ERROR("[LTS] :=> No available slots - Already Queued: %d", abs(dom));
+		}
+
+		// Wait for programs to end...
+		WAIT(sched.dom);
+		sem_getvalue(sched.dom, &dom);
 		admit(kernel);
+		LOG_WARNING("[LTS] :=> Updated available slots <%d>", dom);
 	}
 
 	return NULL;
@@ -60,6 +73,7 @@ void admit(kernel_t *kernel)
 	safe_queue_t *new = kernel->scheduler.new;
 	safe_queue_t *ready = kernel->scheduler.ready;
 	conexion_t memory = kernel->conexion_memory;
+	operands_t operands;
 
 	if (new != NULL && ready != NULL)
 	{
@@ -78,7 +92,16 @@ void admit(kernel_t *kernel)
 			{
 				LOG_TRACE("[LTS] :=> Request page table...");
 
-				conexion_enviar_stream(memory, MEMORY_INIT, &pcb->id, sizeof(uint32_t));
+				uint32_t pcb_id = pcb->id;
+				uint32_t pcb_size = pcb->size;
+
+				operands.op1 = pcb_id;
+				operands.op2 = pcb_size;
+
+				void *stream = operandos_to_stream(&operands);
+
+				conexion_enviar_stream(memory, MEMORY_INIT, stream, sizeof(operands_t));
+				free(stream);
 
 				ssize_t bytes_received = -1;
 
@@ -105,34 +128,18 @@ void admit(kernel_t *kernel)
 		{
 			pcb->status = PCB_READY;
 
-			if (should_interrupt(&kernel->scheduler, pcb))
-			{
-
-				ssize_t bytes_sent = cpu_controller_send_interrupt(kernel->conexion_interrupt);
-
-				if (bytes_sent > 0)
-				{
-					LOG_ERROR("[LTS] :=> Interruption occurred [%ld bytes]", bytes_sent);
-					LOG_DEBUG("[LTS] :=> Current [%dms] - New [%dms]", kernel->scheduler.current_estimation, pcb->estimation);
-				}
-				else
-				{
-					LOG_ERROR("[LTS] :=> Couldn't sent interruption");
-				}
-			}
-			else
-			{
-				LOG_DEBUG("[LTS] :=> No interruption required");
-			}
+			check_interruption(kernel, pcb);
 
 			safe_queue_push(ready, pcb);
 
-			LOG_INFO("[LTS] :=> Process <%d> moved to Ready Queue", pcb->id);
+			LOG_INFO("[LTS] :=> PCB #%d  moved to Ready Queue", pcb->id);
 		}
 		else
 		{
 			LOG_ERROR("[LTS] :=> No process to be admit - PCB cannot be NULL");
 		}
+
+		SIGNAL(kernel->scheduler.execute);
 	}
 	else
 	{

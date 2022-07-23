@@ -349,6 +349,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 {
 	// The result of an instruction executed
 	uint32_t return_value = 0;
+	uint32_t pid = g_cpu.pcb->id;
 
 	switch (instruction->icode)
 	{
@@ -364,7 +365,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 	case C_REQUEST_EXIT:
 		execute_EXIT(instruction, data);
-		LOG_ERROR("[CPU] :=> Process exited.");
+		LOG_ERROR("[CPU] :=> Process #%d exited.", pid);
 		break;
 
 	case C_REQUEST_READ:;
@@ -631,17 +632,20 @@ uint32_t req_physical_address(cpu_t *cpu, uint32_t logical_address)
 	if (!page_in_TLB(cpu->tlb, page_number, &frame))
 	{
 		LOG_ERROR("[TLB] :=> Page Not Found");
-		LOG_TRACE("[MMU] :=> Accessing Memory...");
+		LOG_WARNING("[MMU] :=> Accessing Memory...");
 		second_page = request_table_2_entry(cpu->pcb->page_table, get_entry_lvl_1(page_number, cpu->page_amount_entries));
-		frame = request_frame(second_page, obtener_entrada_segundo_nivel(logical_address, cpu->page_size, cpu->page_amount_entries));
-		LOG_WARNING("[TLB] :=> Obtained  %d|%d|%d ", page_number, second_page, frame);
+		frame = request_frame(second_page, get_entry_lvl_2(logical_address, cpu->page_size, cpu->page_amount_entries));
 		cpu->tlb->replace(cpu->tlb, page_number, frame);
-		LOG_DEBUG("[TLB] :=> Page #%d| Frame #%d added to TLB", page_number, frame);
+		LOG_INFO("[TLB] :=> ADDED: [Page: %d| Frame: %d]", page_number, frame);
+	}
+	else
+	{
+		LOG_INFO("[TLB] :=> MATCH: [Page: %d| Frame: %d]", page_number, frame);
 	}
 
-	uint32_t physical_address = frame * (cpu->page_size) + obtener_offset(logical_address, cpu->page_size);
+	uint32_t physical_address = frame * (cpu->page_size) + get_offset(logical_address, cpu->page_size);
 
-	LOG_INFO("[MMU] :=> Translated Logical Address <%d> -> Physical Address <%d>", logical_address, physical_address);
+	LOG_INFO("[MMU] :=> Logical Address <<%d>> -> Physical Address <<%d>>", logical_address, physical_address);
 
 	return physical_address;
 }
@@ -651,19 +655,19 @@ uint32_t get_page_number(uint32_t logic_address, uint32_t page_size)
 	return (uint32_t)floor(logic_address / page_size);
 }
 
-uint32_t obtener_offset(uint32_t direccion_logica, uint32_t tamanio_pagina)
+uint32_t get_offset(uint32_t direccion_logica, uint32_t page_size)
 {
-	return direccion_logica - tamanio_pagina * get_page_number(direccion_logica, tamanio_pagina);
+	return direccion_logica - page_size * get_page_number(direccion_logica, page_size);
 }
 
-uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t cant_en_por_pag)
+uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t entries_per_table)
 {
-	return (uint32_t)floor(page_number / cant_en_por_pag);
+	return (uint32_t)floor(page_number / entries_per_table);
 }
 
-uint32_t obtener_entrada_segundo_nivel(uint32_t direccion_logica, uint32_t tamanio_pagina, uint32_t cant_en_por_pag)
+uint32_t get_entry_lvl_2(uint32_t direccion_logica, uint32_t page_size, uint32_t entries_per_table)
 {
-	return get_page_number(direccion_logica, tamanio_pagina) % cant_en_por_pag;
+	return get_page_number(direccion_logica, page_size) % entries_per_table;
 }
 
 uint32_t request_table_2_entry(uint32_t id_lvl_1_table, uint32_t row_index)

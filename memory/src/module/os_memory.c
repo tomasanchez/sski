@@ -92,10 +92,12 @@ uint32_t create_frame_for_table(memory_t *memory, uint32_t table_index, uint32_t
 
 	for (uint32_t i = 0; i < memory->max_rows; i++)
 	{
-		if (table[i].frame == frame)
+		if (table[i].frame == INVALID_FRAME)
 		{
 			table[i].present = true;
-			return table[i].frame;
+			table[i].frame = frame;
+			table[i].use = true;
+			return i;
 		}
 	}
 
@@ -118,6 +120,8 @@ uint32_t find_free_frame(memory_t *memory)
 
 uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t value)
 {
+	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
+	sleep(wait_time);
 	memcpy(memory->main_memory + physical_address, &value, sizeof(value));
 	return (uint32_t *)memory->main_memory + physical_address;
 }
@@ -125,6 +129,8 @@ uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t 
 uint32_t read_from_memory(memory_t *memory, uint32_t physical_address)
 {
 	uint32_t value = 0;
+	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
+	sleep(wait_time);
 	memcpy(&value, memory->main_memory + physical_address, sizeof(value));
 	return value;
 }
@@ -150,6 +156,22 @@ get_table_lvl2_number(memory_t *memory, uint32_t frame)
 	return INVALID_FRAME;
 }
 
+page_table_lvl_2_t *
+get_frame_ref(memory_t *memory, uint32_t frame)
+{
+	uint32_t id = get_table_lvl2_number(memory, frame);
+	page_table_lvl_2_t *table = safe_list_get(memory->tables_lvl_2, id);
+
+	for (uint32_t i = 0; i < memory->max_rows; i++)
+	{
+		if (table[i].frame == frame)
+		{
+			return &table[i];
+		}
+	}
+
+	return NULL;
+}
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
@@ -166,16 +188,7 @@ uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t max_frame
 	{
 		id = find_id(memory->tables_lvl_2);
 		table = new_page_table_lvl2(rows);
-
-		for (uint32_t j = 0; j < rows && j < max_frames_per_process; j++)
-		{
-			uint32_t frame = find_free_frame(memory);
-			table[j].frame = frame;
-			table[j].present = false;
-		}
-
 		safe_list_add_in_index(memory->tables_lvl_2, id, table);
-
 		ids[i] = id;
 	}
 
@@ -219,11 +232,16 @@ void delete_related_tables(memory_t *memory, uint32_t table_id)
 {
 	page_table_lvl_1_t *table = list_get(memory->tables_lvl_1->_list, table_id);
 
+	LOG_WARNING("\t-\tDeleting\tTable\t#%d\t-\t", table_id);
+	print_table(memory, table_id);
+
 	// Iterate over a LVL 1 Table
 	for (uint32_t i = 0; i < memory->max_rows; i++)
 	{
 		// Delete all LVL 2 Tables Associated with the LVL 1 Table
+		LOG_WARNING("[Memory] :=> Deleting Table#%d[%d]", table_id, table[i].second_page);
 		delete_level_2_table(memory, table[i].second_page);
+		LOG_TRACE("[Memory] :=> Table#%d[%d] Deleted", table_id, table[i].second_page);
 	}
 
 	// Replace with NULL in the list.
@@ -240,7 +258,11 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 	for (uint32_t j = 0; j < memory->max_rows && j < memory->max_frames; j++)
 	{
 		// Delete all Frames associated with the LVL 2 Table
-		delete_frame(memory, lvl2_table[j].frame);
+		if (lvl2_table[j].frame != INVALID_FRAME)
+		{
+			delete_frame(memory, lvl2_table[j].frame);
+			LOG_TRACE("[Memory] :=> Deleted Row[%d]= Frame#%d", j, lvl2_table[j].frame);
+		}
 	}
 
 	free(lvl2_table);
@@ -249,5 +271,6 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 
 void delete_frame(memory_t *memory, uint32_t id)
 {
-	memory->frames[id] = false;
+	if (id <= memory->max_frames)
+		memory->frames[id] = false;
 }

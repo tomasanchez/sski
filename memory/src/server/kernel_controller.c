@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
-
+#include "fs.h"
 #include "kernel_controller.h"
 #include "server.h"
 #include "pcb.h"
@@ -134,7 +134,7 @@ void kernel_controller_destroy_process_file(int socket)
 void kernel_controller_memory_init(int socket)
 {
 	ssize_t bytes_received = -1;
-	void *pid_ref = servidor_recibir_stream(socket, &bytes_received);
+	void *ref = servidor_recibir_stream(socket, &bytes_received);
 
 	if (bytes_received <= 0)
 	{
@@ -142,11 +142,14 @@ void kernel_controller_memory_init(int socket)
 		return;
 	}
 
-	uint32_t pid = *(uint32_t *)pid_ref;
-	free(pid_ref);
+	operands_t operands = operandos_from_stream(ref);
+	uint32_t pid = operands.op1;
+	uint32_t pcb_size = operands.op2;
+	free(ref);
 
-	LOG_DEBUG("[Server] :=> Initializing PCB #%d", pid);
-
+	LOG_DEBUG("[Server] :=> Initializing PCB#%d [%dbytes]", pid, pcb_size);
+	LOG_TRACE("[Memory] :=> Creating SWAP file for PCB #%d...", pid);
+	create_file(pid, pcb_size);
 	LOG_TRACE("[Server] :=> Obtaining available page table");
 
 	uint32_t page_table = get_page_table();
@@ -168,19 +171,6 @@ void kernel_controller_memory_init(int socket)
 // ============================================================================================================
 //                                   ***** Private Functions *****
 // ============================================================================================================
-
-static bool file_exists(char *fname)
-{
-	return access(fname, F_OK) EQ 0;
-}
-
-static void delete_file(char *fname)
-{
-	if (file_exists(fname))
-	{
-		remove(fname);
-	}
-}
 
 pcb_t *
 retrieve_swapped_pcb(uint32_t pcb_id)
@@ -230,17 +220,10 @@ swap_pcb(void *pcb_stream)
 
 	pcb_t *pcb = pcb_from_stream(pcb_stream);
 
-	char path[MAX_CHARS] = "";
-
-	sprintf(path, "%s%s%d%s", path_swap(), "/", pcb->id, ".swap");
-
-	delete_file(path);
-
-	int fd = open(path, O_RDWR | O_CREAT, 0666);
+	int fd = open_file(pcb->id);
 
 	if (fd != -1)
 	{
-		LOG_TRACE("[SWAP] :=> Open SWAP file for PCB #%d at <%s>", pcb->id, path);
 		status = SUCCESS;
 		off_t pct_stream_size = (off_t)pcb_bytes_size(pcb);
 
@@ -269,13 +252,9 @@ swap_pcb(void *pcb_stream)
 	return status;
 }
 
-void delete_swapped_pcb(uint32_t pcb_id)
+void delete_swapped_pcb(uint32_t pid)
 {
-	char path[MAX_CHARS] = "";
-
-	sprintf(path, "%s%s%d%s", path_swap(), "/", pcb_id, ".swap");
-
-	delete_file(path);
+	delete_swap_file(pid);
 }
 
 uint32_t

@@ -50,14 +50,34 @@ swap_controller_receive_pcb(void)
 	ssize_t bytes_received = 0;
 	void *stream = NULL;
 	stream = conexion_recibir_stream(g_kernel.conexion_memory.socket, &bytes_received);
-	LOG_WARNING("[SWAP-Controller] :=> Package received [%ld bytes] ", bytes_received);
+	LOG_WARNING("[SWAP-Controller] :=> SWAP metadata received [%ld bytes]", bytes_received);
 
 	// Recover data from Stream
-	pcb_t *recovered_pcb = pcb_from_stream(stream);
-	LOG_PCB(recovered_pcb);
+	// pcb_t *recovered_pcb = pcb_from_stream(stream);
+	// LOG_PCB(recovered_pcb);
 
 	// Deallocate Stream
 	free(stream);
 
-	return recovered_pcb;
+	return NULL;
+}
+
+ssize_t swap_controller_exit(pcb_t *pcb)
+{
+	void *stream = NULL;
+
+	opcode_t pcb_terminated = PROCESS_TERMINATED;
+	uint32_t pid = pcb->id;
+	uint32_t page_table = pcb->page_table;
+	uint32_t size = sizeof(pid) + sizeof(page_table);
+
+	stream = malloc(size);
+	uint32_t offset = 0;
+	memcpy(stream, &pid, sizeof(pid));
+	offset += sizeof(pid);
+	memcpy(stream + offset, &page_table, sizeof(page_table));
+
+	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, sizeof(stream));
+	free(stream);
+	return ret;
 }

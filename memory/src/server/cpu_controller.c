@@ -74,8 +74,7 @@ bool should_replace_frame(memory_t *memory, uint32_t table_number_2);
 uint32_t
 get_table_lvl1_number(memory_t *memory, uint32_t table_number_2);
 
-uint32_t
-replaze_frame(uint32_t frame_to_replace, uint32_t frame);
+void replaze_frame(uint32_t frame_to_replace);
 
 // ============================================================================================================
 //                                   ***** Endpoints  *****
@@ -90,33 +89,22 @@ void cpu_controller_read(int socket)
 
 	uint32_t frame = get_frame(physical_address);
 	uint32_t table_number_2 = get_table_lvl2_number(&g_memory, frame);
+	uint32_t value = UINT32_MAX;
 
 	// Frame DOES NOT EXIST
 	if (table_number_2 == UINT32_MAX)
 	{
 		LOG_ERROR("[CPU-CONTROLLER] :=> Invalid Frame <%d> not found in any table", frame);
-		return;
 	}
-
-	// Frame is Present?
-	if (!frame_is_present(&g_memory, table_number_2, frame))
+	else
 	{
-		LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame <%d> is not present", frame);
+		page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
 
-		if (should_replace_frame(&g_memory, table_number_2))
-		{
-			LOG_WARNING("[CPU-CONTROLLER] :=> Page replacement is required");
+		if (frame_ref)
+			frame_ref->modified = false;
 
-			// uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, table_number_2);
-			// replaze_frame(frame_to_replace, frame);
-			// SWAP(frame_to_replace)
-		}
-		// UNSWAP(new_frame)
-		create_frame_for_table(&g_memory, table_number_2, frame);
-		LOG_DEBUG("[CPU-CONTROLLER] :=> Frame<%d> has been added", frame);
+		value = read_from_memory(&g_memory, physical_address);
 	}
-
-	uint32_t value = read_from_memory(&g_memory, physical_address);
 
 	LOG_INFO("[Memory] :=> Read Value <%d> from <%d>", value, physical_address);
 
@@ -124,11 +112,11 @@ void cpu_controller_read(int socket)
 
 	if (bytes_sent > 0)
 	{
-		LOG_DEBUG("Value <%d> was sent [%ld bytes]", value, bytes_sent);
+		LOG_DEBUG("[CPU-CONTROLLER] :=> Value <%d> was sent [%ld bytes]", value, bytes_sent);
 	}
 	else
 	{
-		LOG_ERROR("Value could not be sent.");
+		LOG_ERROR("[CPU-CONTROLLER] :=> Value could not be sent.");
 	}
 }
 
@@ -150,31 +138,13 @@ void cpu_controller_write(int socket)
 		LOG_ERROR("[CPU-CONTROLLER] :=> Invalid Frame <%d> not found in any table", frame);
 		return;
 	}
+	page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
 
-	// Frame is Present?
-	if (!frame_is_present(&g_memory, table_number_2, frame))
-	{
-		LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame <%d> is not present", frame);
-
-		if (should_replace_frame(&g_memory, table_number_2))
-		{
-			LOG_WARNING("[CPU-CONTROLLER] :=> Page replacement is required");
-
-			// uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, table_number_2);
-			// replaze_frame(frame_to_replace, frame);
-		}
-
-		create_frame_for_table(&g_memory, table_number_2, frame);
-		LOG_DEBUG("[CPU-CONTROLLER] :=> Frame<%d> has been added", frame);
-	}
-	else
-	{
-		// SET BIT MODIFIED
-		LOG_WARNING("[CPU-CONTROLLER] :=> Frame <%d> modified", frame);
-	}
+	if (frame_ref)
+		frame_ref->modified = true;
 
 	write_in_memory(&g_memory, physical_address, value);
-	LOG_INFO("[Memory] :=> Value <%d> was written into the Physical Address <%d> (Frame #%d)", value, physical_address, frame);
+	LOG_INFO("[Memory] :=> Value <%d> written into Physical Address <%d> (Frame #%d)", value, physical_address, frame);
 
 	/*
 	Frame_size = 256
@@ -380,10 +350,8 @@ receive_operands(int socket, uint32_t *pid)
 	void *stream = servidor_recibir_stream(socket, &bytes_read);
 	LOG_TRACE("[CPU-CONTROLLER] :=> Received Package [%ld bytes]", bytes_read);
 	memcpy(pid, stream, sizeof(uint32_t));
-	LOG_WARNING("Received PID: %d", *pid);
 	operands_t operands;
 	memcpy(&operands, stream + sizeof(uint32_t), sizeof(operands_t));
-	LOG_INFO("Received operands: %d %d", operands.op1, operands.op2);
 	free(stream);
 	return operands;
 }
@@ -397,8 +365,7 @@ obtain_memory_value(uint32_t position)
 uint32_t
 obtain_second_page(uint32_t id_table_1, uint32_t index)
 {
-	// TODO: Fix LIST_GET
-	page_table_lvl_1_t *table_lvl1 = list_get(g_memory.tables_lvl_1->_list, id_table_1);
+	page_table_lvl_1_t *table_lvl1 = safe_list_get(g_memory.tables_lvl_1, id_table_1);
 
 	if (index > g_memory.max_rows)
 	{
@@ -412,14 +379,47 @@ obtain_second_page(uint32_t id_table_1, uint32_t index)
 uint32_t
 obtain_frame(uint32_t id_table_2, uint32_t index)
 {
-	// TODO: Fix LIST_GET
-	page_table_lvl_2_t *table_lvl2 = list_get(g_memory.tables_lvl_2->_list, id_table_2);
+	page_table_lvl_2_t *table_lvl2 = safe_list_get(g_memory.tables_lvl_2, id_table_2);
 
 	// TODO: VALIDAR QUE ESTO ESTA BIEN (Me huele mal)
 	if (index > g_memory.max_rows)
 	{
 		LOG_ERROR("[CPU-CONTROLLER] :=> Index out of bounds for FRAMES");
 		return UINT32_MAX;
+	}
+
+	if (!table_lvl2[index].present)
+	{
+		LOG_ERROR("[CPU-CONTROLLER] :=> Page Fault: Frame  not allocated");
+		uint32_t new_frame = find_free_frame(&g_memory);
+
+		if (should_replace_frame(&g_memory, index))
+		{
+			LOG_WARNING("[MEMORY] :=> Page replacement is required");
+			uint32_t id_table_1 = get_table_lvl1_number(&g_memory, id_table_2);
+			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_1);
+			replaze_frame(frame_to_replace);
+			LOG_INFO("[ALGORITHM] :=> Replaced Frame: #%d -> #%d", frame_to_replace, new_frame);
+		}
+
+		if (table_lvl2[index].frame == INVALID_FRAME)
+		{
+			table_lvl2[index].frame = new_frame;
+			table_lvl2[index].present = true;
+			table_lvl2[index].use = true;
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, index, new_frame);
+		}
+		else
+		{
+			uint32_t created_at = create_frame_for_table(&g_memory, index, id_table_2);
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
+		}
+
+		return new_frame;
+	}
+	else
+	{
+		LOG_WARNING("[Memory] :=> Frame <%d> modified", table_lvl2[index].frame);
 	}
 
 	return table_lvl2[index].frame;
@@ -493,8 +493,17 @@ get_table_lvl1_number(memory_t *memory, uint32_t table_number_2)
 	return UINT32_MAX;
 }
 
-uint32_t
-replaze_frame(uint32_t frame_to_replace, uint32_t frame)
+void replaze_frame(uint32_t frame_to_replace)
 {
-	return frame_to_replace + frame;
+	uint32_t table_number_2 = get_table_lvl2_number(&g_memory, frame_to_replace);
+	page_table_lvl_2_t *table = safe_list_get(g_memory.tables_lvl_2, table_number_2);
+
+	for (uint32_t i = 0; i < g_memory.max_rows; i++)
+	{
+		if (table[i].frame == frame_to_replace)
+		{
+			table[i].present = false;
+			table[i].use = false;
+		}
+	}
 }

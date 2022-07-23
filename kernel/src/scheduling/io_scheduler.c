@@ -12,6 +12,10 @@
 #include "mts.h"
 #include "sts.h"
 #include "pcb.h"
+#include "scheduler.h"
+#include "kernel.h"
+
+extern kernel_t *g_kernel;
 
 /**
  * @brief Retrieves a Blocked PCB
@@ -37,23 +41,35 @@ void *io_scheduler(void *scheduler)
 
 	for (;;)
 	{
-		LOG_WARNING("[IO] :=>  Waiting for an IO request");
-		// WAIT for a process to need IO
+		int requests = 0;
+		sem_getvalue(s->io_request, &requests);
+
+		if (requests > 0)
+		{
+			LOG_TRACE("[IO] :=> There are <%d> IO requests", requests);
+		}
+		else
+		{
+			LOG_WARNING("[IO] :=>  Waiting for an IO request");
+		}
+
 		WAIT(s->io_request);
-		LOG_DEBUG("[IO] :=>  IO request received");
+
+		LOG_TRACE("[IO] :=> Attending a Request...");
+
 		pcb_t *pcb = NULL;
 		pcb = retrieve_pcb(s);
 
 		if (pcb)
 		{
 			// IO request received
-			LOG_DEBUG("[IO] :=> request received from Process #%d", pcb->id);
-
+			LOG_INFO("[IO] :=> PCB #%d requested IO", pcb->id);
+			s->current_io = pcb->id;
 			// Execute IO Burst
-			LOG_TRACE("[IO] :=> Using IO for: %ds", pcb->io);
+			LOG_TRACE("[IO] :=> PCB #%d Using IO for: %ds", pcb->id, pcb->io);
 			sleep(pcb->io / 1000);
 
-			LOG_DEBUG("[IO] :=> IO finished");
+			LOG_INFO("[IO] :=> PCB #%d IO finished", pcb->id);
 
 			switch (pcb->status)
 			{
@@ -70,6 +86,8 @@ void *io_scheduler(void *scheduler)
 		{
 			LOG_ERROR("[IO] :=> No PCB available when IO was signaled");
 		}
+
+		s->current_io = UINT32_MAX;
 	}
 
 	return NULL;

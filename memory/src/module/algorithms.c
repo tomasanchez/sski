@@ -15,14 +15,13 @@
 #include "memory_module.h"
 #include "page_table.h"
 
-page_table_lvl_2_t **
-create_big_table(memory_t *memory, uint32_t table_index);
-
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
+
 uint32_t clock_selector(void *self, uint32_t table_index)
 {
+	LOG_TRACE("[Memory] Selecting frame to be replaced using CLOCK algorithm");
 	// Clock Selector
 	static uint32_t clock = 0;
 
@@ -36,9 +35,15 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 	uint32_t frame = INVALID_FRAME;
 	// Wether a FRAME was matched or not
 	bool completed = false;
-	// Look for a zero FROM CLOCK
+
+	LOG_WARNING("\t---\tTABLE\tBEFORE\tALGORITHM\t---");
+	LOG_TABLE(total_rows, big_table);
+
+	LOG_ERROR("{CLOCK}> %d", clock);
+	LOG_TRACE("[CLOCK] :=> Looking for a zero...");
 	for (uint32_t j = clock; j < total_rows && !completed; j++)
 	{
+
 		if ((big_table[j]->present))
 		{ // When found
 			if (!(big_table[j])->use)
@@ -48,16 +53,17 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 				(big_table[j])->use = true;
 				clock = j + 1 >= total_rows ? 0 : j + 1;
 				completed = true;
+				LOG_DEBUG("[CLOCK] :=> Replacement in %d", j);
 			}
 			// SET bit U to 0
 			else if (j == clock)
 			{
 				(big_table[clock])->use = false;
+				LOG_WARNING("[CLOCK] :=> Index %d is in use, but it is the one to be replaced", j);
 			}
 		}
 	}
-
-	// When nothing matches - Look from after until clock.
+	LOG_TRACE("[CLOCK]:=> When nothing matches - Look from after until clock");
 	for (uint32_t j = 0; j <= clock && !completed; j++)
 	{
 		if ((big_table[j]->present))
@@ -72,13 +78,14 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 		}
 	}
 
-	// When all are in use -> reset them all
 	if (!completed)
 	{
+		LOG_TRACE("[CLOCK] :=> All are in use. Resetting...");
 		for (uint32_t j = 0; j < total_rows && !completed; j++)
 		{
 			(big_table[j])->use = false;
 		}
+		LOG_TABLE(total_rows, big_table);
 
 		frame = (big_table[clock])->frame;
 		(big_table[clock])->use = true;
@@ -93,6 +100,8 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 
 uint32_t improved_clock_selector(void *self, uint32_t table_index)
 {
+	LOG_TRACE("[Memory] Selecting frame to be replaced using CLOCK Improved algorithm");
+
 	// Improved Clock
 	static uint32_t clock = 0;
 
@@ -108,11 +117,16 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 	// Wether a FRAME was matched or not
 	bool completed = false;
 
+	LOG_WARNING("\t---\tTABLE\tBEFORE\tALGORITHM\t---");
+	LOG_TABLE(total_rows, big_table);
+	LOG_ERROR("{CLOCK-I}> %d", clock);
+
 	/*
 	 * 1. Empezando desde la posición actual del puntero, recorrer la lista de marcos.
 	 * Durante el recorrido, dejar el bit de uso (U) intacto.
 	 * El primer marco que se encuentre con U = 0 y M = 0 se elige para el reemplazo.
 	 */
+	LOG_TRACE("[CLOCK-I] :=> Looking for [U=0, M=0]...");
 	// for Row in Table if Present
 	// or...
 	// table.filter(row.present)
@@ -123,6 +137,8 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 			//! When  U=0 && M=0 -> FRAME to be repalced FOUND!
 			if (!(big_table[i])->use && !(big_table[i])->modified)
 			{
+				LOG_WARNING("[CLOCK-I] :=> Match Found");
+				LOG_TABLE_HEADER();
 				frame = (big_table[i])->frame;
 				(big_table[i])->use = true;
 				clock = i + 1 >= total_rows ? 0 : i + 1;
@@ -138,6 +154,9 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 			//! When  U=0 && M=0 -> FRAME to be repalced FOUND!
 			if (!(big_table[i])->use && !(big_table[i])->modified)
 			{
+				LOG_WARNING("[CLOCK-I] :=> Match Found");
+				LOG_TABLE_HEADER();
+				LOG_ENTRY(big_table, i);
 				frame = (big_table[i])->frame;
 				(big_table[i])->use = true;
 				clock = i + 1 >= total_rows ? 0 : i + 1;
@@ -151,6 +170,10 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 	 * El primer marco que cumpla la condición es seleccionado para el reemplazo.
 	 * Durante este recorrido, cambiar el bit de uso a 0 de todos los marcos que no se elijan.
 	 */
+	if (!completed)
+	{
+		LOG_TRACE("[CLOCK-I] :=> Looking for a  [U=0, M=1]...");
+	}
 	for (uint32_t i = clock; i < total_rows && !completed; i++)
 	{
 		if ((big_table[i]->present))
@@ -158,6 +181,9 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 			//! When  U=0 && M=1 -> FRAME to be repalced FOUND!
 			if (!(big_table[i])->use && (big_table[i])->modified)
 			{
+				LOG_WARNING("[CLOCK-I] :=> Match Found");
+				LOG_TABLE_HEADER();
+				LOG_ENTRY(big_table, i);
 				frame = (big_table[i])->frame;
 				(big_table[i])->use = true;
 				clock = i + 1 >= total_rows ? 0 : i + 1;
@@ -194,6 +220,10 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 	// for Row in Table if Present
 	// or...
 	// table.filter(row.present)
+	if (!completed)
+	{
+		LOG_TRACE("[CLOCK-I] :=> Looking for [U=0, M=0] (AGAIN)...");
+	}
 	for (uint32_t i = clock; i < total_rows && !completed; i++)
 	{
 		if ((big_table[i]->present))
@@ -225,31 +255,9 @@ uint32_t improved_clock_selector(void *self, uint32_t table_index)
 	}
 
 	free(big_table);
-
 	return frame;
 }
 
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
-
-page_table_lvl_2_t **
-create_big_table(memory_t *memory, uint32_t table_index)
-{
-	page_table_lvl_1_t *pt_1 = safe_list_get(memory->tables_lvl_1, table_index);
-	size_t total_rows = memory->max_rows * memory->max_rows;
-
-	page_table_lvl_2_t **big_table = malloc(sizeof(page_table_lvl_2_t *) * total_rows);
-
-	for (size_t i = 0, k = 0; i < memory->max_rows && k < total_rows; i++)
-	{
-		page_table_lvl_2_t *pt_2 = safe_list_get(memory->tables_lvl_2, pt_1[i].second_page);
-
-		for (size_t j = 0; j < memory->max_rows; j++, k++)
-		{
-			big_table[k] = &pt_2[j];
-		}
-	}
-
-	return big_table;
-}

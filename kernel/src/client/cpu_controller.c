@@ -58,8 +58,8 @@ ssize_t cpu_controller_send_pcb(conexion_t connection_dispatch, opcode_t opcode,
 ssize_t cpu_controller_send_interrupt(conexion_t connection_interrupt)
 {
 	ssize_t bytes_sent = -1;
-	uint32_t placeholder = 0;
-	SAFE_STATEMENT(&this.cpu_interrupt, bytes_sent = conexion_enviar_stream(connection_interrupt, INT, &placeholder, sizeof(placeholder)));
+	opcode_t opcode = INT;
+	SAFE_STATEMENT(&this.cpu_interrupt, bytes_sent = connection_send_value(connection_interrupt, &opcode, sizeof(opcode_t)));
 	return bytes_sent;
 }
 
