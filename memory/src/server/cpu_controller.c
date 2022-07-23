@@ -320,6 +320,8 @@ void cpu_controller_send_page_second_level(int fd)
 		operands_t values = operandos_from_stream(stream);
 		LOG_TRACE("[CPU-CONTROLLER] :=> Requested Table#%d[%d]...", values.op1, values.op2);
 		print_table(&g_memory, values.op1);
+		// If x >= 4 ? 3 : X;
+		uint32_t t1_sub = values.op2 >= g_memory.max_rows ? g_memory.max_rows - 1 : values.op2;
 		entry_second_level = obtain_second_page(values.op1, values.op2);
 		LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d]= #%d", values.op1, values.op2, entry_second_level);
 	}
@@ -452,7 +454,8 @@ uint32_t frame_exist(memory_t *memory, uint32_t frame)
 uint32_t
 get_frame(uint32_t physical_address)
 {
-	return (uint32_t)physical_address / (uint32_t) tam_pagina();;
+	return (uint32_t)physical_address / (uint32_t)tam_pagina();
+	;
 }
 
 bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame)
