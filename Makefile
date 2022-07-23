@@ -94,6 +94,14 @@ install:
 	@echo "\nCommons installed\n"
 	@echo Completed
 
+install-python:
+	@echo Installing Python...
+	apt-get install python3
+	@echo "Python installed!"
+
+install-sh:
+	chmod +x $(PWD)/*.sh
+
 # ! Requieres root user
 #Compile the shared library
 lib:
