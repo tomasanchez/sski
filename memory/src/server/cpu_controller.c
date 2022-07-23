@@ -319,6 +319,7 @@ void cpu_controller_send_page_second_level(int fd)
 	{
 		operands_t values = operandos_from_stream(stream);
 		LOG_TRACE("[CPU-CONTROLLER] :=> Requested Table#%d[%d]...", values.op1, values.op2);
+		print_table(&g_memory, values.op1);
 		entry_second_level = obtain_second_page(values.op1, values.op2);
 		LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d]= #%d", values.op1, values.op2, entry_second_level);
 	}
