@@ -53,7 +53,7 @@ static int serve(memory_t *memory);
 static int on_init_memory(memory_t *memory)
 {
 	// Init App
-	memory->server = servidor_create(IP, puerto_escucha());
+	memory->server = servidor_create(ip(), puerto_escucha());
 	memory->tm = new_thread_manager();
 
 	// Init Memory
@@ -113,7 +113,7 @@ int on_init(memory_t *memory)
 
 	signals_init();
 
-	LOG_DEBUG("Server created at %s:%s", IP, puerto_escucha());
+	LOG_DEBUG("Server created at %s:%s", ip(), puerto_escucha());
 	LOG_DEBUG("Memory Module started SUCCESSFULLY");
 
 	return EXIT_SUCCESS;

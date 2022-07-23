@@ -168,6 +168,7 @@ int on_init(void)
 
 	LOG_DEBUG("Configurations loaded.");
 
+	LOG_TRACE("Configurations loaded %s", ip());
 	// Attach del evento de interrupcion forzada.
 	signal(SIGINT, cierre_forzoso);
 

@@ -62,8 +62,8 @@ static int on_cpu_init(cpu_t *cpu)
 {
 	cpu->pcb = NULL;
 	cpu->tm = new_thread_manager();
-	cpu->server_dispatch = servidor_create(ip_memoria(), puerto_escucha_dispatch());
-	cpu->server_interrupt = servidor_create(ip_memoria(), puerto_escucha_interrupt());
+	cpu->server_dispatch = servidor_create(ip(), puerto_escucha_dispatch());
+	cpu->server_interrupt = servidor_create(ip(), puerto_escucha_interrupt());
 	cpu->has_interruption = false;
 	cpu->sync = init_sync();
 
@@ -172,6 +172,7 @@ int on_init(cpu_t *cpu)
 	}
 
 	LOG_DEBUG("Configurations loaded.");
+	LOG_TRACE("Configurations loaded %s", ip());
 
 	// Attach del evento de interrupcion forzada.
 	signal(SIGINT, handle_sigint);
