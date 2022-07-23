@@ -20,6 +20,7 @@
 #include <math.h>
 #include "cfg.h"
 #include "os_memory.h"
+#include "swap.h"
 #include "page_table.h"
 
 extern memory_t g_memory;
@@ -59,7 +60,7 @@ uint32_t
 obtain_second_page(uint32_t id_table_1, uint32_t index);
 
 uint32_t
-obtain_frame(uint32_t id_table_2, uint32_t index);
+obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid);
 
 uint32_t
 frame_exist(memory_t *memory, uint32_t frame);
@@ -74,7 +75,7 @@ bool should_replace_frame(memory_t *memory, uint32_t table_number_2);
 uint32_t
 get_table_lvl1_number(memory_t *memory, uint32_t table_number_2);
 
-void replaze_frame(uint32_t frame_to_replace);
+void replace_frame(uint32_t pid, uint32_t frame_to_replace);
 
 // ============================================================================================================
 //                                   ***** Endpoints  *****
@@ -272,6 +273,8 @@ void cpu_controller_send_frame(int fd)
 {
 	ssize_t bytes_read = -1;
 	void *stream = servidor_recibir_stream(fd, &bytes_read);
+
+	uint32_t pid = UINT32_MAX;
 	uint32_t frame = 0;
 
 	if (bytes_read <= 0)
@@ -281,8 +284,9 @@ void cpu_controller_send_frame(int fd)
 	}
 	else
 	{
-		operands_t values = operandos_from_stream(stream);
-		frame = obtain_frame(values.op1, values.op2);
+		memcpy(&pid, stream, sizeof(pid));
+		operands_t values = operandos_from_stream(stream + sizeof(pid));
+		frame = obtain_frame(values.op1, values.op2, pid);
 		LOG_TRACE("[CPU-CONTROLLER] :=> Frame obtained #%d", frame);
 	}
 
@@ -377,7 +381,7 @@ obtain_second_page(uint32_t id_table_1, uint32_t index)
 }
 
 uint32_t
-obtain_frame(uint32_t id_table_2, uint32_t index)
+obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid)
 {
 	page_table_lvl_2_t *table_lvl2 = safe_list_get(g_memory.tables_lvl_2, id_table_2);
 
@@ -398,7 +402,7 @@ obtain_frame(uint32_t id_table_2, uint32_t index)
 			LOG_WARNING("[MEMORY] :=> Page replacement is required");
 			uint32_t id_table_1 = get_table_lvl1_number(&g_memory, id_table_2);
 			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_1);
-			replaze_frame(frame_to_replace);
+			replace_frame(pid, frame_to_replace);
 			LOG_INFO("[ALGORITHM] :=> Replaced Frame: #%d -> #%d", frame_to_replace, new_frame);
 		}
 
@@ -493,7 +497,7 @@ get_table_lvl1_number(memory_t *memory, uint32_t table_number_2)
 	return UINT32_MAX;
 }
 
-void replaze_frame(uint32_t frame_to_replace)
+void replace_frame(uint32_t pid, uint32_t frame_to_replace)
 {
 	uint32_t table_number_2 = get_table_lvl2_number(&g_memory, frame_to_replace);
 	page_table_lvl_2_t *table = safe_list_get(g_memory.tables_lvl_2, table_number_2);
@@ -506,4 +510,6 @@ void replaze_frame(uint32_t frame_to_replace)
 			table[i].use = false;
 		}
 	}
+
+	swap_frame_for_pcb(pid, frame_to_replace);
 }

@@ -1,129 +1,151 @@
 /**
  * @file swap.c
- * @author Francisco Maver (fmaver@frba.utn.edu.ar)
+ * @author Tomás Sánchez <tosanchez@frba.utn.edu.ar>
  * @brief
  * @version 0.1
- * @date 2022-07-21
+ * @date 07-22-2022
  *
  * @copyright Copyright (c) 2022
  *
  */
-
 #include "swap.h"
+#include "pcb.h"
+#include "os_memory.h"
+#include "fs.h"
+#include "cfg.h"
+#include <time.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <string.h>
+#include <stdlib.h>
 
-static char* path_swap;
-static long retardo_swap;
-static uint32_t tam_pagina;
-static t_config* configuracion;
-static registro_t* buff;
-static pthread_mutex_t mutex_swap;
-static t_list* marcos_virtuales;
-static uint32_t cantidad_marcos;
-static uint32_t memoria_size;
+extern memory_t g_memory;
 
-typedef struct MarcoVirtual{
-	swap_t* swap;
-	registro_t* registro;
-}virtual_t;
+// ============================================================================================================
+//                               ***** Declarations *****
+// ============================================================================================================
 
+void swap_frame(uint32_t frame, void *file_address, uint32_t *offset);
 
+// ============================================================================================================
+//                               ***** Public Functions *****
+// ============================================================================================================
 
-swap_t
-*swap_crearSwap(uint32_t pid)
+void swap_frame_for_pcb(uint32_t pid, uint32_t frame)
 {
-	swap_t* swap = malloc(sizeof(swap_t));
-	swap->swap_name = malloc(40);
-	swap->items = list_create();
+	swap_data_t *swap_data = get_swap_data_for_pcb(&g_memory, pid);
 
-	LOG_TRACE("[SWAP] :=> Archivo swap creado con nombre: #%s#, para el proceso %u\n", swap->swap_name, pid);
-
-	swap->archivo_swap = fopen(swap->swap_name,"w+");
-
-	return swap;
-}
-
-void swap_destruirSwap(swap_t* swap)
-{
-	pthread_mutex_lock(&mutex_swap);
-
-	LOG_TRACE("[SWAP] :=> Archivo swap eliminado de nombre: #%s#\n", swap->swap_name);
-
-	list_destroy(swap->items);
-	fclose(swap->archivo_swap);
-	remove(swap->swap_name);
-	free(swap->swap_name);
-	free(swap);
-
-	pthread_mutex_unlock(&mutex_swap);
-}
-
-void swapInit(){
-	configuracion = config_create("./settings.conf");
-	retardo_swap = config_get_int_value(configuracion, "RETARDO_SWAP");
-	path_swap = config_get_string_value(configuracion, "PATH_SWAP");
-	tam_pagina = config_get_int_value(configuracion, "TAM_PAGINA");
-	memoria_size = config_get_int_value(configuracion, "TAM_MEMORIA");
-	pthread_mutex_init(&mutex_swap,NULL);
-	cantidad_marcos = memoria_size / tam_pagina + 1;
-	marcos_virtuales = list_create();
-}
-
-bool esRegistro(void* item){
-	return ((item_t*) item)->registro == buff;
-}
-
-bool swap_estaEnSwap(swap_t* swap,registro_t* registro){
-	buff = registro;
-	bool x =list_any_satisfy(swap->items,esRegistro);
-	return x;
-}
-
-void swap_escribirEnSwap(swap_t* swap,registro_t* registro){
-	pthread_mutex_lock(&mutex_swap);
-	usleep(retardo_swap * 1000);
-
-	if(!swap_estaEnSwap(swap,registro)){
-
-		item_t* item = malloc(sizeof(item_t));
-		item->registro = registro;
-		item->indice = ftell(swap->archivo_swap) / tam_pagina;
-		void* datos = ram_getDatosDeMarco(registro->valor);
-		fwrite(datos,tam_pagina,1,swap->archivo_swap);
-		free(datos);
-		list_add(swap->items,item);
-
-	} else if (ram_estaModificado(registro->valor)){
-		buff = registro;
-		item_t* item = list_find(swap->items,esRegistro);
-
-		fseek(swap->archivo_swap,item->indice * tam_pagina,SEEK_SET);
-		void* datos = ram_getDatosDeMarco(registro->valor);
-
-		fwrite(datos,tam_pagina,1,swap->archivo_swap);
-		fseek(swap->archivo_swap,0,SEEK_END);
-		free(datos);
+	if (swap_data == NULL)
+	{
+		LOG_ERROR("[SWAP] No swap data for pid %d", pid);
+		return;
 	}
 
-	pthread_mutex_unlock(&mutex_swap);
+	int fd = open_file(pid);
+
+	if (fd == -1)
+	{
+		LOG_ERROR("[SWAP] Couldn't open file for pid %d", pid);
+		return;
+	}
+
+	off_t swap_size = (off_t)swap_data->size;
+
+	ftruncate(fd, swap_size);
+
+	void *file_address = mmap(NULL, swap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+	if (file_address == MAP_FAILED)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't MMAP file: %s", strerror(errno));
+		return;
+	}
+
+	swap_frame(frame, file_address, &swap_data->offset);
+	msync(file_address, swap_size, MS_SYNC);
+	munmap(file_address, swap_size);
+	close(fd);
 }
 
-void swap_escribirEnMemoria(swap_t* swap ,registro_t* registro){
-	pthread_mutex_lock(&mutex_swap);
+void swap_pcb(void *pcb_ref)
+{
 
-	usleep(retardo_swap * 1000);
+	pcb_t *pcb = pcb_from_stream(pcb_ref);
+	free(pcb_ref);
 
+	// Fail fast
+	if (pcb == NULL)
+	{
+		LOG_ERROR("[SWAP] :=> Could not retrieve PCB from stream");
+		return;
+	}
 
-	buff = registro;
-	item_t* item = list_find(swap->items,esRegistro);
+	int fd = open_file(pcb->id);
 
+	if (fd == -1)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't open SWAP file for PCB#%d", pcb->id);
+		return;
+	}
 
-	fseek(swap->archivo_swap,item->indice * tam_pagina,SEEK_SET);
-	void* datos = malloc(tam_pagina);
+	off_t swap_size = (off_t)pcb->size > get_frames_used_size(&g_memory, pcb->page_table) ? pcb->size : get_frames_used_size(&g_memory, pcb->page_table);
 
-	fread(datos,tam_pagina,1,swap->archivo_swap);
+	ftruncate(fd, swap_size);
 
-	ram_escribirDatos(registro->valor,datos);
+	void *file_address = mmap(NULL, swap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
+	if (file_address == MAP_FAILED)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't MMAP file: %s", strerror(errno));
+		return;
+	}
 
-	pthread_mutex_unlock(&mutex_swap);
+	LOG_INFO("[SWAP] :=> Mapping into <%p> [%ld bytes]", file_address, swap_size);
+	LOG_WARNING("[SWAP] :=> Memcpying data related to PCB #%d", pcb->id);
+
+	uint32_t offset = get_offset_for_pcb(&g_memory, pcb->id);
+
+	page_table_lvl_2_t **big_table = create_big_table(&g_memory, pcb->page_table);
+
+	for (uint32_t i = 0; i < g_memory.max_rows * g_memory.max_rows; i++)
+	{
+		if ((big_table[i])->frame != INVALID_FRAME && (big_table[i])->present)
+			swap_frame((big_table[i])->frame, file_address, &offset);
+	}
+
+	msync(file_address, swap_size, MS_SYNC);
+	munmap(file_address, swap_size);
+	LOG_INFO("[SWAP] :=> PCB #%d was swapped [%ld bytes]", pcb->id, swap_size);
+	free(big_table);
+	close(fd);
+	pcb_destroy(pcb);
+}
+
+swap_data_t *new_swap_data(uint32_t pid, uint32_t size)
+{
+	swap_data_t *swap_data = malloc(sizeof(swap_data_t));
+	swap_data->pid = pid;
+	swap_data->size = size;
+	return swap_data;
+}
+
+// ============================================================================================================
+//                               ***** Private Functions *****
+// ============================================================================================================
+
+void swap_frame(uint32_t frame, void *file_address, uint32_t *offset)
+{
+
+	size_t frame_size = tam_pagina();
+	size_t swapped_frame_size = sizeof(uint32_t) + frame_size;
+
+	void *frame_stream = malloc(swapped_frame_size);
+	memcpy(frame_stream, &frame, sizeof(uint32_t));
+	memcpy(frame_stream + sizeof(uint32_t), get_frame_address(&g_memory, frame), frame_size);
+	memcpy(file_address + *offset, frame_stream, swapped_frame_size);
+	*offset += swapped_frame_size;
+	free(frame_stream);
 }

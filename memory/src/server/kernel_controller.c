@@ -22,6 +22,7 @@
 #include "cfg.h"
 #include "log.h"
 #include "os_memory.h"
+#include "swap.h"
 
 // ============================================================================================================
 //                                   ***** Declarations *****
@@ -36,7 +37,7 @@ extern memory_t g_memory;
  * @return memory position
  */
 uint32_t
-swap_pcb(void *pcb_stream);
+swap_pcb_(void *pcb_stream);
 
 pcb_t *
 retrieve_swapped_pcb(uint32_t pcb_id);
@@ -67,7 +68,7 @@ void kernel_controller_swap(int socket)
 	void *pcb_stream = servidor_recibir_stream(socket, &bytes_received);
 	LOG_TRACE("[Server] :=> A PCB was received to be swapped");
 
-	uint32_t swap_status = swap_pcb(pcb_stream);
+	uint32_t swap_status = swap_pcb_(pcb_stream);
 	if (swap_status == SUCCESS)
 	{
 		LOG_TRACE("[Server] :=> PCB was SUCCESSSFULLY swapped");
@@ -145,6 +146,8 @@ void kernel_controller_memory_init(int socket)
 	operands_t operands = operandos_from_stream(ref);
 	uint32_t pid = operands.op1;
 	uint32_t pcb_size = operands.op2;
+	swap_data_t *swap_data = new_swap_data(pid, pcb_size);
+	safe_list_add(g_memory.swap_data, swap_data);
 	free(ref);
 
 	LOG_DEBUG("[Server] :=> Initializing PCB#%d [%dbytes]", pid, pcb_size);
@@ -214,7 +217,7 @@ retrieve_swapped_pcb(uint32_t pcb_id)
 }
 
 uint32_t
-swap_pcb(void *pcb_stream)
+swap_pcb_(void *pcb_stream)
 {
 	uint32_t status = ERROR;
 
@@ -255,6 +258,7 @@ swap_pcb(void *pcb_stream)
 void delete_swapped_pcb(uint32_t pid)
 {
 	delete_swap_file(pid);
+	delete_swap_data(&g_memory, pid);
 }
 
 uint32_t

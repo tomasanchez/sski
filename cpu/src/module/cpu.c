@@ -704,9 +704,8 @@ uint32_t request_table_2_entry(uint32_t id_lvl_1_table, uint32_t row_index)
 	return ret_page;
 }
 
-uint32_t request_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento)
+uint32_t request_frame(uint32_t tabla_segundo_nivel, uint32_t offset)
 {
-
 	// ENVIO DE STREAM
 
 	LOG_TRACE("[MMU] :=> Request Frame value...");
@@ -714,11 +713,16 @@ uint32_t request_frame(uint32_t tabla_segundo_nivel, uint32_t desplazamiento)
 	operands_t *operands = malloc(sizeof(operands_t));
 
 	operands->op1 = tabla_segundo_nivel;
-	operands->op2 = desplazamiento;
+	operands->op2 = offset;
 
 	void *send_stream = operandos_to_stream(operands);
 
-	conexion_enviar_stream(g_cpu.conexion, FRAME, send_stream, sizeof(operands_t));
+	void *big_stream = malloc(sizeof(uint32_t) + sizeof(operands_t));
+
+	memcpy(big_stream, &g_cpu.pcb->id, sizeof(uint32_t));
+	memcpy(big_stream + sizeof(uint32_t), send_stream, sizeof(operands_t));
+
+	conexion_enviar_stream(g_cpu.conexion, FRAME, big_stream, sizeof(operands_t) + sizeof(uint32_t));
 
 	// RECIBO DE UINT32_T
 

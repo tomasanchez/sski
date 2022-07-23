@@ -72,3 +72,21 @@ get_table_lvl2_number(memory_t *memory, uint32_t frame);
 
 page_table_lvl_2_t *
 get_frame_ref(memory_t *memory, uint32_t frame);
+
+/**
+ * @brief Get the frames used size
+ *
+ * @param memory the memory Module Instance
+ * @param table_lvl_1 the table id
+ * @return size in bytes
+ */
+uint32_t
+get_frames_used_size(memory_t *memory, uint32_t table_lvl_1);
+
+void *get_frame_address(memory_t *memory, uint32_t frame);
+
+uint32_t get_offset_for_pcb(memory_t *memory, uint32_t pid);
+
+void *get_swap_data_for_pcb(memory_t *memory, uint32_t pid);
+
+void delete_swap_data(memory_t *memory, uint32_t pid);
