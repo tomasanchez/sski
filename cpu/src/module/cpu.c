@@ -663,7 +663,7 @@ uint32_t get_offset(uint32_t direccion_logica, uint32_t page_size)
 
 uint32_t get_entry_lvl_1(uint32_t page_number, uint32_t entries_per_table)
 {
-	return (uint32_t)floor(page_number / entries_per_table);
+	return (uint32_t)page_number / (uint32_t)entries_per_table;
 }
 
 uint32_t get_entry_lvl_2(uint32_t direccion_logica, uint32_t page_size, uint32_t entries_per_table)
