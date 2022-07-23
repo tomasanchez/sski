@@ -451,7 +451,7 @@ uint32_t frame_exist(memory_t *memory, uint32_t frame)
 uint32_t
 get_frame(uint32_t physical_address)
 {
-	return floor(physical_address / tam_pagina());
+	return (uint32_t)physical_address / (uint32_t) tam_pagina();;
 }
 
 bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame)
