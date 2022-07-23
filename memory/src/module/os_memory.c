@@ -16,6 +16,7 @@
 #include "os_memory.h"
 #include "page_table.h"
 #include "log.h"
+#include "swap.h"
 
 // ============================================================================================================
 //                                   ***** Declarations  *****
@@ -29,7 +30,7 @@
  * @param frames  the number of frames
  * @return uint32_t
  */
-uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t frames);
+uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows);
 
 /**
  * @brief Creates a Lvl I Page Table in Memory
@@ -78,7 +79,7 @@ void delete_frame(memory_t *memory, uint32_t id);
 
 uint32_t create_new_process(memory_t *memory)
 {
-	return create_table(memory, memory->max_rows, create_lvl2_tables(memory, memory->max_rows, memory->max_frames));
+	return create_table(memory, memory->max_rows, create_lvl2_tables(memory, memory->max_rows));
 }
 
 void delete_process(memory_t *memory, uint32_t table_id)
@@ -172,11 +173,77 @@ get_frame_ref(memory_t *memory, uint32_t frame)
 
 	return NULL;
 }
+
+uint32_t get_frames_used_size(memory_t *memory, uint32_t table_lvl_1)
+{
+	page_table_lvl_2_t **big_table = create_big_table(memory, table_lvl_1);
+	uint32_t size = 0;
+
+	for (uint32_t i = 0; i < memory->max_rows * memory->max_rows; i++)
+	{
+		if (big_table[i]->frame != INVALID_FRAME)
+		{
+			size += tam_pagina() + sizeof(big_table[i]->frame);
+		}
+	}
+
+	free(big_table);
+
+	return size;
+}
+
+void *get_frame_address(memory_t *memory, uint32_t frame)
+{
+	return memory->main_memory + frame * tam_pagina();
+}
+
+uint32_t get_offset_for_pcb(memory_t *memory, uint32_t pid)
+{
+	swap_data_t *data = get_swap_data_for_pcb(memory, pid);
+	return data != NULL ? data->offset : 0;
+}
+
+void *get_swap_data_for_pcb(memory_t *memory, uint32_t pid)
+{
+	for (int i = 0; i < list_size(memory->swap_data->_list); i++)
+	{
+		swap_data_t *metadata = safe_list_get(memory->swap_data, i);
+
+		if (metadata->pid == pid)
+		{
+			return metadata;
+		}
+	}
+
+	return NULL;
+}
+
+void delete_swap_data(memory_t *memory, uint32_t pid)
+{
+	int index = -1;
+
+	for (int i = 0; i < list_size(memory->swap_data->_list); i++)
+	{
+		swap_data_t *metadata = safe_list_get(memory->swap_data, i);
+
+		if (metadata->pid == pid)
+		{
+			index = i;
+			break;
+		}
+	}
+
+	if (index >= 0)
+	{
+		list_remove_and_destroy_element(memory->swap_data->_list, index, free);
+	}
+}
+
 // ============================================================================================================
 //                                   ***** Private Functions  *****
 // ============================================================================================================
 
-uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows, uint32_t max_frames_per_process)
+uint32_t *create_lvl2_tables(memory_t *memory, uint32_t rows)
 {
 	uint32_t *ids = NULL;
 	uint32_t id = 0;

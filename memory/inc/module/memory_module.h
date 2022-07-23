@@ -36,6 +36,9 @@ typedef struct Memory
 	// Tables of Level II
 	safe_list_t *tables_lvl_2;
 
+	// Metadata for SWAP files
+	safe_list_t *swap_data;
+
 	/**
 	 * @brief Selects a frame to be replaced according to the algorithm
 	 *

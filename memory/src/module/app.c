@@ -60,6 +60,7 @@ static int on_init_memory(memory_t *memory)
 	memory->main_memory = malloc(tam_memoria());
 	memory->tables_lvl_1 = new_safe_list();
 	memory->tables_lvl_2 = new_safe_list();
+	memory->swap_data = new_safe_list();
 
 	// Init Frames
 	memory->frame_selector = strcmp(algoritmo_reemplazo(), "CLOCK") == 0 ? clock_selector : improved_clock_selector;
@@ -82,6 +83,7 @@ static void on_delete_memory(memory_t *memory)
 	free(memory->main_memory);
 	safe_list_fast_destroy(memory->tables_lvl_1);
 	safe_list_fast_destroy(memory->tables_lvl_2);
+	safe_list_fast_destroy(memory->swap_data);
 }
 
 // ============================================================================================================
