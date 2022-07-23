@@ -78,28 +78,42 @@ void safe_list_add_all(safe_list_t *this, t_list *list)
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void safe_list_replace(safe_list_t *this, int index, void *element){
+void safe_list_replace(safe_list_t *this, int index, void *element)
+{
 	pthread_mutex_lock(&this->_mtx);
 	list_replace(this->_list, index, element);
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void safe_list_remove(safe_list_t *this, int index){
+void safe_list_remove(safe_list_t *this, int index)
+{
 	pthread_mutex_lock(&this->_mtx);
 	list_remove(this->_list, index);
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void safe_list_add_in_index(safe_list_t *this, int index, void *element){
+void safe_list_add_in_index(safe_list_t *this, int index, void *element)
+{
 	pthread_mutex_lock(&this->_mtx);
 	list_add_in_index(this->_list, index, element);
 	pthread_mutex_unlock(&this->_mtx);
 }
 
-void * safe_list_get(safe_list_t *this, int index){
+void *safe_list_get(safe_list_t *this, int index)
+{
 	void *e = NULL;
 	pthread_mutex_lock(&this->_mtx);
 	e = list_get(this->_list, index);
 	pthread_mutex_unlock(&this->_mtx);
+	return e;
+}
+
+int safe_list_size(safe_list_t *this)
+{
+	int e = 0;
+	pthread_mutex_lock(&this->_mtx);
+	e = list_size(this->_list);
+	pthread_mutex_unlock(&this->_mtx);
+
 	return e;
 }

@@ -66,13 +66,6 @@ void delete_related_tables(memory_t *memory, uint32_t table_id);
  */
 void delete_level_2_table(memory_t *memory, uint32_t table_id);
 
-/**
- * @brief Deletes a Frame from Memory
- *
- * @param memory the Memory containing the frames
- * @param id the frame ID to delete
- */
-void delete_frame(memory_t *memory, uint32_t id);
 // ============================================================================================================
 //                                   ***** Public Functions  *****
 // ============================================================================================================
@@ -274,7 +267,14 @@ uint32_t create_table(memory_t *memory, uint32_t rows, uint32_t *ids)
 
 	free(ids);
 
-	list_add_in_index(memory->tables_lvl_1->_list, id, table);
+	if ((uint32_t)safe_list_size(memory->tables_lvl_1) > id)
+	{
+		safe_list_replace(memory->tables_lvl_1, id, table);
+	}
+	else
+	{
+		safe_list_add_in_index(memory->tables_lvl_1, id, table);
+	}
 
 	return id;
 }
@@ -286,7 +286,7 @@ uint32_t find_id(safe_list_t *safe_list)
 
 	for (uint32_t i = 0; i < (uint32_t)list_size(safe_list->_list); i++)
 	{
-		page_table_lvl_1_t *table = list_get(safe_list->_list, i);
+		page_table_lvl_1_t *table = safe_list_get(safe_list, i);
 
 		if (table == NULL)
 			return i;
@@ -298,6 +298,12 @@ uint32_t find_id(safe_list_t *safe_list)
 void delete_related_tables(memory_t *memory, uint32_t table_id)
 {
 	page_table_lvl_1_t *table = list_get(memory->tables_lvl_1->_list, table_id);
+
+	if (table == NULL)
+	{
+		LOG_ERROR("Table #%d not found", table_id);
+		return;
+	}
 
 	LOG_WARNING("\t-\tDeleting\tTable\t#%d\t-\t", table_id);
 	print_table(memory, table_id);
@@ -333,7 +339,6 @@ void delete_level_2_table(memory_t *memory, uint32_t table_id)
 	}
 
 	free(lvl2_table);
-	list_replace(memory->tables_lvl_2->_list, table_id, NULL);
 }
 
 void delete_frame(memory_t *memory, uint32_t id)

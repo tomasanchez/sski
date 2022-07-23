@@ -50,6 +50,13 @@ create_big_table(void *memory_ref, uint32_t table_index)
 	memory_t *memory = (memory_t *)memory_ref;
 
 	page_table_lvl_1_t *pt_1 = safe_list_get(memory->tables_lvl_1, table_index);
+
+	if (pt_1 == NULL)
+	{
+		LOG_ERROR("Page Table %d not found ", table_index);
+		return NULL;
+	}
+
 	size_t total_rows = memory->max_rows * memory->max_rows;
 
 	page_table_lvl_2_t **big_table = malloc(sizeof(page_table_lvl_2_t *) * total_rows);

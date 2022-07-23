@@ -119,4 +119,6 @@ void safe_list_add_in_index(safe_list_t *, int index, void *element);
  * @param index
  * @return Retorna el contenido de una posicion determinada de la lista
  */
-void* safe_list_get(safe_list_t *, int index);
+void *safe_list_get(safe_list_t *, int index);
+
+int safe_list_size(safe_list_t *this);

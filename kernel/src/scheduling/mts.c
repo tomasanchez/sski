@@ -82,11 +82,6 @@ pcb_t *resume(scheduler_t *scheduler)
 
 	if (pcb != NULL)
 	{
-		swap_controller_request_pcb(pcb->id);
-
-		pcb_t *pcb_nuevo = swap_controller_receive_pcb();
-		pcb_destroy(pcb_nuevo);
-
 		LOG_WARNING("[MTS] :=> Suspended PCB #%d has been RESUMED", pcb->id);
 	}
 

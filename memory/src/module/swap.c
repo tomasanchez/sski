@@ -44,6 +44,8 @@ void swap_frame_for_pcb(uint32_t pid, uint32_t frame)
 		return;
 	}
 
+	LOG_DEBUG("[SWAP] Obtained SwapData{PID:%d, OFFSET: %d, SIZE: %d}", swap_data->pid, swap_data->offset, swap_data->size);
+
 	int fd = open_file(pid);
 
 	if (fd == -1)
@@ -68,6 +70,9 @@ void swap_frame_for_pcb(uint32_t pid, uint32_t frame)
 	msync(file_address, swap_size, MS_SYNC);
 	munmap(file_address, swap_size);
 	close(fd);
+	page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
+	frame_ref->present = false;
+	usleep(retardo_swap() * 1000);
 }
 
 void swap_pcb(void *pcb_ref)
@@ -118,10 +123,13 @@ void swap_pcb(void *pcb_ref)
 
 	msync(file_address, swap_size, MS_SYNC);
 	munmap(file_address, swap_size);
+	swap_data_t *data = get_swap_data_for_pcb(&g_memory, pcb->id);
+	data->size = swap_size;
 	LOG_INFO("[SWAP] :=> PCB #%d was swapped [%ld bytes]", pcb->id, swap_size);
 	free(big_table);
 	close(fd);
 	pcb_destroy(pcb);
+	usleep(retardo_swap() * 1000);
 }
 
 swap_data_t *new_swap_data(uint32_t pid, uint32_t size)
@@ -129,6 +137,7 @@ swap_data_t *new_swap_data(uint32_t pid, uint32_t size)
 	swap_data_t *swap_data = malloc(sizeof(swap_data_t));
 	swap_data->pid = pid;
 	swap_data->size = size;
+	swap_data->offset = 0;
 	return swap_data;
 }
 
@@ -148,4 +157,112 @@ void swap_frame(uint32_t frame, void *file_address, uint32_t *offset)
 	memcpy(file_address + *offset, frame_stream, swapped_frame_size);
 	*offset += swapped_frame_size;
 	free(frame_stream);
+}
+
+void unswap_frame_for_pcb(uint32_t pid, uint32_t frame)
+{
+
+	int fd = open_file(pid);
+
+	if (fd == -1)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't open file for pid %d", pid);
+		return;
+	}
+
+	swap_data_t *swap_data = get_swap_data_for_pcb(&g_memory, pid);
+
+	void *file_address = mmap(NULL, swap_data->size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (file_address == MAP_FAILED)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't MMAP file: %s", strerror(errno));
+		return;
+	}
+
+	size_t page_size = tam_pagina();
+	size_t swap_entry = page_size + sizeof(uint32_t);
+
+	size_t replace_index = 0;
+	for (size_t i = 0; i < swap_data->offset; i += swap_entry)
+	{
+		uint32_t frame_swapped = UINT32_MAX;
+		memcpy(&frame_swapped, file_address + i, sizeof(uint32_t));
+
+		if (frame_swapped == frame)
+		{
+			void *frame_data = malloc(page_size);
+			memcpy(frame_data, file_address + i + sizeof(uint32_t), sizeof(page_size));
+			memcpy(g_memory.main_memory + (page_size * frame), frame_data, page_size);
+			free(frame_data);
+			replace_index = i;
+			break;
+		}
+	}
+
+	if (swap_data->offset > page_size)
+	{
+		memcpy(file_address + replace_index, file_address + swap_data->offset - page_size, page_size);
+		swap_data->offset -= swap_entry;
+	}
+	else
+	{
+		swap_data->offset = 0;
+	}
+
+	msync(file_address, swap_data->size, MS_SYNC);
+	munmap(file_address, swap_data->size);
+	close(fd);
+	page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame);
+	frame_ref->present = true;
+	usleep(retardo_swap() * 1000);
+}
+
+void unswap_pcb(uint32_t pid)
+{
+	swap_data_t *swap_data = get_swap_data_for_pcb(&g_memory, pid);
+
+	int fd = open_file(pid);
+
+	if (fd == -1)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't open file for pid %d", pid);
+		return;
+	}
+
+	void *file_address = mmap(NULL, swap_data->size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+	if (file_address == MAP_FAILED)
+	{
+		LOG_ERROR("[SWAP] :=> Couldn't MMAP file: %s", strerror(errno));
+		return;
+	}
+
+	size_t page_size = tam_pagina();
+	size_t swap_entry = page_size + sizeof(uint32_t);
+
+	for (size_t i = 0; i < swap_data->offset; i += swap_entry)
+	{
+
+		uint32_t frame_swapped = UINT32_MAX;
+		memcpy(&frame_swapped, file_address + i, sizeof(uint32_t));
+
+		page_table_lvl_2_t *frame_ref = get_frame_ref(&g_memory, frame_swapped);
+
+		if (frame_ref->present)
+		{
+			void *frame_data = malloc(page_size);
+			memcpy(frame_data, file_address + i + sizeof(uint32_t), sizeof(page_size));
+			memcpy(g_memory.main_memory + (page_size * frame_ref->frame), frame_data, page_size);
+			free(frame_data);
+		}
+		else
+		{
+			swap_data->offset = i + swap_entry;
+		}
+	}
+
+	msync(file_address, swap_data->size, MS_SYNC);
+	munmap(file_address, swap_data->size);
+	close(fd);
+	usleep(retardo_swap() * 1000);
 }

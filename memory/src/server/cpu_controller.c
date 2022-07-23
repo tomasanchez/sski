@@ -402,21 +402,22 @@ obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid)
 			LOG_WARNING("[MEMORY] :=> Page replacement is required");
 			uint32_t id_table_1 = get_table_lvl1_number(&g_memory, id_table_2);
 			uint32_t frame_to_replace = g_memory.frame_selector(&g_memory, id_table_1);
+			LOG_TRACE("[MEMORY] :=> Frame #%d should be replaced.", frame_to_replace);
 			replace_frame(pid, frame_to_replace);
 			LOG_INFO("[ALGORITHM] :=> Replaced Frame: #%d -> #%d", frame_to_replace, new_frame);
 		}
 
 		if (table_lvl2[index].frame == INVALID_FRAME)
 		{
-			table_lvl2[index].frame = new_frame;
-			table_lvl2[index].present = true;
-			table_lvl2[index].use = true;
-			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, index, new_frame);
+			uint32_t created_at = create_frame_for_table(&g_memory, index, new_frame);
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
 		}
 		else
 		{
-			uint32_t created_at = create_frame_for_table(&g_memory, index, id_table_2);
-			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...}", id_table_2, created_at, new_frame);
+			delete_frame(&g_memory, new_frame);
+			unswap_frame_for_pcb(pid, table_lvl2[index].frame);
+			table_lvl2[index].use = true;
+			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...} [UNSWAPPED]", id_table_2, index, table_lvl2[index].frame);
 		}
 
 		return new_frame;
@@ -511,5 +512,7 @@ void replace_frame(uint32_t pid, uint32_t frame_to_replace)
 		}
 	}
 
+	LOG_DEBUG("[Memory] :=> Frame #%d is being swapped for PCB#%d...", frame_to_replace, pid);
 	swap_frame_for_pcb(pid, frame_to_replace);
+	LOG_WARNING("[Memory] :=> Frame #%d was SWAPPED", frame_to_replace);
 }

@@ -92,6 +92,10 @@ uint32_t clock_selector(void *self, uint32_t table_index)
 		// Reset clock when cycles
 		clock = clock + 1 <= total_rows ? 0 : clock + 1;
 	}
+	else
+	{
+		LOG_WARNING("[CLOCK] :=> No reset was needed.");
+	}
 
 	free(big_table);
 
