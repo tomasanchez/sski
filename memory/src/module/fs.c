@@ -10,7 +10,6 @@
  */
 #include <time.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -77,11 +76,8 @@ void create_file(uint32_t pid, uint32_t size)
 
 	if (fd != -1)
 	{
-		struct stat sb;
 
-		if (fstat(fd, &sb) != ERROR)
-		{
-			off_t length = size;
+			uint32_t length = size;
 
 			ftruncate(fd, length);
 
@@ -97,7 +93,7 @@ void create_file(uint32_t pid, uint32_t size)
 			msync(file_address, length, MS_SYNC);
 			munmap(file_address, length);
 			LOG_INFO("[FS] :=> Created file for PCB #%d [%dbytes]", pid, size);
-		}
+	
 
 		close(fd);
 	}
