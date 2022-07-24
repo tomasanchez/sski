@@ -322,8 +322,8 @@ void cpu_controller_send_page_second_level(int fd)
 		print_table(&g_memory, values.op1);
 		// If x >= 4 ? 3 : X;
 		uint32_t t1_sub = values.op2 >= g_memory.max_rows ? g_memory.max_rows - 1 : values.op2;
-		entry_second_level = obtain_second_page(values.op1, values.op2);
-		LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d]= #%d", values.op1, values.op2, entry_second_level);
+		entry_second_level = obtain_second_page(values.op1, t1_sub);
+		LOG_INFO("[CPU-CONTROLLER] :=> Table#%d[%d]= #%d", values.op1, t1_sub, entry_second_level);
 	}
 
 	ssize_t bytes_sent = fd_send_value(fd, &entry_second_level, sizeof(entry_second_level));
