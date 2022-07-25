@@ -67,7 +67,7 @@ void *io_scheduler(void *scheduler)
 			s->current_io = pcb->id;
 			// Execute IO Burst
 			LOG_TRACE("[IO] :=> PCB #%d Using IO for: %ds", pcb->id, pcb->io);
-			sleep(pcb->io / 1000);
+			usleep(pcb->io * 1000);
 
 			LOG_INFO("[IO] :=> PCB #%d IO finished", pcb->id);
 

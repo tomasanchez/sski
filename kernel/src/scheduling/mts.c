@@ -49,7 +49,7 @@ void *track_time(void *dto)
 
 	// Get current time
 	LOG_DEBUG("[MTS] :=> Tracking PCB #%d", pid);
-	sleep(s->max_blocked_time / 1000);
+	usleep(s->max_blocked_time * 1000);
 	LOG_TRACE("[MTS] :=> Suspension Tracker for PCB #%d finished", pid);
 
 	if (pcb_exists(s->blocked, pid) || s->current_io == pid)

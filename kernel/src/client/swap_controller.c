@@ -78,6 +78,7 @@ ssize_t swap_controller_exit(pcb_t *pcb)
 	memcpy(stream + offset, &page_table, sizeof(page_table));
 
 	ssize_t ret = conexion_enviar_stream(g_kernel.conexion_memory, pcb_terminated, stream, size);
+	LOG_TRACE("[SWAP-Controller] :=> Request sent [%ld bytes]", ret);
 	free(stream);
 	return ret;
 }

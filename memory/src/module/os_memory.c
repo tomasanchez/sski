@@ -114,8 +114,8 @@ uint32_t find_free_frame(memory_t *memory)
 
 uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t value)
 {
-	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
-	sleep(wait_time);
+	uint32_t wait_time = (uint32_t)retardo_memoria() * 1000;
+	usleep(wait_time);
 	memcpy(memory->main_memory + physical_address, &value, sizeof(value));
 	return (uint32_t *)memory->main_memory + physical_address;
 }
@@ -123,8 +123,8 @@ uint32_t *write_in_memory(memory_t *memory, uint32_t physical_address, uint32_t 
 uint32_t read_from_memory(memory_t *memory, uint32_t physical_address)
 {
 	uint32_t value = 0;
-	uint32_t wait_time = (uint32_t)retardo_memoria() / 1000;
-	sleep(wait_time);
+	uint32_t wait_time = (uint32_t)retardo_memoria() * 1000;
+	usleep(wait_time);
 	memcpy(&value, memory->main_memory + physical_address, sizeof(value));
 	return value;
 }

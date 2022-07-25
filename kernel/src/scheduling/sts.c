@@ -124,11 +124,11 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 
 void terminate(kernel_t *kernel, pcb_t *pcb)
 {
-	SIGNAL(kernel->scheduler.dom);
-    LOG_TRACE(":: PCB #%d, Table #%d", pcb->id, pcb->page_table);
+	LOG_TRACE("[KERNEL] :=> PCB #%d(Table#%d) Requesting FREE memory...", pcb->id, pcb->page_table);
 	swap_controller_exit(pcb);
 	pcb_destroy(pcb);
 	pcb = NULL;
+	SIGNAL(kernel->scheduler.dom);
 }
 
 void block(scheduler_t *scheduler, pcb_t *pcb, uint32_t io_time)

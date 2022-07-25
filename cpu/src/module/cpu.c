@@ -396,7 +396,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 void execute_NO_OP(uint time)
 {
-	sleep(time / 1000);
+	usleep(time * 1000);
 }
 
 void execute_IO(instruction_t *instruction, cpu_t *cpu)
