@@ -99,6 +99,12 @@ install-python:
 	apt-get install python3
 	@echo "Python installed!"
 
+deploy:
+	@echo Creating Swap File
+	@mkdir -p ../swap
+	$(MAKE) all --no-print-directory
+	$(MAKE) install-sh --no-print-directory
+
 install-sh:
 	chmod +x $(PWD)/*.sh
 
