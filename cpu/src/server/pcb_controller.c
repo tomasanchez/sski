@@ -34,7 +34,7 @@ pcb_t *receive_pcb(int fd)
 	ssize_t recv_bytes = -1;
 	pcb_t *pcb = NULL;
 	pcb = pcb_from_stream(servidor_recibir_stream(fd, &recv_bytes));
-	LOG_PCB(pcb);
+	LOG_DEBUG("[Server] :=> PCB #%d received [%ld bytes]", pcb->id, recv_bytes);
 	g_cpu.pcb = pcb;
 	return pcb;
 }
@@ -53,8 +53,7 @@ ssize_t return_pcb(int fd, pcb_t *pcb, uint32_t time)
 		return -1;
 	}
 
-	LOG_WARNING("[Server] :=> Returning PCB...");
-	LOG_PCB(pcb);
+	LOG_WARNING("[Server] :=> Returning PCB #%d...", pcb->id);
 
 	size_t pcb_size = pcb_bytes_size(pcb);
 	void *stream = malloc(pcb_size + sizeof(time));
