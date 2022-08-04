@@ -192,10 +192,18 @@ int on_run(cpu_t *cpu)
 
 	for (;;)
 	{
-		// WAIT TO RECEIVE A CPU from a Kernel.
+	// WAIT TO RECEIVE A CPU from a Kernel.
+	start:
 		LOG_TRACE("[CPU] :=> Waiting for a process...");
 		WAIT(cpu->sync.pcb_received);
-		LOG_DEBUG("[CPU] :=> Executing PCB<%d>...", cpu->pcb->id);
+
+		if (cpu->pcb == NULL)
+		{
+			LOG_ERROR("[CPU] :=> Corrupted SEMAPHORE >PCB=NULL<");
+			goto start;
+		}
+
+		LOG_DEBUG("[CPU] :=> Executing PCB #%d...", cpu->pcb->id);
 
 		while (cpu->pcb != NULL)
 			cycle(cpu);
