@@ -238,7 +238,7 @@ void cpu_controller_write(int socket)
 
 void cpu_controller_send_entries(int fd)
 {
-
+	usleep(retardo_memoria() * 1000);
 	uint32_t entries = entradas_por_tabla();
 	LOG_TRACE("[CPU-CONTROLLER] :=> Entries per table: %d", entries);
 	ssize_t bytes_sent = fd_send_value(fd, &entries, sizeof(entries));
@@ -274,7 +274,7 @@ void cpu_controller_send_frame(int fd)
 {
 	ssize_t bytes_read = -1;
 	void *stream = servidor_recibir_stream(fd, &bytes_read);
-
+	usleep(retardo_memoria() * 1000);
 	uint32_t pid = UINT32_MAX;
 	uint32_t frame = 0;
 
@@ -305,7 +305,7 @@ void cpu_controller_send_frame(int fd)
 
 void cpu_controller_send_page_second_level(int fd)
 {
-
+	usleep(retardo_memoria() * 1000);
 	ssize_t bytes_read = -1;
 	void *stream = servidor_recibir_stream(fd, &bytes_read);
 	uint32_t entry_second_level = 0;
@@ -455,7 +455,6 @@ uint32_t
 get_frame(uint32_t physical_address)
 {
 	return (uint32_t)physical_address / (uint32_t)tam_pagina();
-	;
 }
 
 bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame)
