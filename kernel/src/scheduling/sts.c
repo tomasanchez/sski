@@ -62,7 +62,7 @@ void execute(kernel_t *kernel, pcb_t *pcb)
 
 	if (bytes_sent > 0)
 	{
-		LOG_INFO("[STS] :=> Executing PCB #%d", pcb->id);
+		LOG_INFO("[STS] :=> Sent PCB #%d for EXECUTION [%ld bytes]", pcb->id, bytes_sent);
 		LOG_WARNING("[STS] :=> PCB #%d estimated to use CPU for %dms", pcb->id, pcb->estimation);
 		pcb_destroy(pcb);
 		pcb = NULL;
