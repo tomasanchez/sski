@@ -231,7 +231,9 @@ void cycle(cpu_t *cpu)
 	// When no int then should execute instruction
 	if (!cpu->has_interruption)
 	{
-		LOG_TRACE("[CPU|PCB#%d] :=> Fetching instruction...", cpu->pcb->id);
+		uint32_t pid = cpu->pcb->id;
+		uint32_t pc = cpu->pcb->pc;
+		LOG_TRACE("[CPU|PCB#%d] :=> Fetching instruction...", pid);
 		// The instruction to be executed
 		instruction_t *instruction;
 		// Fetch
@@ -239,24 +241,24 @@ void cycle(cpu_t *cpu)
 
 		if (instruction)
 		{
-			LOG_DEBUG("[CPU|PCB#%d] :=> Instruction Fetched= #%d", cpu->pcb->id, cpu->pcb->pc);
+			LOG_DEBUG("[CPU|PCB#%d] :=> Instruction Fetched= #%d", pid, pc);
 			// Operands to used
 			operands_t operandos = {0, 0};
 
 			if (decode(instruction))
 			{
-				LOG_TRACE("[CPU|PCB#%d] :=> Fetching operands...", cpu->pcb->id);
+				LOG_TRACE("[CPU|PCB#%d] :=> Fetching operands...", pid);
 				uint32_t value = fetch_operands(instruction->param1);
 				instruction->param0 = operandos.op1;
 				instruction->param1 = value;
-				LOG_DEBUG("[CPU|PCB#%d] :=> Operands Fetched...", cpu->pcb->id);
+				LOG_DEBUG("[CPU|PCB#%d] :=> Operands Fetched...", pid);
 			}
 			else
 			{
-				LOG_WARNING("[CPU|PCB#%d] :=> No operands to fetch");
+				LOG_WARNING("[CPU|PCB] :=> No operands to fetch");
 			}
 
-			LOG_TRACE("[CPU|PCB#%d] :=> Executing Instruction #%d...", cpu->pcb->id, cpu->pcb->pc);
+			LOG_TRACE("[CPU|PCB#%d] :=> Executing Instruction #%d...", pid, pc);
 			instruction_execute(instruction, cpu);
 		}
 		else
