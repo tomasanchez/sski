@@ -362,7 +362,7 @@ uint32_t instruction_execute(instruction_t *instruction, void *data)
 
 	case C_REQUEST_IO:
 		execute_IO(instruction, data);
-		LOG_WARNING("[CPU] :=> I/O");
+		LOG_WARNING("[CPU] :=> Executed I/O");
 		break;
 
 	case C_REQUEST_EXIT:
@@ -404,8 +404,6 @@ void execute_IO(instruction_t *instruction, cpu_t *cpu)
 {
 	LOG_TRACE("[CPU] :=> Executing IO Instruction...");
 	cpu->pcb->status = PCB_BLOCKED;
-
-	tlb_reset(&(cpu->tlb));
 
 	ssize_t bytes_sent = return_pcb(cpu->server_dispatch.client, cpu->pcb, instruction->param0);
 

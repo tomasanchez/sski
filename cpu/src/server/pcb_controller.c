@@ -30,6 +30,7 @@ extern cpu_t g_cpu;
 
 pcb_t *receive_pcb(int fd)
 {
+	LOG_TRACE("[Server] :=> Requested execution. Awaiting...");
 	WAIT(g_cpu.sync.cpu_in_use);
 	ssize_t recv_bytes = -1;
 	pcb_t *pcb = NULL;
