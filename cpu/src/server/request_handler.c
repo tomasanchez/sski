@@ -93,8 +93,8 @@ request_handler(void *fd)
 
 			case PCB:
 				receive_pcb(sender_fd);
-				SIGNAL(g_cpu.sync.pcb_received);
 				break;
+
 			default:
 				LOG_ERROR("[Server] :=> Client<%d>: Unrecognized operation code (%d)", sender_fd, opcode);
 				break;

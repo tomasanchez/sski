@@ -35,8 +35,9 @@ pcb_t *receive_pcb(int fd)
 	ssize_t recv_bytes = -1;
 	pcb_t *pcb = NULL;
 	pcb = pcb_from_stream(servidor_recibir_stream(fd, &recv_bytes));
-	LOG_DEBUG("[Server] :=> PCB #%d received [%ld bytes]", pcb->id, recv_bytes);
 	g_cpu.pcb = pcb;
+	LOG_DEBUG("[Server] :=> PCB #%d received [%ld bytes]", pcb->id, recv_bytes);
+	SIGNAL(g_cpu.sync.pcb_received);
 	return pcb;
 }
 
