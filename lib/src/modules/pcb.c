@@ -39,7 +39,7 @@ pcb_t *get_pcb_by_pid(t_list *pcbs, uint32_t pid)
 {
 	bool clojure(void *pcb) { return _get_by_pid(pid, (pcb_t *)pcb); }
 
-	return list_find(pcbs, clojure);
+	return list_remove_by_condition(pcbs, clojure);
 }
 
 pcb_t *pcb_by_id(safe_queue_t *queue, uint32_t id)
