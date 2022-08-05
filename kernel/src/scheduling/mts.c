@@ -55,7 +55,7 @@ void *track_time(void *dto)
 	if (pcb_exists(s->blocked, pid) || s->current_io == pid)
 	{
 		LOG_INFO("[MTS] :=> PCB #%d has been blocked for %dms", pid, s->max_blocked_time);
-		suspend(s, pcb);
+		suspend(s, pcb_remove_by_id(s->blocked, pid));
 	}
 
 	free(dto);
@@ -70,7 +70,6 @@ void suspend(scheduler_t *scheduler, pcb_t *pcb)
 	SIGNAL(scheduler->dom);
 	LOG_ERROR("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pid);
 	pcb->status = PCB_SUSPENDED_BLOCKED;
-	pcb_remove_by_id(scheduler->blocked, pid);
 	safe_queue_push(scheduler->blocked_sus, pcb);
 	swap_controller_send_pcb(SWAP_PCB, pcb);
 }
