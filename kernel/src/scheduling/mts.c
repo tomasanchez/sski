@@ -66,10 +66,11 @@ void *track_time(void *dto)
 
 void suspend(scheduler_t *scheduler, pcb_t *pcb)
 {
+	uint32_t pid = pcb->id;
 	SIGNAL(scheduler->dom);
-	LOG_ERROR("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pcb->id);
+	LOG_ERROR("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pid);
 	pcb->status = PCB_SUSPENDED_BLOCKED;
-	pcb_remove_by_id(scheduler->blocked, pcb->id);
+	pcb_remove_by_id(scheduler->blocked, pid);
 	safe_queue_push(scheduler->blocked_sus, pcb);
 	swap_controller_send_pcb(SWAP_PCB, pcb);
 }
