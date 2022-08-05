@@ -431,6 +431,7 @@ obtain_frame(uint32_t id_table_2, uint32_t index, uint32_t pid)
 		{
 			LOG_WARNING("[MEMORY] :=> Frame already allocated, should unswap.");
 			delete_frame(&g_memory, new_frame);
+			LOG_ERROR("[SWAP] :=> Access - UNSWAPPING");
 			unswap_frame_for_pcb(pid, table_lvl2[index].frame);
 			table_lvl2[index].use = true;
 			LOG_INFO("[Memory] :=> Table#%d[%d] = { Frame: %d ...} [UNSWAPPED]", id_table_2, index, table_lvl2[index].frame);
@@ -474,7 +475,7 @@ bool frame_is_present(memory_t *memory, uint32_t table_number, uint32_t frame)
 
 bool should_replace_frame(memory_t *memory, uint32_t table_number_2)
 {
-	LOG_TRACE("[Memory] :=> WE SHOULD REPLACE A FRAME ¡!");
+	LOG_TRACE("[Memory] :=> WE SHOULD REPLACE A FRAME");
 	uint32_t table_number = get_table_lvl1_number(memory, table_number_2);
 	LOG_DEBUG("[Memory] :=> TABLE NUMBER FOUND: %d", table_number);
 	page_table_lvl_1_t *table = safe_list_get(memory->tables_lvl_1, table_number);
@@ -538,6 +539,7 @@ void replace_frame(uint32_t pid, uint32_t frame_to_replace)
 	}
 
 	LOG_DEBUG("[Memory] :=> Frame #%d is being swapped for PCB#%d...", frame_to_replace, pid);
+	LOG_ERROR("[SWAP] :=> Access - SWAPPING");
 	swap_frame_for_pcb(pid, frame_to_replace);
 	LOG_WARNING("[Memory] :=> Frame #%d was SWAPPED", frame_to_replace);
 }
