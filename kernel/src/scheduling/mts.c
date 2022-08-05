@@ -55,7 +55,8 @@ void *track_time(void *dto)
 	if (pcb_exists(s->blocked, pid) || s->current_io == pid)
 	{
 		LOG_INFO("[MTS] :=> PCB #%d has been blocked for %dms", pid, s->max_blocked_time);
-		suspend(s, pcb_remove_by_id(s->blocked, pid));
+		pcb_t *removed = pcb_remove_by_id(s->blocked, pid);
+		suspend(s, removed == NULL ? pcb : removed);
 	}
 
 	free(dto);
