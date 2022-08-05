@@ -66,6 +66,12 @@ void *track_time(void *dto)
 
 void suspend(scheduler_t *scheduler, pcb_t *pcb)
 {
+	if (pcb == NULL)
+	{
+		LOG_ERROR("[MTS] :=> PCB NULL - THIS SHOULD NEVER HAPPEN");
+		return;
+	}
+
 	uint32_t pid = pcb->id;
 	SIGNAL(scheduler->dom);
 	LOG_ERROR("[MTS] :=> Blocked PCB #%d has been SUSPENDED", pid);
